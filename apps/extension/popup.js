@@ -42,7 +42,7 @@ const I18N = {
     oneClickHint: 'Mở 2 tab AI, bấm bắt đầu. CrossCritic tự chọn nguồn/đích, tự gửi, tự dừng khi đồng thuận.',
     startAuto: 'Bắt đầu tự động',
     running: 'Đang chạy…',
-    autoModeNote: 'Mặc định: Auto source/target · Latest · Auto-send · 50 steps',
+    autoModeNote: 'Mặc định: Auto source/target · Latest · Auto-send · 100 steps',
     manualMode: 'Manual / tuỳ chỉnh',
     loopCounterLabel: 'vòng phản biện',
     auto: 'Auto',
@@ -85,7 +85,7 @@ const I18N = {
     oneClickHint: 'Open 2 AI tabs, press start. CrossCritic auto-picks source/target, sends, and stops on agreement.',
     startAuto: 'Start auto',
     running: 'Running…',
-    autoModeNote: 'Default: Auto source/target · Latest · Auto-send · 50 steps',
+    autoModeNote: 'Default: Auto source/target · Latest · Auto-send · 100 steps',
     manualMode: 'Manual / custom',
     loopCounterLabel: 'debate rounds',
     auto: 'Auto',
@@ -950,7 +950,7 @@ function buildFinalJson(source, lang = getLang()) {
   const stop = $('stopPhrase')?.value || defaultStopPhrase(lang);
   return JSON.stringify({
     app: 'CrossCritic',
-    version: '0.6.3',
+    version: '0.6.4',
     language: lang,
     saved_at: new Date().toISOString(),
     provider: source.platform,
@@ -1189,13 +1189,13 @@ function setLoopRunning(running) {
   updateRunButtonState(running);
 }
 
-function updateLoopCounter(step = 0, max = Number($('loopMaxSteps')?.value || 50)) {
+function updateLoopCounter(step = 0, max = Number($('loopMaxSteps')?.value || 100)) {
   if ($('loopCounter')) $('loopCounter').textContent = `${step}/${max}`;
 }
 
 function stopLoop(reason = 'stopped') {
   if (loopTimer) clearTimeout(loopTimer);
-  const lastMax = loopState?.maxSteps || Number($('loopMaxSteps')?.value || 50);
+  const lastMax = loopState?.maxSteps || Number($('loopMaxSteps')?.value || 100);
   const lastStep = loopState?.step || 0;
   loopTimer = null;
   loopState = null;
@@ -1278,7 +1278,7 @@ $('oneClickStartBtn')?.addEventListener('click', async () => {
     $('targetTab').value = 'auto';
     $('relayMode').value = 'latest';
     $('autoSendToggle').checked = true;
-    $('loopMaxSteps').value = '50';
+    $('loopMaxSteps').value = '100';
     syncGlassSelectLabels();
     $('startLoopBtn').click();
   } catch (e) { log(e.message); }
@@ -1301,7 +1301,7 @@ $('startLoopBtn')?.addEventListener('click', async () => {
       currentSource: a,
       currentTarget: b,
       step: 0,
-      maxSteps: Math.max(1, Math.min(100, Number($('loopMaxSteps').value || 50))),
+      maxSteps: Math.max(1, Math.min(100, Number($('loopMaxSteps').value || 100))),
       delayMs: Math.max(3, Math.min(120, Number($('loopDelaySec').value || 12))) * 1000,
       waitMs: Math.max(15, Math.min(300, Number($('loopDelaySec').value || 12) * 5)) * 1000
     };
