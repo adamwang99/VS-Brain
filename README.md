@@ -30,6 +30,15 @@ docs/               Product/spec/design notes
 exports/            Local ignored sample/export target
 ```
 
+## Current status
+
+Current extension version: `v0.5.1`.
+
+See:
+
+- `PROJECT_STATUS.md` — current feature/status source-of-truth
+- `CHANGELOG.md` — version history
+
 ## MVP
 
 1. ChatGPT/Gemini current conversation export
