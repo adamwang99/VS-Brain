@@ -252,6 +252,7 @@ async function refreshTabs() {
   $('sourceTab').innerHTML = html || '<option value="">Không thấy tab AI</option>';
   $('targetTab').innerHTML = html || '<option value="">Không thấy tab AI</option>';
   $('relayBtn').disabled = aiTabs.length < 2;
+  $('startLoopBtn').disabled = aiTabs.length < 2;
   log(`đã quét tab AI: ${aiTabs.length}`);
 }
 
@@ -426,9 +427,9 @@ async function clearRelayStates() {
   return keys.length;
 }
 
-async function executeRelay() {
-  const sourceId = Number($('sourceTab').value);
-  const targetId = Number($('targetTab').value);
+async function executeRelay(sourceOverride, targetOverride) {
+  const sourceId = Number(sourceOverride || $('sourceTab').value);
+  const targetId = Number(targetOverride || $('targetTab').value);
   const kind = 'comprehensive';
   const mode = $('relayMode').value;
   if (!sourceId || !targetId || sourceId === targetId) throw new Error('Chọn 2 tab khác nhau');
@@ -445,7 +446,7 @@ async function executeRelay() {
   const prev = await getRelayState(key);
   if (prev?.contentHash === contentHash) {
     log('chưa có phản hồi mới từ tab nguồn; đã chặn dán trùng');
-    return;
+    return { pasted: false, reason: 'duplicate' };
   }
 
   const prompt = buildRelayPrompt(kind, source, $('extraInstruction')?.value || '');
@@ -466,6 +467,7 @@ async function executeRelay() {
   });
   const hasExtra = ($('extraInstruction')?.value || '').trim() ? ' có yêu cầu bổ sung' : '';
   log(`đã dán nội dung mới hash=${contentHash}${hasExtra} method=${result.method || '?'} selector=${result.selector || '?'}; Sếp bấm gửi thủ công`);
+  return { pasted: true, contentHash };
 }
 
 $('refreshTabsBtn')?.addEventListener('click', async () => {
@@ -482,5 +484,58 @@ $('resetRelayBtn')?.addEventListener('click', async () => {
     log(`đã xóa ${n} mốc relay`);
   } catch (e) { log(e.message); }
 });
+
+
+let loopTimer = null;
+let loopState = null;
+
+function setLoopRunning(running) {
+  $('startLoopBtn').disabled = running || aiTabs.length < 2;
+  $('stopLoopBtn').disabled = !running;
+}
+
+function stopLoop(reason = 'stopped') {
+  if (loopTimer) clearTimeout(loopTimer);
+  loopTimer = null;
+  loopState = null;
+  setLoopRunning(false);
+  log(`auto-loop dừng: ${reason}`);
+}
+
+async function loopStep() {
+  if (!loopState) return;
+  if (loopState.step >= loopState.maxSteps) return stopLoop('đạt số bước tối đa');
+  const [sourceId, targetId] = loopState.direction === 0 ? [loopState.a, loopState.b] : [loopState.b, loopState.a];
+  loopState.step += 1;
+  log(`auto-loop bước ${loopState.step}/${loopState.maxSteps}: ${sourceId} → ${targetId}`);
+  try {
+    await executeRelay(sourceId, targetId);
+  } catch (e) {
+    log(`auto-loop lỗi: ${e.message}`);
+  }
+  loopState.direction = loopState.direction ? 0 : 1;
+  loopTimer = setTimeout(loopStep, loopState.delayMs);
+}
+
+$('startLoopBtn')?.addEventListener('click', async () => {
+  try {
+    const a = Number($('sourceTab').value);
+    const b = Number($('targetTab').value);
+    if (!a || !b || a === b) throw new Error('Chọn 2 tab khác nhau');
+    loopState = {
+      a,
+      b,
+      direction: 0,
+      step: 0,
+      maxSteps: Math.max(1, Math.min(20, Number($('loopMaxSteps').value || 6))),
+      delayMs: Math.max(3, Math.min(120, Number($('loopDelaySec').value || 12))) * 1000
+    };
+    setLoopRunning(true);
+    log(`auto-loop bắt đầu: max=${loopState.maxSteps}, delay=${loopState.delayMs / 1000}s. Bản an toàn: tự dán, chưa tự gửi.`);
+    await loopStep();
+  } catch (e) { log(e.message); }
+});
+
+$('stopLoopBtn')?.addEventListener('click', () => stopLoop('Sếp bấm dừng'));
 
 refreshTabs().catch(() => {});

@@ -54,6 +54,17 @@
       </label>
       <button id="relayBtn" disabled>Lấy từ nguồn → dán sang đích <span class="q" title="Mặc định chỉ lấy phản hồi mới nhất và chặn dán trùng bằng hash. Không tự bấm gửi.">?</span></button>
       <button id="resetRelayBtn">Xóa mốc relay <span class="q" title="Xóa dấu vết phản hồi đã chuyển trước đó. Dùng khi muốn dán lại cùng một phản hồi.">?</span></button>
+      <div class="loop-box">
+        <b>Auto chuyển qua lại</b>
+        <label>Số bước tối đa
+          <input id="loopMaxSteps" type="number" min="1" max="20" value="6" />
+        </label>
+        <label>Khoảng chờ mỗi bước (giây)
+          <input id="loopDelaySec" type="number" min="3" max="120" value="12" />
+        </label>
+        <button id="startLoopBtn" disabled>Bắt đầu auto A ↔ B <span class="q" title="Tự chuyển qua lại giữa tab nguồn và tab đích. Bản an toàn: chỉ tự dán, chưa tự bấm gửi.">?</span></button>
+        <button id="stopLoopBtn" disabled>Dừng auto</button>
+      </div>
     </section>
 
     <details class="guide">
