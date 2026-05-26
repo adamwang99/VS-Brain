@@ -132,7 +132,7 @@ function toMarkdown(scan, messages) {
 }
 
 async function scan() {
-  setStatus('Scanning...');
+  setStatus('Đang quét...');
   currentScan = await runInPage(pageScanner);
   $('provider').textContent = currentScan.platform;
   $('title').textContent = currentScan.title;
@@ -142,12 +142,12 @@ async function scan() {
   $('exportJsonlBtn').disabled = !newMessages.length;
   $('exportMdBtn').disabled = !newMessages.length;
   $('checkpointBtn').disabled = !currentScan.messages.length;
-  setStatus(`Found ${currentScan.messages.length}, new ${newMessages.length}.`);
-  log(`scan provider=${currentScan.platform} visible=${currentScan.messages.length} new=${newMessages.length} checkpoint=${cp?.lastSeenMessageKey ? 'yes' : 'no'}`);
+  setStatus(`Tìm thấy ${currentScan.messages.length} tin, mới ${newMessages.length} tin.`);
+  log(`quét provider=${currentScan.platform} thấy=${currentScan.messages.length} mới=${newMessages.length} checkpoint=${cp?.lastSeenMessageKey ? 'có' : 'chưa'}`);
 }
 
 $('scanBtn').addEventListener('click', async () => {
-  try { await scan(); } catch (e) { setStatus('Scan failed.'); log(e.message); }
+  try { await scan(); } catch (e) { setStatus('Quét thất bại.'); log(e.message); }
 });
 
 $('exportJsonlBtn').addEventListener('click', async () => {
@@ -157,7 +157,7 @@ $('exportJsonlBtn').addEventListener('click', async () => {
     const filename = `crosscritic/${currentScan.platform}/${safeName(currentScan.title)}-${Date.now()}.jsonl`;
     await downloadText(filename, toJsonl(messages), 'application/jsonl');
     await setCheckpoint(currentScan, currentScan.messages);
-    log(`export jsonl messages=${messages.length}`);
+    log(`đã xuất JSONL: ${messages.length} tin`);
     await scan();
   } catch (e) { log(e.message); }
 });
@@ -169,7 +169,7 @@ $('exportMdBtn').addEventListener('click', async () => {
     const filename = `crosscritic/${currentScan.platform}/${safeName(currentScan.title)}-${Date.now()}.md`;
     await downloadText(filename, toMarkdown(currentScan, messages), 'text/markdown');
     await setCheckpoint(currentScan, currentScan.messages);
-    log(`export md messages=${messages.length}`);
+    log(`đã xuất Markdown: ${messages.length} tin`);
     await scan();
   } catch (e) { log(e.message); }
 });
@@ -178,7 +178,7 @@ $('checkpointBtn').addEventListener('click', async () => {
   try {
     if (!currentScan) await scan();
     await setCheckpoint(currentScan, currentScan.messages);
-    log('checkpoint marked');
+    log('đã đánh dấu mốc');
     await scan();
   } catch (e) { log(e.message); }
 });

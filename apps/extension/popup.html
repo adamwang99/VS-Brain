@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,18 +8,38 @@
 </head>
 <body>
   <main>
-    <h1>CrossCritic</h1>
-    <div id="status">Ready.</div>
-    <section class="meta">
-      <div><span>Provider</span><strong id="provider">-</strong></div>
-      <div><span>Title</span><strong id="title">-</strong></div>
-      <div><span>Visible</span><strong id="count">0</strong></div>
+    <header>
+      <h1>CrossCritic</h1>
+      <p class="subtitle">Lưu chat AI, chống trùng, đánh dấu mốc.</p>
+    </header>
+
+    <div id="status">Sẵn sàng.</div>
+
+    <section class="meta" aria-label="Thông tin cuộc trò chuyện">
+      <div><span>Nền tảng <button class="help" title="Trang đang mở: ChatGPT, Gemini hoặc chưa hỗ trợ." aria-label="Trợ giúp nền tảng">?</button></span><strong id="provider">-</strong></div>
+      <div><span>Tiêu đề <button class="help" title="Tên cuộc trò chuyện lấy từ tiêu đề tab/trang hiện tại." aria-label="Trợ giúp tiêu đề">?</button></span><strong id="title">-</strong></div>
+      <div><span>Tin thấy được <button class="help" title="Số tin nhắn extension đọc được trên trang hiện tại. Nếu trang chỉ tải một phần lịch sử, hãy cuộn lên để tải thêm rồi quét lại." aria-label="Trợ giúp tin thấy được">?</button></span><strong id="count">0</strong></div>
     </section>
-    <button id="scanBtn">Scan current chat</button>
-    <button id="exportJsonlBtn" disabled>Export new JSONL</button>
-    <button id="exportMdBtn" disabled>Export new Markdown</button>
-    <button id="checkpointBtn" disabled>Mark checkpoint</button>
-    <pre id="log"></pre>
+
+    <section class="actions" aria-label="Chức năng">
+      <button id="scanBtn">Quét chat hiện tại <span class="q" title="Đọc nội dung đang hiển thị trong tab ChatGPT/Gemini. Không tải file, không gửi dữ liệu ra ngoài.">?</span></button>
+      <button id="exportJsonlBtn" disabled>Xuất JSONL mới <span class="q" title="Tải file .jsonl chỉ gồm tin mới sau checkpoint. JSONL là bản lưu chuẩn để gộp/chống trùng.">?</span></button>
+      <button id="exportMdBtn" disabled>Xuất Markdown mới <span class="q" title="Tải file .md dễ đọc, chỉ gồm tin mới sau checkpoint. Dùng để xem/chia sẻ nhanh.">?</span></button>
+      <button id="checkpointBtn" disabled>Đánh dấu mốc hiện tại <span class="q" title="Lưu vị trí tin cuối cùng hiện thấy. Lần sau chỉ xuất phần sau mốc này.">?</span></button>
+    </section>
+
+    <details class="guide">
+      <summary>Hướng dẫn nhanh</summary>
+      <ol>
+        <li>Mở một cuộc chat ChatGPT hoặc Gemini.</li>
+        <li>Bấm <b>Quét chat hiện tại</b>.</li>
+        <li>Lần đầu: xuất JSONL/Markdown để lưu toàn bộ phần đang thấy.</li>
+        <li>Lần sau: extension tự dùng checkpoint, chỉ xuất tin mới.</li>
+        <li>Nếu muốn tự chọn mốc: bấm <b>Đánh dấu mốc hiện tại</b>.</li>
+      </ol>
+    </details>
+
+    <pre id="log" aria-label="Nhật ký thao tác"></pre>
   </main>
   <script src="popup.js"></script>
 </body>
