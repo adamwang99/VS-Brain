@@ -261,6 +261,17 @@ async function refreshTabs() {
   $('startLoopBtn').disabled = aiTabs.length < 2;
   $('autoPickBtn').disabled = aiTabs.length < 2;
   $('swapTabsBtn').disabled = aiTabs.length < 2;
+
+  if (aiTabs.length >= 2) {
+    try {
+      await autoPickNewestDirection();
+    } catch (_) {
+      $('sourceTab').value = String(aiTabs[0].id);
+      const fallbackTarget = aiTabs.find((t) => t.id !== aiTabs[0].id) || aiTabs[1];
+      $('targetTab').value = String(fallbackTarget.id);
+      log(`fallback chọn mặc định: nguồn=${aiTabs[0].provider} → đích=${fallbackTarget.provider}`);
+    }
+  }
   log(`đã quét tab AI: ${aiTabs.length}`);
 }
 
