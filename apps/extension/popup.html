@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CrossCritic</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <main>
+    <h1>CrossCritic</h1>
+    <div id="status">Ready.</div>
+    <section class="meta">
+      <div><span>Provider</span><strong id="provider">-</strong></div>
+      <div><span>Title</span><strong id="title">-</strong></div>
+      <div><span>Visible</span><strong id="count">0</strong></div>
+    </section>
+    <button id="scanBtn">Scan current chat</button>
+    <button id="exportJsonlBtn" disabled>Export new JSONL</button>
+    <button id="exportMdBtn" disabled>Export new Markdown</button>
+    <button id="checkpointBtn" disabled>Mark checkpoint</button>
+    <pre id="log"></pre>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

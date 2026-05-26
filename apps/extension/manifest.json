@@ -10,6 +10,7 @@
     "https://gemini.google.com/*"
   ],
   "action": {
-    "default_title": "CrossCritic"
+    "default_title": "CrossCritic",
+    "default_popup": "popup.html"
   }
 }
