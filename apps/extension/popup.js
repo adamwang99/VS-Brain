@@ -1314,11 +1314,21 @@ function syncSliderStep() {
   const input = $('loopMaxSteps');
   const display = $('sliderValue');
   if (!slider || !input) return;
-  const val = Number(slider.value) || 0;
+  const val = Number(slider.value) || 1;
   const current = Number($('loopCounter')?.textContent?.split('/')[0] || 0);
+  // block reduce if loop is running
+  if (loopState && val < current) {
+    slider.value = String(loopState.maxSteps);
+    if (display) display.textContent = String(loopState.maxSteps);
+    input.value = String(loopState.maxSteps);
+    if ($('loopCounter')) $('loopCounter').textContent = `${current}/${loopState.maxSteps}`;
+    log(`không thể kéo xuống dưới số vòng đang chạy: ${current}`);
+    return;
+  }
   input.value = String(val);
   if (display) display.textContent = String(val);
-  if ($('loopCounter')) $('loopCounter').textContent = `${current}/${Math.max(1, val)}`;
+  if (loopState) loopState.maxSteps = val;
+  if ($('loopCounter')) $('loopCounter').textContent = `${current}/${val}`;
 }
 $('oneClickStartBtn')?.addEventListener('click', async () => {
   try {
