@@ -8,88 +8,88 @@
 </head>
 <body>
   <main>
-    <header>
-      <h1>🧠 CrossCritic <span class="version">v0.2.5</span></h1>
-      <p class="subtitle">Lưu chat AI, chống trùng, đánh dấu mốc.</p>
+    <header class="hero glass">
+      <div>
+        <h1>🧠 CrossCritic <span class="version">v0.3.0</span></h1>
+        <p class="subtitle">AI debate relay · archive · checkpoint</p>
+      </div>
+      <div id="status">Sẵn sàng</div>
     </header>
 
-    <div id="status">Sẵn sàng.</div>
-
-    <section class="meta" aria-label="Thông tin cuộc trò chuyện">
-      <div><span>Nền tảng <button class="help" title="Trang đang mở: ChatGPT, Gemini hoặc chưa hỗ trợ." aria-label="Trợ giúp nền tảng">?</button></span><strong id="provider">-</strong></div>
-      <div><span>Tiêu đề <button class="help" title="Tên cuộc trò chuyện lấy từ tiêu đề tab/trang hiện tại." aria-label="Trợ giúp tiêu đề">?</button></span><strong id="title">-</strong></div>
-      <div><span>Tin thấy được <button class="help" title="Số tin nhắn extension đọc được trên trang hiện tại. Nếu trang chỉ tải một phần lịch sử, hãy cuộn lên để tải thêm rồi quét lại." aria-label="Trợ giúp tin thấy được">?</button></span><strong id="count">0</strong></div>
-    </section>
-
-    <section class="actions" aria-label="Chức năng">
-      <button id="scanBtn">Quét chat hiện tại <span class="q" title="Đọc nội dung đang hiển thị trong tab ChatGPT/Gemini. Không tải file, không gửi dữ liệu ra ngoài.">?</span></button>
-      <button id="exportJsonlBtn" disabled>Xuất JSONL mới <span class="q" title="Tải file .jsonl chỉ gồm tin mới sau checkpoint. JSONL là bản lưu chuẩn để gộp/chống trùng.">?</span></button>
-      <button id="exportMdBtn" disabled>Xuất Markdown mới <span class="q" title="Tải file .md dễ đọc, chỉ gồm tin mới sau checkpoint. Dùng để xem/chia sẻ nhanh.">?</span></button>
-      <button id="exportAllJsonlBtn" disabled>Xuất lại toàn bộ JSONL <span class="q" title="Bỏ qua checkpoint và xuất toàn bộ tin đang thấy. Dùng khi lỡ đánh dấu mốc sai.">?</span></button>
-      <button id="exportAllMdBtn" disabled>Xuất lại toàn bộ Markdown <span class="q" title="Bỏ qua checkpoint và xuất toàn bộ tin đang thấy ra Markdown.">?</span></button>
-      <button id="checkpointBtn" disabled>Đánh dấu mốc hiện tại <span class="q" title="Lưu vị trí tin cuối cùng hiện thấy. Lần sau chỉ xuất phần sau mốc này.">?</span></button>
-      <button id="clearCheckpointBtn" disabled>Xóa mốc đã lưu <span class="q" title="Xóa checkpoint của cuộc chat này. Sau đó nút xuất mới sẽ lấy lại toàn bộ tin đang thấy.">?</span></button>
-    </section>
-
-    <section class="relay" aria-label="Điều phối phản biện">
-      <h2>Phản biện tuần tự</h2>
-      <button id="refreshTabsBtn">Quét tab AI đang mở <span class="q" title="Tìm các tab ChatGPT, Gemini, DeepSeek, Claude, Perplexity đang mở trong Chrome.">?</span></button>
-      <button id="autoPickBtn" disabled>Tự chọn nguồn/đích mới nhất <span class="q" title="Quét các tab đã chọn/đang mở, tìm tab có phản hồi mới nhất chưa relay, đặt làm nguồn; tab còn lại làm đích.">?</span></button>
-      <label>Tab nguồn <span class="hint">lấy câu trả lời mới nhất</span>
-        <select id="sourceTab"></select>
-      </label>
-      <label>Tab đích <span class="hint">dán prompt phản biện</span>
-        <select id="targetTab"></select>
-      </label>
-      <button id="swapTabsBtn" disabled>Đổi nguồn ↔ đích <span class="q" title="Hoán đổi nhanh tab nguồn và tab đích, khỏi chọn lại hai lần.">?</span></button>
-      <div class="fixed-template">
-        <b>Prompt mặc định:</b> phản biện tổng hợp — logic, kỹ thuật, fact, thiếu sót, rủi ro, cấu trúc, hành động tiếp theo.
+    <section class="glass relay" aria-label="Điều phối phản biện">
+      <div class="section-head">
+        <h2>Phản biện</h2>
+        <button id="refreshTabsBtn" class="chip">Quét tab</button>
       </div>
-      <label>Chế độ lấy nội dung
-        <select id="relayMode">
-          <option value="latest">Chỉ phản hồi mới nhất</option>
-          <option value="selection">Đoạn đang bôi chọn</option>
+
+      <div class="grid2">
+        <label>Nguồn
+          <select id="sourceTab"></select>
+        </label>
+        <label>Đích
+          <select id="targetTab"></select>
+        </label>
+      </div>
+
+      <div class="toolbar">
+        <button id="autoPickBtn" disabled>Tự chọn</button>
+        <button id="swapTabsBtn" disabled>↔ Đổi</button>
+        <select id="relayMode" title="Chế độ lấy nội dung">
+          <option value="latest">Latest</option>
+          <option value="selection">Selection</option>
         </select>
-      </label>
-      <label>Yêu cầu bổ sung <span class="hint">tùy chọn, sẽ chèn vào prompt phản biện</span>
-        <textarea id="extraInstruction" rows="4" placeholder="Ví dụ: tập trung kiểm tra tính khả thi MVP, rủi ro bảo mật, cách giảm context... "></textarea>
-      </label>
-      <button id="relayBtn" disabled>Lấy từ nguồn → dán sang đích <span class="q" title="Mặc định chỉ lấy phản hồi mới nhất và chặn dán trùng bằng hash. Không tự bấm gửi.">?</span></button>
-      <button id="resetRelayBtn">Xóa mốc relay <span class="q" title="Xóa dấu vết phản hồi đã chuyển trước đó. Dùng khi muốn dán lại cùng một phản hồi.">?</span></button>
-      <div class="loop-box">
-        <b>Auto chuyển qua lại</b>
-        <label>Số bước tối đa
-          <input id="loopMaxSteps" type="number" min="1" max="20" value="6" />
-        </label>
-        <label>Khoảng chờ mỗi bước (giây)
-          <input id="loopDelaySec" type="number" min="3" max="120" value="12" />
-        </label>
-        <label>Cụm từ chốt tiếng Việt để dừng
+      </div>
+
+      <textarea id="extraInstruction" rows="3" placeholder="Yêu cầu bổ sung: tập trung UX, bảo mật, feasibility..."></textarea>
+
+      <button id="relayBtn" class="primary" disabled>Dán phản biện →</button>
+
+      <div class="loop-row">
+        <label>Steps <input id="loopMaxSteps" type="number" min="1" max="20" value="6" /></label>
+        <label>Delay <input id="loopDelaySec" type="number" min="3" max="120" value="12" /></label>
+        <label class="toggle"><input id="autoSendToggle" type="checkbox" /> Auto-send</label>
+      </div>
+
+      <div class="toolbar">
+        <button id="startLoopBtn" disabled>Auto A↔B</button>
+        <button id="stopLoopBtn" disabled>Dừng</button>
+        <button id="resetRelayBtn">Reset relay</button>
+      </div>
+
+      <details class="advanced">
+        <summary>Tuỳ chọn nâng cao</summary>
+        <label>Cụm chốt dừng
           <input id="stopPhrase" type="text" value="CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN" />
         </label>
-        <label class="checkline">
-          <input id="autoSendToggle" type="checkbox" />
-          Tự bấm gửi sau khi dán
-        </label>
-        <button id="startLoopBtn" disabled>Bắt đầu auto A ↔ B <span class="q" title="Tự chuyển qua lại giữa tab nguồn và tab đích. Nếu bật tự gửi, app sẽ click nút Send sau khi dán.">?</span></button>
-        <button id="stopLoopBtn" disabled>Dừng auto</button>
-        <button id="exportLogBtn">Xuất log debug</button>
+        <div class="fixed-template">Prompt mặc định: phản biện sâu đa góc nhìn — logic, kỹ thuật, fact, UX, bảo mật, context, vận hành.</div>
+      </details>
+    </section>
+
+    <section class="glass archive" aria-label="Lưu trữ chat">
+      <div class="section-head">
+        <h2>Lưu trữ</h2>
+        <button id="scanBtn" class="chip">Quét chat</button>
+      </div>
+      <div class="mini-meta">
+        <span id="provider">-</span>
+        <span id="count">0 tin</span>
+      </div>
+      <strong id="title" class="titleline">-</strong>
+      <div class="toolbar wrap">
+        <button id="exportJsonlBtn" disabled>JSONL mới</button>
+        <button id="exportMdBtn" disabled>MD mới</button>
+        <button id="exportAllJsonlBtn" disabled>JSONL full</button>
+        <button id="exportAllMdBtn" disabled>MD full</button>
+        <button id="checkpointBtn" disabled>Đánh mốc</button>
+        <button id="clearCheckpointBtn" disabled>Xoá mốc</button>
       </div>
     </section>
 
-    <details class="guide">
-      <summary>Hướng dẫn nhanh</summary>
-      <ol>
-        <li>Mở một cuộc chat ChatGPT hoặc Gemini.</li>
-        <li>Bấm <b>Quét chat hiện tại</b>.</li>
-        <li>Lần đầu: xuất JSONL/Markdown để lưu toàn bộ phần đang thấy.</li>
-        <li>Lần sau: extension tự dùng checkpoint, chỉ xuất tin mới.</li>
-        <li>Nếu đánh dấu nhầm: bấm <b>Xóa mốc đã lưu</b> hoặc <b>Xuất lại toàn bộ</b>.</li>
-        <li>Nếu muốn tự chọn mốc: bấm <b>Đánh dấu mốc hiện tại</b>.</li>
-      </ol>
+    <details class="glass logbox">
+      <summary>Log / debug</summary>
+      <button id="exportLogBtn" class="chip">Xuất log</button>
+      <pre id="log" aria-label="Nhật ký thao tác"></pre>
     </details>
-
-    <pre id="log" aria-label="Nhật ký thao tác"></pre>
   </main>
   <script src="popup.js"></script>
 </body>
