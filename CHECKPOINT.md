@@ -1,15 +1,15 @@
 # VS Brain Checkpoint
 
-Saved: 2026-05-27 01:40 GMT+7
+Saved: 2026-05-27 01:50 GMT+7
 
 ## Current version
 
-`v0.8.13`
+`v0.8.14`
 
 Latest commit:
 
 ```text
-pending commit: quality guard v1 and handoff distill v2
+pending commit: english logs auto prune roadmap v0.8.14
 ```
 
 ## Current state
@@ -34,6 +34,8 @@ Main UX:
 - Auto Handoff Runtime can trigger at 70% estimated context, open replacement tab, inject bootstrap, swap loop tab id, and resume.
 - Quality Guard v1 stops long loops on repeated hash, repeated contradiction, or repeated low confidence signals.
 - Handoff bootstrap now asks model to distill requirements/decisions/resolved/unresolved/quality risks before continuing.
+- Runtime logs are being standardized to English and auto-pruned after 30 minutes / 120 lines.
+- Completion roadmap recorded in `docs/ROADMAP.md`.
 - Monetization/free-pro split is recorded as upgrade debt; current focus remains stabilizing full internal beta first.
 - Manual/advanced controls hidden under details.
 
@@ -59,12 +61,12 @@ Stop phrases:
 
 ## Last user-requested change completed
 
-- Quality Guard v1 + Handoff distill v2:
-  - repeated hash detection
-  - confidence/no-new-issues/contradiction/critical marker parsing
-  - stop loop on repeated hash, repeated contradiction, repeated low confidence
-  - per-round quality logs
-  - handoff bootstrap forces compressed state distillation before continuing
+- English logs + auto-prune + roadmap:
+  - runtime/debug logs standardized toward English
+  - max 120 lines
+  - auto-drop entries older than 30 minutes
+  - export log remains available
+  - `docs/ROADMAP.md` records next completion phases
 
 ## Pending possible refinements
 

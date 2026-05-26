@@ -1,5 +1,14 @@
 # VS Brain Changelog
 
+## v0.8.14
+
+- Standardized runtime/debug logs toward English-only output.
+- Added log auto-pruning:
+  - max 120 lines
+  - drops entries older than 30 minutes
+  - export log now maps structured log objects back to text lines
+- Added `docs/ROADMAP.md` with completion plan for Quality Guard v2, Auto Handoff v3, provider health checks, multi-provider modes, and packaging.
+
 ## v0.8.13
 
 - Added Quality Guard v1:

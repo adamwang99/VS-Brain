@@ -4,7 +4,7 @@ VS Brain is a Chrome side-panel extension for running structured AI-to-AI critiq
 
 It turns ad-hoc copy/paste between AI tools into a governed workflow: scan conversations, relay only the latest answer, force structured critique, stop on explicit agreement, finalize a blueprint, and preserve checkpoints when context gets too large.
 
-Current extension version: `v0.8.13`.
+Current extension version: `v0.8.14`.
 
 ## Why it is useful
 
@@ -218,4 +218,4 @@ After code changes, click **Reload** on the extension card.
 
 ## Version history
 
-See `CHANGELOG.md`.
+See `CHANGELOG.md` and `docs/ROADMAP.md`.

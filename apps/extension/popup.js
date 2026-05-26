@@ -2,11 +2,13 @@ let currentScan = null;
 
 const $ = (id) => document.getElementById(id);
 const debugLines = [];
+const LOG_MAX_LINES = 120;
+const LOG_TTL_MS = 30 * 60 * 1000;
 const log = (msg) => {
-  const line = `${new Date().toLocaleTimeString()} ${msg}`;
-  debugLines.unshift(line);
-  if (debugLines.length > 300) debugLines.pop();
-  $('log').textContent = debugLines.join('\n');
+  const now = Date.now();
+  debugLines.unshift({ ts: now, line: `${new Date(now).toLocaleTimeString()} ${msg}` });
+  while (debugLines.length > LOG_MAX_LINES || (debugLines.length && now - debugLines[debugLines.length - 1].ts > LOG_TTL_MS)) debugLines.pop();
+  $('log').textContent = debugLines.map((x) => x.line).join('\n');
 };
 const setStatus = (msg) => { $('status').textContent = msg; };
 
@@ -40,7 +42,7 @@ const I18N = {
     close: 'Đóng',
     ready: 'Sẵn sàng',
     oneClickTitle: 'Tự động phản biện giữa các AI',
-    oneClickHint: 'Mở 2 tab AI, bấm bắt đầu. VS Brain tự chọn nguồn/đích, tự gửi, tự dừng khi đồng thuận.',
+    oneClickHint: 'Mở 2 tab AI, bấm bắt đầu. VS Brain auto-pick nguồn/đích, tự gửi, tự dừng khi đồng thuận.',
     startAuto: 'Bắt đầu tự động',
     running: 'Đang chạy…',
     autoModeNote: 'Mặc định: Auto source/target · Latest · Auto-send · 100 steps',
@@ -358,8 +360,8 @@ function extractQualitySignals(text) {
   const lower = t.toLowerCase();
   const confidenceMatch = lower.match(/confidence\s*[:：]?\s*(\d+(?:\.\d+)?)/i) || lower.match(/điểm tin cậy\s*[:：]?\s*(\d+(?:\.\d+)?)/i);
   const confidence = confidenceMatch ? Math.max(0, Math.min(10, Number(confidenceMatch[1]))) : null;
-  const shouldContinue = /should_continue\s*[:：]?\s*true/i.test(t) || /tiếp tục\s*[:：]?\s*(có|true)/i.test(lower);
-  const noNewIssues = /(no new issues|không có lỗi mới|không còn lỗi mới|no material issues)/i.test(t);
+  const shouldContinue = /should_continue\s*[:：]?\s*true/i.test(t) || /tiếp tục\s*[:：]?\s*(yes|true)/i.test(lower);
+  const noNewIssues = /(no new issues|không yes lỗi mới|không còn lỗi mới|no material issues)/i.test(t);
   const contradiction = /(contradiction|mâu thuẫn|inconsistent|không nhất quán)/i.test(t);
   const critical = /(critical issues?\s*[:：]\s*(?!none|không)|lỗi nghiêm trọng\s*[:：]\s*(?!không)|blocker|chặn)/i.test(t);
   return { confidence, shouldContinue, noNewIssues, contradiction, critical };
@@ -483,13 +485,13 @@ Continue the VS Brain critique from this compressed handoff. Treat the sections 
 async function createContextHandoff(reason = 'manual_context_handoff') {
   const tab = await activeTab();
   const [{ result: scan }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: pageScanner });
-  if (!scan?.messages?.length) throw new Error('Không có chat để tạo handoff');
+  if (!scan?.messages?.length) throw new Error('Không yes chat để tạo handoff');
   const state = buildHandoffState(scan, reason);
   const base = `vs-brain/context-handoff-${safeName(state.provider)}-${Date.now()}`;
   await downloadText(`${base}.md`, buildHandoffMarkdown(state), 'text/markdown');
   await downloadText(`${base}.json`, JSON.stringify(state, null, 2), 'application/json');
   await chrome.storage.local.set({ latestContextHandoff: state });
-  log(`đã tạo context handoff provider=${state.provider} tokens_est=${state.context_estimate.tokens_est} usage=${state.context_estimate.usage_pct_est}%`);
+  log(`context handoff created provider=${state.provider} tokens_est=${state.context_estimate.tokens_est} usage=${state.context_estimate.usage_pct_est}%`);
   if (window.confirm(getLang() === 'en' ? 'Open a new AI tab for this handoff?' : 'Mở tab AI mới để tiếp tục từ handoff?')) {
     await chrome.tabs.create({ url: state.url });
   }
@@ -524,7 +526,7 @@ async function autoHandoffIfNeeded() {
     if (pct < threshold) continue;
 
     loopState.handoffInProgress = true;
-    log(`auto-handoff kích hoạt tab=${tabId} usage=${pct}% threshold=${threshold}%`);
+    log(`auto-handoff triggered tab=${tabId} usage=${pct}% threshold=${threshold}%`);
     const base = `vs-brain/context-handoff-auto-${safeName(state.provider)}-${Date.now()}`;
     await downloadText(`${base}.md`, buildHandoffMarkdown(state), 'text/markdown');
     await downloadText(`${base}.json`, JSON.stringify(state, null, 2), 'application/json');
@@ -538,9 +540,9 @@ async function autoHandoffIfNeeded() {
     if ($('autoSendToggle')?.checked) {
       const sent = await executeInAiTab(newTab.id, clickSendInPage, [], 'handoff-new-tab');
       if (!sent?.ok) throw new Error(`auto-handoff không gửi được bootstrap: ${sent?.error || 'unknown'}`);
-      log(`auto-handoff đã gửi bootstrap tab mới=${newTab.id}; chờ response đầu`);
+      log(`auto-handoff bootstrap sent newTab==${newTab.id}; waiting first response`);
       const waited = await waitForTabNewResponse(newTab.id, oldHash, Math.max(60000, loopState.waitMs), 2000);
-      if (!waited.changed && !waited.stop) log(`auto-handoff chưa thấy response mới: ${waited.reason}`);
+      if (!waited.changed && !waited.stop) log(`auto-handoff no new response yet: ${waited.reason}`);
     }
 
     if (loopState.a === tabId) loopState.a = newTab.id;
@@ -550,7 +552,7 @@ async function autoHandoffIfNeeded() {
     $('sourceTab').value = String(loopState.currentSource);
     $('targetTab').value = String(loopState.currentTarget);
     loopState.handoffInProgress = false;
-    log(`auto-handoff hoàn tất: ${tabId} → ${newTab.id}; tiếp tục loop`);
+    log(`auto-handoff completed: ${tabId} → ${newTab.id}; resuming loop`);
     return true;
   }
   return false;
@@ -572,11 +574,11 @@ async function scan() {
   $('checkpointBtn').disabled = !currentScan.messages.length;
   $('clearCheckpointBtn').disabled = !cp;
   setStatus(`Tìm thấy ${currentScan.messages.length} tin, mới ${newMessages.length} tin.`);
-  log(`quét provider=${currentScan.platform} thấy=${currentScan.messages.length} mới=${newMessages.length} checkpoint=${cp?.lastSeenMessageKey ? 'có' : 'chưa'}`);
+  log(`scan provider=${currentScan.platform} found=${currentScan.messages.length} new=${newMessages.length} checkpoint=${cp?.lastSeenMessageKey ? 'yes' : 'no'}`);
 }
 
 $('scanBtn').addEventListener('click', async () => {
-  try { await scan(); } catch (e) { setStatus('Quét thất bại.'); log(e.message); }
+  try { await scan(); } catch (e) { setStatus('Scan failed.'); log(e.message); }
 });
 
 $('exportJsonlBtn').addEventListener('click', async () => {
@@ -586,7 +588,7 @@ $('exportJsonlBtn').addEventListener('click', async () => {
     const filename = `vs-brain/${currentScan.platform}/${safeName(currentScan.title)}-${Date.now()}.jsonl`;
     await downloadText(filename, toJsonl(messages), 'application/jsonl');
     await setCheckpoint(currentScan, currentScan.messages);
-    log(`đã xuất JSONL: ${messages.length} tin`);
+    log(`exported JSONL: ${messages.length} tin`);
     await scan();
   } catch (e) { log(e.message); }
 });
@@ -598,7 +600,7 @@ $('exportMdBtn').addEventListener('click', async () => {
     const filename = `vs-brain/${currentScan.platform}/${safeName(currentScan.title)}-${Date.now()}.md`;
     await downloadText(filename, toMarkdown(currentScan, messages), 'text/markdown');
     await setCheckpoint(currentScan, currentScan.messages);
-    log(`đã xuất Markdown: ${messages.length} tin`);
+    log(`exported Markdown: ${messages.length} tin`);
     await scan();
   } catch (e) { log(e.message); }
 });
@@ -611,7 +613,7 @@ $('exportAllJsonlBtn').addEventListener('click', async () => {
     const filename = `vs-brain/${currentScan.platform}/${safeName(currentScan.title)}-FULL-${Date.now()}.jsonl`;
     await downloadText(filename, toJsonl(messages), 'application/jsonl');
     await setCheckpoint(currentScan, currentScan.messages);
-    log(`đã xuất lại toàn bộ JSONL: ${messages.length} tin`);
+    log(`exported full JSONL: ${messages.length} tin`);
     await scan();
   } catch (e) { log(e.message); }
 });
@@ -623,7 +625,7 @@ $('exportAllMdBtn').addEventListener('click', async () => {
     const filename = `vs-brain/${currentScan.platform}/${safeName(currentScan.title)}-FULL-${Date.now()}.md`;
     await downloadText(filename, toMarkdown(currentScan, messages), 'text/markdown');
     await setCheckpoint(currentScan, currentScan.messages);
-    log(`đã xuất lại toàn bộ Markdown: ${messages.length} tin`);
+    log(`exported full Markdown: ${messages.length} tin`);
     await scan();
   } catch (e) { log(e.message); }
 });
@@ -637,7 +639,7 @@ $('clearCheckpointBtn').addEventListener('click', async () => {
   try {
     if (!currentScan) await scan();
     await clearCheckpoint(currentScan);
-    log('đã xóa mốc đã lưu');
+    log('checkpoint cleared');
     await scan();
   } catch (e) { log(e.message); }
 });
@@ -646,7 +648,7 @@ $('checkpointBtn').addEventListener('click', async () => {
   try {
     if (!currentScan) await scan();
     await setCheckpoint(currentScan, currentScan.messages);
-    log('đã đánh dấu mốc');
+    log('checkpoint marked');
     await scan();
   } catch (e) { log(e.message); }
 });
@@ -691,11 +693,11 @@ async function refreshTabs() {
       $('sourceTab').value = String(aiTabs[0].id);
       const fallbackTarget = aiTabs.find((t) => t.id !== aiTabs[0].id) || aiTabs[1];
       $('targetTab').value = String(fallbackTarget.id);
-      log(`fallback chọn mặc định: nguồn=${aiTabs[0].provider} → đích=${fallbackTarget.provider}`);
+      log(`fallback default pick: source=${aiTabs[0].provider} → target=${fallbackTarget.provider}`);
     }
   }
   syncGlassSelectLabels();
-  log(`đã quét tab AI: ${aiTabs.length}`);
+  log(`AI tabs scanned: ${aiTabs.length}`);
 }
 
 function escapeHtml(s) {
@@ -914,12 +916,12 @@ Nguyên tắc bắt buộc:
 Checklist phản biện đa góc nhìn:
 1. Logic: mâu thuẫn, nhảy bước, kết luận không theo tiền đề, vòng lặp lập luận.
 2. Kỹ thuật: tính khả thi, edge case, lỗi triển khai, dependency, giới hạn nền tảng/browser/provider.
-3. Fact/evidence: giả định chưa chứng minh, thiếu nguồn, điểm có thể sai hoặc cần kiểm chứng.
-4. Product/UX: thao tác có dễ hiểu không, có undo/recovery không, có trạng thái lỗi rõ không.
+3. Fact/evidence: giả định no chứng minh, thiếu nguồn, điểm yes thể sai hoặc cần kiểm chứng.
+4. Product/UX: thao tác yes dễ hiểu không, yes undo/recovery không, yes trạng thái lỗi rõ không.
 5. Security/privacy: quyền quá rộng, auto-send nguy hiểm, rò dữ liệu, clipboard/storage nhạy cảm.
 6. Hiệu suất/context: copy lặp, prompt phình, tốn token, vòng lặp vô hạn, stop gate yếu.
 7. Vận hành: log/debug, versioning, rollback, compatibility, hướng dẫn người dùng.
-8. Kết quả cuối: có đủ tiêu chí để dừng chưa, còn cần provider khác phản biện không.
+8. Kết quả cuối: yes đủ tiêu chí để dừng no, còn cần provider khác phản biện không.
 
 Output bắt buộc bằng tiếng Việt, ngắn nhưng đủ sắc:
 - Kết luận: PASS / PARTIAL / FAIL
@@ -934,15 +936,15 @@ Output bắt buộc bằng tiếng Việt, ngắn nhưng đủ sắc:
 Chỉ được ghi cụm từ chốt nếu TẤT CẢ điều kiện sau đều đúng:
 1. Không còn lỗi nghiêm trọng.
 2. Không còn thiếu sót làm thay đổi kết luận/sản phẩm.
-3. Không còn rủi ro bảo mật/vận hành chưa có cách xử lý.
-4. Không còn mâu thuẫn logic hoặc yêu cầu chưa rõ.
+3. Không còn rủi ro bảo mật/vận hành no yes cách xử lý.
+4. Không còn mâu thuẫn logic hoặc yêu cầu no rõ.
 5. Điểm tin cậy >= 9/10.
 6. should_continue=false.
 
 Nếu và chỉ nếu đồng ý hoàn toàn theo 6 điều kiện trên, hãy ghi CHÍNH XÁC cụm từ sau ở dòng cuối cùng:
 ${stopPhrase}
 
-Nếu chưa đạt đủ 6 điều kiện, tuyệt đối không ghi cụm từ chốt.`;
+Nếu no đạt đủ 6 điều kiện, tuyệt đối không ghi cụm từ chốt.`;
 }
 
 function buildRelayPrompt(kind, source, extraInstruction = '', stopPhrase = defaultStopPhrase(), lang = getLang()) {
@@ -1014,7 +1016,7 @@ async function autoPickNewestDirection() {
   const preferred = [currentSource, currentTarget].filter(Boolean);
   const candidates = (preferred.length >= 2 ? aiTabs.filter((t) => preferred.includes(t.id)) : aiTabs).slice(0, 6);
   const states = (await Promise.all(candidates.map((t) => getLatestHashForTab(t.id)))).filter(Boolean);
-  if (states.length < 2) throw new Error('Không đọc được đủ 2 tab để tự chọn');
+  if (states.length < 2) throw new Error('Không đọc được đủ 2 tab để auto-pick');
 
   const allStore = await chrome.storage.local.get(null);
   const usedHashes = new Set(Object.values(allStore)
@@ -1030,7 +1032,7 @@ async function autoPickNewestDirection() {
 
   $('sourceTab').value = String(source.tabId);
   $('targetTab').value = String(target.tabId);
-  log(`tự chọn: nguồn=${source.provider} hash=${source.contentHash}${fresh.length ? ' mới' : ' đã relay trước'} → đích=${target.provider}`);
+  log(`auto-pick: source=${source.provider} hash=${source.contentHash}${fresh.length ? ' mới' : ' đã relay trước'} → target=${target.provider}`);
   return { source, target };
 }
 
@@ -1070,7 +1072,7 @@ async function fillTargetSafely(targetId, prompt) {
   await revealRunningTab(targetId, 'before-fill');
   let result = await executeInAiTab(targetId, fillPromptInPage, [prompt], 'target');
   if (result?.ok) return result;
-  log(`fill fail lần 1 tab=${targetId}: ${result?.error || 'unknown'}; thử restore/rebind một lần`);
+  log(`fill fail lần 1 tab=${targetId}: ${result?.error || 'unknown'}; retrying restore/rebind once`);
   await revealRunningTab(targetId, 'fill-retry');
   result = await executeInAiTab(targetId, fillPromptInPage, [prompt], 'target');
   if (result?.ok) return result;
@@ -1081,7 +1083,7 @@ async function executeRelay(sourceOverride, targetOverride) {
   let sourceId = Number(sourceOverride || $('sourceTab').value) || 0;
   let targetId = Number(targetOverride || $('targetTab').value) || 0;
   if (!sourceId || !targetId || sourceId === targetId) {
-    log('dropdown chưa hợp lệ, tự dò tìm nguồn/đích...');
+    log('dropdown no hợp lệ, tự dò tìm nguồn/đích...');
     const picked = await autoPickNewestDirection();
     sourceId = picked.source.tabId;
     targetId = picked.target.tabId;
@@ -1089,21 +1091,21 @@ async function executeRelay(sourceOverride, targetOverride) {
   const kind = 'comprehensive';
   const mode = $('relayMode').value;
   if (!sourceId || !targetId || sourceId === targetId) throw new Error('Không tự dò được nguồn/đích');
-  log(`relay chuẩn bị: source=${sourceId} target=${targetId} autoSend=${$('autoSendToggle')?.checked ? 'ON' : 'OFF'}`);
+  log(`relay preparing: source=${sourceId} target=${targetId} autoSend=${$('autoSendToggle')?.checked ? 'ON' : 'OFF'}`);
 
   const [{ result: source }] = await chrome.scripting.executeScript({
     target: { tabId: sourceId },
     func: extractLatestResponseInPage,
     args: [mode]
   });
-  if (!source?.content) throw new Error(mode === 'selection' ? 'Chưa bôi chọn đoạn nào trong tab nguồn' : 'Không lấy được câu trả lời mới nhất từ tab nguồn');
-  log(`relay nguồn đọc được: provider=${source.platform} chars=${source.content.length}`);
+  if (!source?.content) throw new Error(mode === 'selection' ? 'Chưa bôi chọn đoạn nào trong tab nguồn' : 'Không lấy được câu new response nhất từ tab nguồn');
+  log(`relay source read: provider=${source.platform} chars=${source.content.length}`);
 
   const contentHash = hashText(source.content);
   const key = await relayStateKey(sourceId, targetId, kind, mode);
   const prev = await getRelayState(key);
   if (prev?.contentHash === contentHash) {
-    log('chưa có phản hồi mới từ tab nguồn; đã chặn dán trùng');
+    log('no yes phản hồi mới từ tab nguồn; đã chặn dán trùng');
     return { pasted: false, reason: 'duplicate' };
   }
 
@@ -1127,9 +1129,9 @@ async function executeRelay(sourceOverride, targetOverride) {
     relayedAt: new Date().toISOString(),
     preview: source.content.slice(0, 180)
   });
-  const hasExtra = ($('extraInstruction')?.value || '').trim() ? ' có yêu cầu bổ sung' : '';
-  const sendText = $('autoSendToggle')?.checked ? ` autoSend=${sendResult?.ok ? 'ok' : 'fail'}` : '; Sếp bấm gửi thủ công';
-  log(`đã dán nội dung mới hash=${contentHash}${hasExtra} method=${result.method || '?'} selector=${result.selector || '?'}${sendText}`);
+  const hasExtra = ($('extraInstruction')?.value || '').trim() ? ' yes yêu cầu bổ sung' : '';
+  const sendText = $('autoSendToggle')?.checked ? ` autoSend=${sendResult?.ok ? 'ok' : 'fail'}` : '; manual send required';
+  log(`new content pasted hash=${contentHash}${hasExtra} method=${result.method || '?'} selector=${result.selector || '?'}${sendText}`);
   return { pasted: true, contentHash, autoSent: !!sendResult?.ok };
 }
 
@@ -1183,7 +1185,7 @@ Generated by VS Brain v0.6.1 from the latest provider response.
 - Tiêu đề nguồn: ${source.title || ''}
 - URL: ${source.url || ''}
 - Cụm chốt: ${stop}
-- Đã phát hiện đồng thuận cuối: ${source.content.includes(stop) ? 'có' : 'không'}
+- Đã phát hiện đồng thuận cuối: ${source.content.includes(stop) ? 'yes' : 'không'}
 - Chế độ chốt: ${finalizationMode}
 - Lý do dừng: ${stopReason}
 
@@ -1201,7 +1203,7 @@ Trích từ bản cuối ở trên: các lỗi đã được sửa, các phản 
 
 ## 4. Giả định / giới hạn còn lại
 
-Nếu bản cuối còn nêu giả định, ràng buộc, hoặc rủi ro chưa xử lý, cần kiểm tra trước khi triển khai.
+Nếu bản cuối còn nêu giả định, ràng buộc, hoặc rủi ro no xử lý, cần kiểm tra trước khi triển khai.
 
 ## 5. Việc cần làm tiếp theo
 
@@ -1270,7 +1272,7 @@ AGREED FINAL RESPONSE:
 ${source.content}`;
   return `Bạn là thư ký chốt phiên VS Brain. Dừng phản biện. Dừng tranh luận. Hãy tạo BẢN BLUEPRINT / BÁO CÁO THỐNG NHẤT CUỐI từ nội dung đã đồng thuận bên dưới.
 
-Output phải chi tiết, có cấu trúc, đủ để người dùng lưu lại và thực thi. Không viết tóm tắt ngắn.
+Output phải chi tiết, yes cấu trúc, đủ để người dùng lưu lại và thực thi. Không viết tóm tắt ngắn.
 
 Cấu trúc bắt buộc:
 # Blueprint thống nhất cuối
@@ -1312,13 +1314,13 @@ async function finalizeAndSave() {
   if (!hasFinalAgreement) {
     const msg = getLang() === 'en'
       ? `No final agreement phrase found. Stop reason: ${stopReason}. Create a DRAFT blueprint anyway?`
-      : `Chưa có cụm đồng thuận cuối. Lý do dừng: ${stopReason}. Vẫn tạo DRAFT blueprint?`;
+      : `Chưa yes cụm đồng thuận cuối. Lý do dừng: ${stopReason}. Vẫn tạo DRAFT blueprint?`;
     if (!window.confirm(msg)) {
-      log('đã hủy chốt vì chưa có đồng thuận cuối');
+      log('đã hủy chốt vì no yes đồng thuận cuối');
       return;
     }
     finalizationMode = 'draft_forced';
-    log(`chốt dạng draft_forced vì chưa có đồng thuận cuối; stop_reason=${stopReason}`);
+    log(`chốt dạng draft_forced vì no yes đồng thuận cuối; stop_reason=${stopReason}`);
   }
 
   const prompt = buildFinalizePrompt(source, getLang());
@@ -1329,7 +1331,7 @@ async function finalizeAndSave() {
   const [{ result: sent }] = await chrome.scripting.executeScript({ target: { tabId }, func: clickSendInPage });
   if (!sent?.ok) throw new Error(sent?.error || 'Không bấm gửi được prompt chốt');
 
-  log('đã gửi prompt chốt, đang chờ blueprint cuối...');
+  log('finalize prompt sent; waiting final blueprint...');
   const waited = await waitForTabNewResponse(tabId, oldHash, 180000, 2000);
   if (!waited.changed && !waited.stop) throw new Error(`timeout chờ blueprint cuối: ${waited.reason}`);
 
@@ -1340,14 +1342,14 @@ async function finalizeAndSave() {
   await downloadText(`${base}.md`, buildFinalMarkdown(finalSource, getLang(), finalMeta), 'text/markdown');
   await downloadText(`${base}.json`, buildFinalJson(finalSource, getLang(), finalMeta), 'application/json');
   await downloadText(`${base}-prompt.md`, prompt, 'text/markdown');
-  log(`đã tạo blueprint cuối & lưu provider=${finalSource.platform} chars=${finalSource.content.length}`);
+  log(`final blueprint created and saved provider=${finalSource.platform} chars=${finalSource.content.length}`);
 }
 
 $('langMode')?.addEventListener('change', () => {
   ensureStopPhraseForLang();
   applyUiLang();
   if ($('promptTemplate')) { $('promptTemplate').value = ''; $('promptTemplate').placeholder = defaultPromptTemplate(getLang(), $('stopPhrase')?.value || defaultStopPhrase()); }
-  log(`đổi ngôn ngữ prompt: ${getLang().toUpperCase()}`);
+  log(`prompt language changed: ${getLang().toUpperCase()}`);
 });
 
 
@@ -1360,7 +1362,7 @@ function initPromptTemplate() {
 
 $('resetPromptBtn')?.addEventListener('click', () => {
   initPromptTemplate();
-  log('đã reset prompt mặc định');
+  log('default prompt reset');
 });
 
 $('finalizeBtn')?.classList.remove('glow-save');
@@ -1375,7 +1377,7 @@ $('handoffBtn')?.addEventListener('click', async () => {
 
 function buildHelpText() {
   if (getLang() === 'en') return `# VS Brain Full Guide\n\n1. Open 2 AI tabs, e.g. ChatGPT and Gemini.\n2. Click Scan tabs. Source/Target can stay Auto.\n3. Optional: add extra instruction.\n4. Click Paste critique to do one assisted relay.\n5. For automatic debate: enable Auto-send, set Steps, click Auto A↔B.\n6. The loop stops when the latest response contains the stop phrase: VS_BRAIN_FULL_AGREEMENT, or when max steps is reached.\n7. Click Finalize & Save to export MD + JSON.\n8. If something breaks, open Log/debug and export log.\n\nModes:\n- Latest: send only latest assistant reply.\n- Selection: send selected text only.\n\nSafety:\nAuto-send is optional. Stop phrase is only accepted in the latest response.`;
-  return `# Hướng dẫn đầy đủ VS Brain\n\n1. Mở 2 tab AI, ví dụ ChatGPT và Gemini.\n2. Bấm Quét tab. Nguồn/Đích có thể để Auto.\n3. Nếu cần, nhập Yêu cầu bổ sung.\n4. Bấm Dán phản biện để chạy 1 lượt hỗ trợ.\n5. Muốn tự động: bật Auto-send, đặt Steps, bấm Auto A↔B.\n6. Vòng lặp dừng khi phản hồi mới nhất có cụm chốt: CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN, hoặc đạt số bước tối đa.\n7. Bấm Chốt & lưu để xuất MD + JSON.\n8. Nếu lỗi, mở Log/debug và Xuất log.\n\nChế độ:\n- Latest: chỉ gửi phản hồi mới nhất.\n- Selection: chỉ gửi đoạn đang bôi chọn.\n\nAn toàn:\nAuto-send là tuỳ chọn. Cụm chốt chỉ được kiểm tra trong phản hồi mới nhất.`;
+  return `# Hướng dẫn đầy đủ VS Brain\n\n1. Mở 2 tab AI, ví dụ ChatGPT và Gemini.\n2. Bấm Quét tab. Nguồn/Đích yes thể để Auto.\n3. Nếu cần, nhập Yêu cầu bổ sung.\n4. Bấm Dán phản biện để chạy 1 lượt hỗ trợ.\n5. Muốn tự động: bật Auto-send, đặt Steps, bấm Auto A↔B.\n6. Vòng lặp dừng khi phản hồi mới nhất yes cụm chốt: CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN, hoặc đạt số bước tối đa.\n7. Bấm Chốt & lưu để xuất MD + JSON.\n8. Nếu lỗi, mở Log/debug và Xuất log.\n\nChế độ:\n- Latest: chỉ gửi phản hồi mới nhất.\n- Selection: chỉ gửi đoạn đang bôi chọn.\n\nAn toàn:\nAuto-send là tuỳ chọn. Cụm chốt chỉ được kiểm tra trong phản hồi mới nhất.`;
 }
 
 
@@ -1407,18 +1409,18 @@ function renderHelpModal() {
     <p>If auto-send or paste fails, open <b>Log/debug</b> and export the log.</p>
   ` : `
     <h3>VS Brain làm gì?</h3>
-    <p>VS Brain kết nối các tab AI đang mở, chỉ lấy phản hồi mới nhất để dán sang provider khác cho phản biện có cấu trúc, tự dừng khi đồng thuận, và lưu bản cuối.</p>
+    <p>VS Brain kết nối các tab AI đang mở, chỉ lấy phản hồi mới nhất để dán sang provider khác cho phản biện yes cấu trúc, tự dừng khi đồng thuận, và lưu bản cuối.</p>
     <h3>Bắt đầu nhanh</h3>
     <ol>
       <li>Mở hai tab AI, ví dụ ChatGPT và Gemini.</li>
-      <li>Bấm <b>Quét tab</b>. Nguồn/Đích có thể để <b>Auto</b>.</li>
+      <li>Bấm <b>Quét tab</b>. Nguồn/Đích yes thể để <b>Auto</b>.</li>
       <li>Nhập <b>Yêu cầu bổ sung</b> nếu cần.</li>
       <li>Bấm <b>Dán phản biện →</b> để chạy một lượt.</li>
       <li>Bật <b>Auto-send</b> rồi bấm <b>Auto A↔B</b> để chạy tự động.</li>
     </ol>
     <h3>Ý nghĩa nút chính</h3>
     <ul>
-      <li><b>Auto nguồn/đích</b>: app tự dò tab có phản hồi mới nhất chưa chuyển.</li>
+      <li><b>Auto nguồn/đích</b>: app tự dò tab yes phản hồi mới nhất no chuyển.</li>
       <li><b>Latest</b>: chỉ gửi phản hồi assistant mới nhất.</li>
       <li><b>Selection</b>: chỉ gửi đoạn đang bôi chọn.</li>
       <li><b>Steps</b>: số bước tối đa trước khi dừng.</li>
@@ -1426,7 +1428,7 @@ function renderHelpModal() {
       <li><b>Chốt & lưu</b>: xuất file MD + JSON của bản cuối.</li>
     </ul>
     <h3>Điều kiện dừng</h3>
-    <p>Auto-loop dừng khi phản hồi mới nhất có <code>CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN</code> hoặc đạt Steps tối đa.</p>
+    <p>Auto-loop dừng khi phản hồi mới nhất yes <code>CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN</code> hoặc đạt Steps tối đa.</p>
     <h3>Khi lỗi</h3>
     <p>Mở <b>Log/debug</b> và bấm <b>Xuất log</b> gửi lại để kiểm tra selector/paste/send.</p>
   `;
@@ -1461,16 +1463,16 @@ $('autoPickBtn')?.addEventListener('click', async () => {
 $('swapTabsBtn')?.addEventListener('click', () => {
   const source = $('sourceTab').value;
   const target = $('targetTab').value;
-  if (!source || !target || source === target) return log('không thể đổi: nguồn/đích chưa hợp lệ');
+  if (!source || !target || source === target) return log('không thể đổi: nguồn/đích no hợp lệ');
   $('sourceTab').value = target;
   $('targetTab').value = source;
-  log('đã đổi nguồn ↔ đích');
+  log('swapped source ↔ target');
 });
 
 $('resetRelayBtn')?.addEventListener('click', async () => {
   try {
     const n = await clearRelayStates();
-    log(`đã xóa ${n} mốc relay`);
+    log(`cleared ${n} relay states`);
   } catch (e) { log(e.message); }
 });
 
@@ -1532,7 +1534,7 @@ function stopLoop(reason = 'stopped') {
   updateLoopCounter(lastStep, lastMax);
   stopTimer();
   $('finalizeBtn')?.classList.add('glow-save');
-  log(`auto-loop dừng: ${reason}`);
+  log(`auto-loop stopped: ${reason}`);
 }
 
 
@@ -1575,7 +1577,7 @@ async function loopStep() {
 
   loopState.step += 1;
   updateLoopCounter(loopState.step, loopState.maxSteps);
-  log(`auto-loop bước ${loopState.step}/${loopState.maxSteps}: ${sourceId} → ${targetId}`);
+  log(`auto-loop step ${loopState.step}/${loopState.maxSteps}: ${sourceId} → ${targetId}`);
   let relayResult = null;
   try {
     relayResult = await executeRelay(sourceId, targetId);
@@ -1590,13 +1592,13 @@ async function loopStep() {
   $('targetTab').value = String(loopState.currentTarget);
 
   if ($('autoSendToggle')?.checked && relayResult?.autoSent) {
-    log(`đang chờ tab ${targetId} trả lời mới...`);
+    log(`waiting tab ${targetId} new response...`);
     const waited = await waitForTabNewResponse(targetId, targetOldHash, loopState.waitMs);
     if (waited.stop) return stopLoop(waited.reason);
     if (!waited.changed) {
-      log(`chưa có phản hồi mới từ tab ${targetId}: ${waited.reason}; vẫn thử bước kế sau delay`);
+      log(`no yes phản hồi mới từ tab ${targetId}: ${waited.reason}; will try next step after delay`);
     } else {
-      log(`đã thấy phản hồi mới từ tab ${targetId} hash=${waited.contentHash}`);
+      log(`new response detected tab ${targetId} hash=${waited.contentHash}`);
       const q = await checkLatestQuality(targetId);
       if (!q.ok) return stopLoop(q.reason);
     }
@@ -1615,7 +1617,7 @@ function setRoundLimit(raw, reason = 'manual') {
   let val = Math.max(1, Math.min(1000, Number(raw) || 1));
   if (loopState && val < current) {
     val = loopState.maxSteps;
-    log(`không thể giảm dưới số vòng đang chạy: ${current}`);
+    log(`cannot reduce below current round: ${current}`);
   }
   if (input) input.value = String(val);
   if (slider) slider.value = String(Math.round(val / 10) * 10 || 1);
@@ -1623,7 +1625,7 @@ function setRoundLimit(raw, reason = 'manual') {
   if (loopState) loopState.maxSteps = val;
   if ($('loopCounter')) $('loopCounter').textContent = `${current}/${val}`;
   qsa('.round-preset').forEach((btn) => btn.classList.toggle('active', Number(btn.dataset.round) === val));
-  if (reason !== 'slider') log(`đặt số vòng=${val} (${reason})`);
+  if (reason !== 'slider') log(`round limit set=${val} (${reason})`);
 }
 
 function syncSliderStep() {
@@ -1649,7 +1651,7 @@ $('startLoopBtn')?.addEventListener('click', async () => {
     let a = Number($('sourceTab').value) || 0;
     let b = Number($('targetTab').value) || 0;
     if (!a || !b || a === b) {
-      log('dropdown chưa hợp lệ, tự dò tìm nguồn/đích...');
+      log('dropdown no hợp lệ, tự dò tìm nguồn/đích...');
       const picked = await autoPickNewestDirection();
       a = picked.source.tabId;
       b = picked.target.tabId;
@@ -1670,7 +1672,7 @@ $('startLoopBtn')?.addEventListener('click', async () => {
     updateLoopCounter(0, loopState.maxSteps);
     startTimer();
     $('finalizeBtn')?.classList.remove('glow-save');
-    log(`auto-loop bắt đầu: max=${loopState.maxSteps}, delay=${loopState.delayMs / 1000}s. autoSend=${$('autoSendToggle')?.checked ? 'ON' : 'OFF'}`);
+    log(`auto-loop started: max=${loopState.maxSteps}, delay=${loopState.delayMs / 1000}s. autoSend=${$('autoSendToggle')?.checked ? 'ON' : 'OFF'}`);
     await loopStep();
   } catch (e) { log(e.message); }
 });
@@ -1685,10 +1687,10 @@ $('exportLogBtn')?.addEventListener('click', async () => {
       `version: v0.2.2`,
       `time: ${new Date().toISOString()}`,
       '',
-      ...debugLines
+      ...debugLines.map((x) => x.line)
     ].join('\n');
     await downloadText(`vs-brain/debug-log-${Date.now()}.txt`, text, 'text/plain');
-    log('đã xuất log debug');
+    log('debug log exported');
   } catch (e) { log(e.message); }
 });
 
