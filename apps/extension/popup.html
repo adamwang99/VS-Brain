@@ -10,10 +10,10 @@
   <main>
     <header class="hero glass">
       <div>
-        <h1>🧠 CrossCritic <span class="version">v0.4.1</span></h1>
+        <h1>🧠 CrossCritic <span class="version">v0.4.2</span></h1>
         <p class="subtitle">AI debate relay · archive · checkpoint</p>
       </div>
-      <div class="head-actions"><select id="langMode" title="Ngôn ngữ prompt"><option value="vi">VI</option><option value="en">EN</option></select><div id="status">Sẵn sàng</div></div>
+      <div class="head-actions"><select id="langMode" class="glass-select" title="Ngôn ngữ prompt"><option value="vi">VI</option><option value="en">EN</option></select><div id="status">Sẵn sàng</div></div>
     </header>
 
     <section class="glass relay" aria-label="Điều phối phản biện">
@@ -24,17 +24,17 @@
 
       <div class="grid2">
         <label>Nguồn
-          <select id="sourceTab"></select>
+          <select id="sourceTab" class="glass-select"></select>
         </label>
         <label>Đích
-          <select id="targetTab"></select>
+          <select id="targetTab" class="glass-select"></select>
         </label>
       </div>
 
       <div class="toolbar">
         <button id="autoPickBtn" disabled>Tự chọn</button>
         <button id="swapTabsBtn" disabled>↔ Đổi</button>
-        <select id="relayMode" title="Chế độ lấy nội dung">
+        <select id="relayMode" class="glass-select" title="Chế độ lấy nội dung">
           <option value="latest">Latest</option>
           <option value="selection">Selection</option>
         </select>
@@ -45,7 +45,7 @@
       <button id="relayBtn" class="primary" disabled>Dán phản biện →</button>
 
       <div class="loop-row">
-        <label>Steps <input id="loopMaxSteps" type="number" min="1" max="20" value="6" /></label>
+        <label>Steps <input id="loopMaxSteps" type="number" min="1" max="100" value="50" /></label>
         <label>Delay <input id="loopDelaySec" type="number" min="3" max="120" value="12" /></label>
         <label class="toggle"><input id="autoSendToggle" type="checkbox" /> Auto-send</label>
       </div>
@@ -59,6 +59,7 @@
 
       <details class="advanced">
         <summary>Tuỳ chọn nâng cao</summary>
+        <button id="helpBtn" class="chip" type="button">Hướng dẫn đầy đủ</button>
         <label>Cụm chốt dừng
           <input id="stopPhrase" type="text" value="CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN" />
         </label>

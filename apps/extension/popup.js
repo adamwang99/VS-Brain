@@ -255,8 +255,9 @@ async function refreshTabs() {
     .filter((t) => providerFromUrl(t.url) !== 'unknown')
     .map((t) => ({ id: t.id, title: t.title || 'Untitled', url: t.url || '', provider: providerFromUrl(t.url) }));
   const html = aiTabs.map((t) => `<option value="${t.id}">${t.provider} — ${escapeHtml(t.title).slice(0, 70)}</option>`).join('');
-  $('sourceTab').innerHTML = html || '<option value="">Không thấy tab AI</option>';
-  $('targetTab').innerHTML = html || '<option value="">Không thấy tab AI</option>';
+  const autoOpt = '<option value="auto">Auto</option>';
+  $('sourceTab').innerHTML = aiTabs.length ? autoOpt + html : '<option value="">Không thấy tab AI</option>';
+  $('targetTab').innerHTML = aiTabs.length ? autoOpt + html : '<option value="">Không thấy tab AI</option>';
   $('relayBtn').disabled = aiTabs.length < 2;
   $('startLoopBtn').disabled = aiTabs.length < 2;
   $('autoPickBtn').disabled = aiTabs.length < 2;
@@ -587,8 +588,8 @@ async function getLatestHashForTab(tabId) {
 
 async function autoPickNewestDirection() {
   if (aiTabs.length < 2) throw new Error('Cần ít nhất 2 tab AI');
-  const currentSource = Number($('sourceTab').value);
-  const currentTarget = Number($('targetTab').value);
+  const currentSource = Number($('sourceTab').value) || 0;
+  const currentTarget = Number($('targetTab').value) || 0;
   const preferred = [currentSource, currentTarget].filter(Boolean);
   const candidates = (preferred.length >= 2 ? aiTabs.filter((t) => preferred.includes(t.id)) : aiTabs).slice(0, 6);
   const states = (await Promise.all(candidates.map((t) => getLatestHashForTab(t.id)))).filter(Boolean);
@@ -613,8 +614,8 @@ async function autoPickNewestDirection() {
 }
 
 async function executeRelay(sourceOverride, targetOverride) {
-  let sourceId = Number(sourceOverride || $('sourceTab').value);
-  let targetId = Number(targetOverride || $('targetTab').value);
+  let sourceId = Number(sourceOverride || $('sourceTab').value) || 0;
+  let targetId = Number(targetOverride || $('targetTab').value) || 0;
   if (!sourceId || !targetId || sourceId === targetId) {
     log('dropdown chưa hợp lệ, tự dò tìm nguồn/đích...');
     const picked = await autoPickNewestDirection();
@@ -684,7 +685,7 @@ function buildFinalMarkdown(source, lang = getLang()) {
 function buildFinalJson(source, lang = getLang()) {
   return JSON.stringify({
     app: 'CrossCritic',
-    version: '0.4.0',
+    version: '0.4.2',
     language: lang,
     saved_at: new Date().toISOString(),
     provider: source.platform,
@@ -698,7 +699,7 @@ function buildFinalJson(source, lang = getLang()) {
 
 async function finalizeAndSave() {
   ensureStopPhraseForLang();
-  let tabId = Number($('sourceTab').value);
+  let tabId = Number($('sourceTab').value) || 0;
   if (!tabId) {
     const picked = await autoPickNewestDirection();
     tabId = picked.source.tabId;
@@ -718,6 +719,16 @@ $('langMode')?.addEventListener('change', () => {
 
 $('finalizeBtn')?.addEventListener('click', async () => {
   try { await finalizeAndSave(); } catch (e) { log(e.message); }
+});
+
+
+function buildHelpText() {
+  if (getLang() === 'en') return `# CrossCritic Full Guide\n\n1. Open 2 AI tabs, e.g. ChatGPT and Gemini.\n2. Click Scan tabs. Source/Target can stay Auto.\n3. Optional: add extra instruction.\n4. Click Paste critique to do one assisted relay.\n5. For automatic debate: enable Auto-send, set Steps, click Auto A↔B.\n6. The loop stops when the latest response contains the stop phrase: CROSSCRITIC_FULL_AGREEMENT, or when max steps is reached.\n7. Click Finalize & Save to export MD + JSON.\n8. If something breaks, open Log/debug and export log.\n\nModes:\n- Latest: send only latest assistant reply.\n- Selection: send selected text only.\n\nSafety:\nAuto-send is optional. Stop phrase is only accepted in the latest response.`;
+  return `# Hướng dẫn đầy đủ CrossCritic\n\n1. Mở 2 tab AI, ví dụ ChatGPT và Gemini.\n2. Bấm Quét tab. Nguồn/Đích có thể để Auto.\n3. Nếu cần, nhập Yêu cầu bổ sung.\n4. Bấm Dán phản biện để chạy 1 lượt hỗ trợ.\n5. Muốn tự động: bật Auto-send, đặt Steps, bấm Auto A↔B.\n6. Vòng lặp dừng khi phản hồi mới nhất có cụm chốt: CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN, hoặc đạt số bước tối đa.\n7. Bấm Chốt & lưu để xuất MD + JSON.\n8. Nếu lỗi, mở Log/debug và Xuất log.\n\nChế độ:\n- Latest: chỉ gửi phản hồi mới nhất.\n- Selection: chỉ gửi đoạn đang bôi chọn.\n\nAn toàn:\nAuto-send là tuỳ chọn. Cụm chốt chỉ được kiểm tra trong phản hồi mới nhất.`;
+}
+
+$('helpBtn')?.addEventListener('click', async () => {
+  try { await downloadText(`crosscritic/guide-${getLang()}-${Date.now()}.md`, buildHelpText(), 'text/markdown'); log('đã xuất hướng dẫn đầy đủ'); } catch (e) { log(e.message); }
 });
 
 $('refreshTabsBtn')?.addEventListener('click', async () => {
@@ -832,8 +843,8 @@ async function loopStep() {
 
 $('startLoopBtn')?.addEventListener('click', async () => {
   try {
-    let a = Number($('sourceTab').value);
-    let b = Number($('targetTab').value);
+    let a = Number($('sourceTab').value) || 0;
+    let b = Number($('targetTab').value) || 0;
     if (!a || !b || a === b) {
       log('dropdown chưa hợp lệ, tự dò tìm nguồn/đích...');
       const picked = await autoPickNewestDirection();
@@ -847,7 +858,7 @@ $('startLoopBtn')?.addEventListener('click', async () => {
       currentSource: a,
       currentTarget: b,
       step: 0,
-      maxSteps: Math.max(1, Math.min(20, Number($('loopMaxSteps').value || 6))),
+      maxSteps: Math.max(1, Math.min(100, Number($('loopMaxSteps').value || 50))),
       delayMs: Math.max(3, Math.min(120, Number($('loopDelaySec').value || 12))) * 1000,
       waitMs: Math.max(15, Math.min(300, Number($('loopDelaySec').value || 12) * 5)) * 1000
     };
