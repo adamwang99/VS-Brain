@@ -35,7 +35,16 @@ const I18N = {
     scanChat: 'Quét chat',
     logDebug: 'Log / debug',
     exportLog: 'Xuất log',
-    helpTitle: 'Hướng dẫn CrossCritic'
+    helpTitle: 'Hướng dẫn CrossCritic',
+    ready: 'Sẵn sàng',
+    auto: 'Auto',
+    noAiTabs: 'Không thấy tab AI',
+    jsonlNew: 'JSONL mới',
+    mdNew: 'MD mới',
+    jsonlFull: 'JSONL full',
+    mdFull: 'MD full',
+    markCheckpoint: 'Đánh mốc',
+    clearCheckpoint: 'Xoá mốc'
   },
   en: {
     subtitle: 'AI debate relay · archive · checkpoint',
@@ -61,7 +70,16 @@ const I18N = {
     scanChat: 'Scan chat',
     logDebug: 'Log / debug',
     exportLog: 'Export log',
-    helpTitle: 'CrossCritic guide'
+    helpTitle: 'CrossCritic guide',
+    ready: 'Ready',
+    auto: 'Auto',
+    noAiTabs: 'No AI tabs',
+    jsonlNew: 'New JSONL',
+    mdNew: 'New MD',
+    jsonlFull: 'Full JSONL',
+    mdFull: 'Full MD',
+    markCheckpoint: 'Mark checkpoint',
+    clearCheckpoint: 'Clear checkpoint'
   }
 };
 
@@ -76,6 +94,16 @@ function applyUiLang() {
     const key = el.dataset.i18n;
     if (t[key]) el.textContent = t[key];
   });
+
+  $('exportJsonlBtn').textContent = t.jsonlNew;
+  $('exportMdBtn').textContent = t.mdNew;
+  $('exportAllJsonlBtn').textContent = t.jsonlFull;
+  $('exportAllMdBtn').textContent = t.mdFull;
+  $('checkpointBtn').textContent = t.markCheckpoint;
+  $('clearCheckpointBtn').textContent = t.clearCheckpoint;
+  $('status').textContent = t.ready;
+  qsa('[data-placeholder-vi]').forEach((el) => { el.placeholder = el.dataset[`placeholder${lang === 'en' ? 'En' : 'Vi'}`] || el.placeholder; });
+  qsa('option[data-label-vi]').forEach((opt) => { opt.textContent = opt.dataset[`label${lang === 'en' ? 'En' : 'Vi'}`] || opt.textContent; });
   const h = $('helpBtn'); if (h) h.title = lang === 'en' ? 'Help' : 'Hướng dẫn sử dụng';
   syncGlassSelectLabels();
 }
@@ -408,9 +436,10 @@ async function refreshTabs() {
     .filter((t) => providerFromUrl(t.url) !== 'unknown')
     .map((t) => ({ id: t.id, title: t.title || 'Untitled', url: t.url || '', provider: providerFromUrl(t.url) }));
   const html = aiTabs.map((t) => `<option value="${t.id}">${t.provider} — ${escapeHtml(t.title).slice(0, 70)}</option>`).join('');
-  const autoOpt = '<option value="auto">Auto</option>';
-  $('sourceTab').innerHTML = aiTabs.length ? autoOpt + html : '<option value="">Không thấy tab AI</option>';
-  $('targetTab').innerHTML = aiTabs.length ? autoOpt + html : '<option value="">Không thấy tab AI</option>';
+  const t = I18N[getLang()] || I18N.vi;
+  const autoOpt = `<option value="auto">${t.auto}</option>`;
+  $('sourceTab').innerHTML = aiTabs.length ? autoOpt + html : `<option value="">${t.noAiTabs}</option>`;
+  $('targetTab').innerHTML = aiTabs.length ? autoOpt + html : `<option value="">${t.noAiTabs}</option>`;
   $('relayBtn').disabled = aiTabs.length < 2;
   $('startLoopBtn').disabled = aiTabs.length < 2;
   $('autoPickBtn').disabled = aiTabs.length < 2;
@@ -838,7 +867,7 @@ function buildFinalMarkdown(source, lang = getLang()) {
 function buildFinalJson(source, lang = getLang()) {
   return JSON.stringify({
     app: 'CrossCritic',
-    version: '0.4.4',
+    version: '0.5.0',
     language: lang,
     saved_at: new Date().toISOString(),
     provider: source.platform,

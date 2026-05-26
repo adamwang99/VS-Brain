@@ -10,10 +10,10 @@
   <main>
     <header class="hero glass">
       <div>
-        <h1>🧠 CrossCritic <span class="version">v0.4.9</span></h1>
+        <h1>🧠 CrossCritic <span class="version">v0.5.0</span></h1>
         <p class="subtitle" data-i18n="subtitle">AI debate relay · archive · checkpoint</p>
       </div>
-      <div class="head-actions"><button id="helpBtn" class="help-round" title="Hướng dẫn sử dụng">?</button><select id="langMode" class="glass-select" title="Ngôn ngữ prompt"><option value="vi">VI</option><option value="en">EN</option></select><div id="status">Sẵn sàng</div></div>
+      <div class="head-actions"><button id="helpBtn" class="help-round" title="Hướng dẫn sử dụng">?</button><select id="langMode" class="glass-select" title="Ngôn ngữ prompt"><option value="vi">Tiếng Việt</option><option value="en">English</option></select><div id="status" data-i18n="ready">Sẵn sàng</div></div>
     </header>
 
     <section class="glass relay" aria-label="Điều phối phản biện">
@@ -35,12 +35,12 @@
         <button id="autoPickBtn" disabled data-i18n="autoPick">Tự chọn</button>
         <button id="swapTabsBtn" disabled data-i18n="swap">↔ Đổi</button>
         <select id="relayMode" class="glass-select" title="Chế độ lấy nội dung">
-          <option value="latest">Latest</option>
-          <option value="selection">Selection</option>
+          <option value="latest" data-label-vi="Mới nhất" data-label-en="Latest">Mới nhất</option>
+          <option value="selection" data-label-vi="Đoạn chọn" data-label-en="Selection">Đoạn chọn</option>
         </select>
       </div>
 
-      <textarea id="extraInstruction" rows="3" placeholder="Yêu cầu bổ sung: tập trung UX, bảo mật, feasibility..."></textarea>
+      <textarea id="extraInstruction" rows="3" placeholder="Yêu cầu bổ sung: tập trung UX, bảo mật, feasibility..." data-placeholder-vi="Yêu cầu bổ sung: tập trung UX, bảo mật, feasibility..." data-placeholder-en="Extra instruction: focus on UX, security, feasibility..."></textarea>
 
       <button id="relayBtn" class="primary" disabled data-i18n="pasteCritique">Dán phản biện →</button>
 
@@ -62,7 +62,7 @@
         <label><span data-i18n="stopPhraseLabel">Cụm chốt dừng</span>
           <input id="stopPhrase" type="text" value="CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN" />
         </label>
-        <label><span data-i18n="promptTemplateLabel">Prompt phản biện</span> <textarea id="promptTemplate" rows="8" placeholder="Prompt phản biện có thể chỉnh sửa..."></textarea></label>
+        <label><span data-i18n="promptTemplateLabel">Prompt phản biện</span> <textarea id="promptTemplate" rows="8" placeholder="Prompt phản biện có thể chỉnh sửa..." data-placeholder-vi="Prompt phản biện có thể chỉnh sửa..." data-placeholder-en="Editable critique prompt..."></textarea></label>
         <div class="toolbar"><button id="resetPromptBtn" class="chip" type="button" data-i18n="resetPrompt">Reset prompt mặc định</button></div>
       </details>
     </section>
