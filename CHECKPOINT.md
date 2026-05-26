@@ -1,15 +1,15 @@
 # VS Brain Checkpoint
 
-Saved: 2026-05-27 01:02 GMT+7
+Saved: 2026-05-27 01:07 GMT+7
 
 ## Current version
 
-`v0.8.7`
+`v0.8.8`
 
 Latest commit:
 
 ```text
-pending commit: add logo branding v0.8.7
+pending commit: tight-crop icon assets v0.8.8
 ```
 
 ## Current state
@@ -29,6 +29,7 @@ Main UX:
 - Finalize requires final agreement phrase or explicit draft confirmation; exports finalization metadata.
 - Context Handoff exports compressed reset package for long/degraded debates and can open a fresh tab.
 - Supplied logo appears in UI header, help modal, and Chrome extension icons with animated glow.
+- Chrome icons are tight-cropped so the logo fills the icon area and stays readable at small sizes.
 - Manual/advanced controls hidden under details.
 
 Core flow:
@@ -53,11 +54,10 @@ Stop phrases:
 
 ## Last user-requested change completed
 
-- Logo branding integration:
-  - use supplied logo source in app assets
-  - regenerate extension icons
-  - show animated logo in header and help modal
-  - update README branding section
+- Icon readability fix:
+  - crop logo content bounding box
+  - regenerate 16/32/48/128 icons with minimal transparent margin
+  - keep source logo unchanged
 
 ## Pending possible refinements
 

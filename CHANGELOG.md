@@ -1,5 +1,9 @@
 # VS Brain Changelog
 
+## v0.8.8
+
+- Regenerated Chrome extension icons with tight content crop so the logo fills the available icon area and remains readable at 16/32px.
+
 ## v0.8.7
 
 - Added supplied VS Brain logo asset to the extension:
