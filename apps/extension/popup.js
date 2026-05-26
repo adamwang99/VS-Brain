@@ -42,7 +42,7 @@ const I18N = {
     close: 'Đóng',
     ready: 'Sẵn sàng',
     oneClickTitle: 'Tự động phản biện giữa các AI',
-    oneClickHint: 'Mở 2 tab AI, bấm bắt đầu. VS Brain tự chọn nguồn/đích, tự gửi, tự dừng khi đồng thuận.',
+    oneClickHint: 'Đứng ở tab AI nguồn, mở tab AI đích bên cạnh, rồi bấm bắt đầu. VS Brain gửi phản biện sang tab đích và tự dừng khi đồng thuận.',
     startAuto: 'Bắt đầu tự động',
     running: 'Đang chạy…',
     autoModeNote: 'Mặc định: Auto source/target · Latest · Auto-send · 100 steps',
@@ -87,7 +87,7 @@ const I18N = {
     close: 'Close',
     ready: 'Ready',
     oneClickTitle: 'Automatic AI-to-AI critique',
-    oneClickHint: 'Open 2 AI tabs, press start. VS Brain auto-picks source/target, sends, and stops on agreement.',
+    oneClickHint: 'Stand on the source AI tab, keep a target AI tab nearby, then press start. VS Brain sends critique to the target and stops on agreement.',
     startAuto: 'Start auto',
     running: 'Running…',
     autoModeNote: 'Default: Auto source/target · Latest · Auto-send · 100 steps',
@@ -671,6 +671,36 @@ function providerFromUrl(url = '') {
 
 let aiTabs = [];
 
+async function getActiveAiTab() {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) return null;
+  const provider = providerFromUrl(tab.url || '');
+  if (provider === 'unknown') return null;
+  return { id: tab.id, title: tab.title || 'Untitled', url: tab.url || '', provider };
+}
+
+async function chooseSourceAndTarget() {
+  if (aiTabs.length < 2) throw new Error('Need at least 2 AI tabs');
+  const active = await getActiveAiTab();
+  const source = active && aiTabs.find((t) => t.id === active.id) ? aiTabs.find((t) => t.id === active.id) : aiTabs[0];
+  const targets = aiTabs.filter((t) => t.id !== source.id);
+  if (!targets.length) throw new Error('No target AI tab found');
+  if (targets.length === 1) {
+    $('sourceTab').value = String(source.id);
+    $('targetTab').value = String(targets[0].id);
+    syncGlassSelectLabels();
+    log(`active-source pick: source=${source.provider} target=${targets[0].provider} mode=single-target`);
+    return { source: { tabId: source.id, provider: source.provider }, target: { tabId: targets[0].id, provider: targets[0].provider }, needsTargetChoice: false };
+  }
+  $('sourceTab').value = String(source.id);
+  const currentTarget = Number($('targetTab').value) || 0;
+  const keptTarget = targets.find((t) => t.id === currentTarget) || targets[0];
+  $('targetTab').value = String(keptTarget.id);
+  syncGlassSelectLabels();
+  log(`active-source pick: source=${source.provider} targets=${targets.length}; user target choice required`);
+  return { source: { tabId: source.id, provider: source.provider }, target: { tabId: keptTarget.id, provider: keptTarget.provider }, needsTargetChoice: true, targetCount: targets.length };
+}
+
 async function refreshTabs() {
   const tabs = await chrome.tabs.query({});
   aiTabs = tabs
@@ -687,13 +717,18 @@ async function refreshTabs() {
   $('swapTabsBtn').disabled = aiTabs.length < 2;
 
   if (aiTabs.length >= 2) {
-    try {
-      await autoPickNewestDirection();
-    } catch (_) {
-      $('sourceTab').value = String(aiTabs[0].id);
-      const fallbackTarget = aiTabs.find((t) => t.id !== aiTabs[0].id) || aiTabs[1];
-      $('targetTab').value = String(fallbackTarget.id);
-      log(`fallback default pick: source=${aiTabs[0].provider} → target=${fallbackTarget.provider}`);
+    const sourceBefore = Number($('sourceTab').dataset.userSelected || 0);
+    const targetBefore = Number($('targetTab').dataset.userSelected || 0);
+    if (sourceBefore && aiTabs.find((t) => t.id === sourceBefore)) $('sourceTab').value = String(sourceBefore);
+    if (targetBefore && aiTabs.find((t) => t.id === targetBefore)) $('targetTab').value = String(targetBefore);
+    if (!sourceBefore || !targetBefore) {
+      try { await chooseSourceAndTarget(); }
+      catch (_) {
+        $('sourceTab').value = String(aiTabs[0].id);
+        const fallbackTarget = aiTabs.find((t) => t.id !== aiTabs[0].id) || aiTabs[1];
+        $('targetTab').value = String(fallbackTarget.id);
+        log(`fallback default pick: source=${aiTabs[0].provider} → target=${fallbackTarget.provider}`);
+      }
     }
   }
   syncGlassSelectLabels();
@@ -1010,30 +1045,7 @@ async function getLatestHashForTab(tabId) {
 }
 
 async function autoPickNewestDirection() {
-  if (aiTabs.length < 2) throw new Error('Cần ít nhất 2 tab AI');
-  const currentSource = Number($('sourceTab').value) || 0;
-  const currentTarget = Number($('targetTab').value) || 0;
-  const preferred = [currentSource, currentTarget].filter(Boolean);
-  const candidates = (preferred.length >= 2 ? aiTabs.filter((t) => preferred.includes(t.id)) : aiTabs).slice(0, 6);
-  const states = (await Promise.all(candidates.map((t) => getLatestHashForTab(t.id)))).filter(Boolean);
-  if (states.length < 2) throw new Error('Không đọc được đủ 2 tab để tự chọn');
-
-  const allStore = await chrome.storage.local.get(null);
-  const usedHashes = new Set(Object.values(allStore)
-    .filter((v) => v && typeof v === 'object' && v.contentHash && v.relayedAt)
-    .map((v) => v.contentHash));
-
-  const fresh = states.filter((s) => !usedHashes.has(s.contentHash));
-  const source = fresh[0] || states[0];
-  let target = states.find((s) => s.tabId !== source.tabId && s.tabId === currentTarget)
-    || states.find((s) => s.tabId !== source.tabId && s.tabId === currentSource)
-    || states.find((s) => s.tabId !== source.tabId);
-  if (!target) throw new Error('Không tìm được tab đích khác nguồn');
-
-  $('sourceTab').value = String(source.tabId);
-  $('targetTab').value = String(target.tabId);
-  log(`auto-pick: source=${source.provider} hash=${source.contentHash}${fresh.length ? ' fresh' : ' already relayed'} → target=${target.provider}`);
-  return { source, target };
+  return chooseSourceAndTarget();
 }
 
 
@@ -1388,7 +1400,7 @@ function renderHelpModal() {
     <p>VS Brain connects open AI tabs and relays only the latest answer for structured critique, revision, agreement detection, and final export.</p>
     <h3>Quick start</h3>
     <ol>
-      <li>Open two AI tabs, e.g. ChatGPT and Gemini.</li>
+      <li>Open the source AI chat and keep it as the active tab. Open the target AI chat in a nearby tab.</li>
       <li>Click <b>Scan tabs</b>. Source/Target may stay <b>Auto</b>.</li>
       <li>Add optional extra instruction.</li>
       <li>Click <b>Paste critique →</b> for one manual relay.</li>
@@ -1418,7 +1430,7 @@ function renderHelpModal() {
     <p>VS Brain kết nối các tab AI đang mở, chỉ lấy phản hồi mới nhất để dán sang provider khác cho phản biện có cấu trúc, tự dừng khi đồng thuận, và lưu bản cuối.</p>
     <h3>Bắt đầu nhanh</h3>
     <ol>
-      <li>Mở hai tab AI, ví dụ ChatGPT và Gemini.</li>
+      <li>Đứng ở tab AI nguồn đang làm việc. Mở tab AI đích ở bên cạnh để VS Brain gửi phản biện sang.</li>
       <li>Bấm <b>Quét tab</b>. Nguồn/Đích có thể để <b>Auto</b>.</li>
       <li>Nhập <b>Yêu cầu bổ sung</b> nếu cần.</li>
       <li>Bấm <b>Dán phản biện →</b> để chạy một lượt.</li>
@@ -1471,6 +1483,9 @@ $('relayBtn')?.addEventListener('click', async () => {
 $('autoPickBtn')?.addEventListener('click', async () => {
   try { await autoPickNewestDirection(); } catch (e) { log(e.message); }
 });
+
+$('sourceTab')?.addEventListener('change', () => { $('sourceTab').dataset.userSelected = $('sourceTab').value; });
+$('targetTab')?.addEventListener('change', () => { $('targetTab').dataset.userSelected = $('targetTab').value; });
 
 $('swapTabsBtn')?.addEventListener('click', () => {
   const source = $('sourceTab').value;
@@ -1646,14 +1661,18 @@ function syncSliderStep() {
 $('oneClickStartBtn')?.addEventListener('click', async () => {
   try {
     await refreshTabs();
-    $('sourceTab').value = 'auto';
-    $('targetTab').value = 'auto';
+    const picked = await chooseSourceAndTarget();
     $('relayMode').value = 'latest';
     $('autoSendToggle').checked = true;
     $('loopMaxSteps').value = '100';
     if ($('stepsSlider')) $('stepsSlider').value = '100';
     syncSliderStep();
     syncGlassSelectLabels();
+    if (picked.needsTargetChoice) {
+      setStatus(`Select target tab (${picked.targetCount} choices)`);
+      log(`auto-start paused: multiple targets available (${picked.targetCount}); user selection required`);
+      return;
+    }
     $('startLoopBtn').click();
   } catch (e) { log(e.message); }
 });
