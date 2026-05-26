@@ -10,6 +10,91 @@ const log = (msg) => {
 };
 const setStatus = (msg) => { $('status').textContent = msg; };
 
+const I18N = {
+  vi: {
+    subtitle: 'AI debate relay · archive · checkpoint',
+    critique: 'Phản biện',
+    scanTabs: 'Quét tab',
+    source: 'Nguồn',
+    target: 'Đích',
+    autoPick: 'Tự chọn',
+    swap: '↔ Đổi',
+    pasteCritique: 'Dán phản biện →',
+    steps: 'Steps',
+    delay: 'Delay',
+    autoSend: 'Auto-send',
+    autoLoop: 'Auto A↔B',
+    stop: 'Dừng',
+    finalize: 'Chốt & lưu',
+    resetRelay: 'Reset relay',
+    advanced: 'Tuỳ chọn nâng cao',
+    stopPhraseLabel: 'Cụm chốt dừng',
+    promptTemplateLabel: 'Prompt phản biện',
+    resetPrompt: 'Reset prompt mặc định',
+    archive: 'Lưu trữ',
+    scanChat: 'Quét chat',
+    logDebug: 'Log / debug',
+    exportLog: 'Xuất log',
+    helpTitle: 'Hướng dẫn CrossCritic'
+  },
+  en: {
+    subtitle: 'AI debate relay · archive · checkpoint',
+    critique: 'Critique',
+    scanTabs: 'Scan tabs',
+    source: 'Source',
+    target: 'Target',
+    autoPick: 'Auto pick',
+    swap: '↔ Swap',
+    pasteCritique: 'Paste critique →',
+    steps: 'Steps',
+    delay: 'Delay',
+    autoSend: 'Auto-send',
+    autoLoop: 'Auto A↔B',
+    stop: 'Stop',
+    finalize: 'Finalize & save',
+    resetRelay: 'Reset relay',
+    advanced: 'Advanced options',
+    stopPhraseLabel: 'Stop phrase',
+    promptTemplateLabel: 'Critique prompt',
+    resetPrompt: 'Reset default prompt',
+    archive: 'Archive',
+    scanChat: 'Scan chat',
+    logDebug: 'Log / debug',
+    exportLog: 'Export log',
+    helpTitle: 'CrossCritic guide'
+  }
+};
+
+function applyUiLang() {
+  const lang = getLang();
+  const t = I18N[lang] || I18N.vi;
+  document.documentElement.lang = lang;
+  $('[data-i18n="subtitle"]').textContent = t.subtitle;
+  $('[data-i18n="critique"]').textContent = t.critique;
+  $('[data-i18n="scanTabs"]').textContent = t.scanTabs;
+  $('[data-i18n="source"]').textContent = t.source;
+  $('[data-i18n="target"]').textContent = t.target;
+  $('[data-i18n="autoPick"]').textContent = t.autoPick;
+  $('[data-i18n="swap"]').textContent = t.swap;
+  $('[data-i18n="pasteCritique"]').textContent = t.pasteCritique;
+  $('[data-i18n="steps"]').textContent = t.steps;
+  $('[data-i18n="delay"]').textContent = t.delay;
+  $('[data-i18n="autoSend"]').textContent = t.autoSend;
+  $('[data-i18n="autoLoop"]').textContent = t.autoLoop;
+  $('[data-i18n="stop"]').textContent = t.stop;
+  $('[data-i18n="finalize"]').textContent = t.finalize;
+  $('[data-i18n="resetRelay"]').textContent = t.resetRelay;
+  $('[data-i18n="advanced"]').textContent = t.advanced;
+  $('[data-i18n="stopPhraseLabel"]').textContent = t.stopPhraseLabel;
+  $('[data-i18n="promptTemplateLabel"]').textContent = t.promptTemplateLabel;
+  $('[data-i18n="resetPrompt"]').textContent = t.resetPrompt;
+  $('[data-i18n="archive"]').textContent = t.archive;
+  $('[data-i18n="scanChat"]').textContent = t.scanChat;
+  $('[data-i18n="logDebug"]').textContent = t.logDebug;
+  $('[data-i18n="exportLog"]').textContent = t.exportLog;
+  const h = $('helpBtn'); if (h) h.title = lang === 'en' ? 'Help' : 'Hướng dẫn sử dụng';
+}
+
 async function activeTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) throw new Error('No active tab');
@@ -713,6 +798,7 @@ async function finalizeAndSave() {
 
 $('langMode')?.addEventListener('change', () => {
   ensureStopPhraseForLang();
+  applyUiLang();
   if ($('promptTemplate')) $('promptTemplate').value = defaultPromptTemplate(getLang(), $('stopPhrase')?.value || defaultStopPhrase());
   log(`đổi ngôn ngữ prompt: ${getLang().toUpperCase()}`);
 });
@@ -955,5 +1041,6 @@ $('exportLogBtn')?.addEventListener('click', async () => {
 
 
 
+applyUiLang();
 initPromptTemplate();
 refreshTabs().catch(() => {});

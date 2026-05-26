@@ -10,30 +10,30 @@
   <main>
     <header class="hero glass">
       <div>
-        <h1>🧠 CrossCritic <span class="version">v0.4.4</span></h1>
-        <p class="subtitle">AI debate relay · archive · checkpoint</p>
+        <h1>🧠 CrossCritic <span class="version">v0.4.5</span></h1>
+        <p class="subtitle" data-i18n="subtitle">AI debate relay · archive · checkpoint</p>
       </div>
       <div class="head-actions"><button id="helpBtn" class="help-round" title="Hướng dẫn sử dụng">?</button><select id="langMode" class="glass-select" title="Ngôn ngữ prompt"><option value="vi">VI</option><option value="en">EN</option></select><div id="status">Sẵn sàng</div></div>
     </header>
 
     <section class="glass relay" aria-label="Điều phối phản biện">
       <div class="section-head">
-        <h2>Phản biện</h2>
-        <button id="refreshTabsBtn" class="chip">Quét tab</button>
+        <h2 data-i18n="critique">Phản biện</h2>
+        <button id="refreshTabsBtn" class="chip" data-i18n="scanTabs">Quét tab</button>
       </div>
 
       <div class="grid2">
-        <label>Nguồn
+        <label><span data-i18n="source">Nguồn</span>
           <select id="sourceTab" class="glass-select"></select>
         </label>
-        <label>Đích
+        <label><span data-i18n="target">Đích</span>
           <select id="targetTab" class="glass-select"></select>
         </label>
       </div>
 
       <div class="toolbar">
-        <button id="autoPickBtn" disabled>Tự chọn</button>
-        <button id="swapTabsBtn" disabled>↔ Đổi</button>
+        <button id="autoPickBtn" disabled data-i18n="autoPick">Tự chọn</button>
+        <button id="swapTabsBtn" disabled data-i18n="swap">↔ Đổi</button>
         <select id="relayMode" class="glass-select" title="Chế độ lấy nội dung">
           <option value="latest">Latest</option>
           <option value="selection">Selection</option>
@@ -42,35 +42,35 @@
 
       <textarea id="extraInstruction" rows="3" placeholder="Yêu cầu bổ sung: tập trung UX, bảo mật, feasibility..."></textarea>
 
-      <button id="relayBtn" class="primary" disabled>Dán phản biện →</button>
+      <button id="relayBtn" class="primary" disabled data-i18n="pasteCritique">Dán phản biện →</button>
 
       <div class="loop-row">
-        <label>Steps <input id="loopMaxSteps" type="number" min="1" max="100" value="50" /></label>
-        <label>Delay <input id="loopDelaySec" type="number" min="3" max="120" value="12" /></label>
-        <label class="toggle"><input id="autoSendToggle" type="checkbox" /> Auto-send</label>
+        <label><span data-i18n="steps">Steps</span> <input id="loopMaxSteps" type="number" min="1" max="100" value="50" /></label>
+        <label><span data-i18n="delay">Delay</span> <input id="loopDelaySec" type="number" min="3" max="120" value="12" /></label>
+        <label class="toggle"><input id="autoSendToggle" type="checkbox" /> <span data-i18n="autoSend">Auto-send</span></label>
       </div>
 
       <div class="toolbar">
-        <button id="startLoopBtn" disabled>Auto A↔B</button>
-        <button id="stopLoopBtn" disabled>Dừng</button>
-        <button id="finalizeBtn">Chốt & lưu</button>
-        <button id="resetRelayBtn">Reset relay</button>
+        <button id="startLoopBtn" disabled data-i18n="autoLoop">Auto A↔B</button>
+        <button id="stopLoopBtn" disabled data-i18n="stop">Dừng</button>
+        <button id="finalizeBtn" data-i18n="finalize">Chốt & lưu</button>
+        <button id="resetRelayBtn" data-i18n="resetRelay">Reset relay</button>
       </div>
 
       <details class="advanced">
-        <summary>Tuỳ chọn nâng cao</summary>
-        <label>Cụm chốt dừng
+        <summary data-i18n="advanced">Tuỳ chọn nâng cao</summary>
+        <label><span data-i18n="stopPhraseLabel">Cụm chốt dừng</span>
           <input id="stopPhrase" type="text" value="CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN" />
         </label>
-        <label>Prompt phản biện <textarea id="promptTemplate" rows="8" placeholder="Prompt phản biện có thể chỉnh sửa..."></textarea></label>
-        <div class="toolbar"><button id="resetPromptBtn" class="chip" type="button">Reset prompt mặc định</button></div>
+        <label><span data-i18n="promptTemplateLabel">Prompt phản biện</span> <textarea id="promptTemplate" rows="8" placeholder="Prompt phản biện có thể chỉnh sửa..."></textarea></label>
+        <div class="toolbar"><button id="resetPromptBtn" class="chip" type="button" data-i18n="resetPrompt">Reset prompt mặc định</button></div>
       </details>
     </section>
 
     <section class="glass archive" aria-label="Lưu trữ chat">
       <div class="section-head">
-        <h2>Lưu trữ</h2>
-        <button id="scanBtn" class="chip">Quét chat</button>
+        <h2 data-i18n="archive">Lưu trữ</h2>
+        <button id="scanBtn" class="chip" data-i18n="scanChat">Quét chat</button>
       </div>
       <div class="mini-meta">
         <span id="provider">-</span>
@@ -98,8 +98,8 @@
     </div>
 
     <details class="glass logbox">
-      <summary>Log / debug</summary>
-      <button id="exportLogBtn" class="chip">Xuất log</button>
+      <summary data-i18n="logDebug">Log / debug</summary>
+      <button id="exportLogBtn" class="chip" data-i18n="exportLog">Xuất log</button>
       <pre id="log" aria-label="Nhật ký thao tác"></pre>
     </details>
   </main>
