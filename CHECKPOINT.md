@@ -1,15 +1,15 @@
 # VS Brain Checkpoint
 
-Saved: 2026-05-27 01:07 GMT+7
+Saved: 2026-05-27 01:12 GMT+7
 
 ## Current version
 
-`v0.8.8`
+`v0.8.9`
 
 Latest commit:
 
 ```text
-pending commit: tight-crop icon assets v0.8.8
+pending commit: max-size icon crop v0.8.9
 ```
 
 ## Current state
@@ -29,7 +29,7 @@ Main UX:
 - Finalize requires final agreement phrase or explicit draft confirmation; exports finalization metadata.
 - Context Handoff exports compressed reset package for long/degraded debates and can open a fresh tab.
 - Supplied logo appears in UI header, help modal, and Chrome extension icons with animated glow.
-- Chrome icons are tight-cropped so the logo fills the icon area and stays readable at small sizes.
+- Chrome icons are max-cropped with no extra padding so the logo fills the icon area at small sizes.
 - Manual/advanced controls hidden under details.
 
 Core flow:
@@ -54,10 +54,10 @@ Stop phrases:
 
 ## Last user-requested change completed
 
-- Icon readability fix:
+- Icon readability fix v2:
   - crop logo content bounding box
-  - regenerate 16/32/48/128 icons with minimal transparent margin
-  - keep source logo unchanged
+  - regenerate 16/32/48/128 icons with no extra padding
+  - maximize logo size inside Chrome icon frame
 
 ## Pending possible refinements
 
