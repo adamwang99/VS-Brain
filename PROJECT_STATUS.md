@@ -1,11 +1,11 @@
-# CrossCritic Project Status
+# VS Brain Project Status
 
 Current version: `v0.5.1`
 Current commit target: codebase HEAD after `fix: localize help modal and improve final export v0.5.1`.
 
 ## Product purpose
 
-CrossCritic is a Chrome side-panel extension that connects open AI provider tabs and relays latest answers between them for structured critique, agreement detection, and final export.
+VS Brain is a Chrome side-panel extension that connects open AI provider tabs and relays latest answers between them for structured critique, agreement detection, and final export.
 
 ## Main capabilities
 
@@ -36,7 +36,7 @@ CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN
 EN:
 
 ```text
-CROSSCRITIC_FULL_AGREEMENT
+VS_BRAIN_FULL_AGREEMENT
 ```
 
 ## Known limitation

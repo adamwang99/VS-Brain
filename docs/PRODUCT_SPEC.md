@@ -1,4 +1,4 @@
-# CrossCritic Product Spec
+# VS Brain Product Spec
 
 ## Primary user need
 

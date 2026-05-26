@@ -1,4 +1,4 @@
-# CrossCritic
+# VS Brain
 
 Cross-provider AI chat archive + critique relay.
 

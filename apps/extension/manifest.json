@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "CrossCritic",
-  "version": "0.7.1",
-  "description": "Archive AI chats and relay critique across providers.",
+  "name": "VS Brain",
+  "version": "0.8.0",
+  "description": "AI-to-AI critique relay, agreement loop, and final blueprint export.",
   "permissions": [
     "activeTab",
     "scripting",
@@ -17,7 +17,7 @@
     "https://gemini.google.com/*"
   ],
   "action": {
-    "default_title": "CrossCritic",
+    "default_title": "VS Brain",
     "default_icon": {
       "16": "icons/brain-16.png",
       "32": "icons/brain-32.png"

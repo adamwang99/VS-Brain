@@ -1,8 +1,8 @@
 {
-  "name": "crosscritic",
+  "name": "vs-brain",
   "version": "0.1.0",
   "private": true,
-  "description": "Cross-provider AI chat archive and critique relay",
+  "description": "AI-to-AI critique relay, agreement loop, and final blueprint export",
   "type": "module",
   "scripts": {
     "lint": "echo 'TODO: lint'",

@@ -1,9 +1,9 @@
-# CrossCritic Changelog
+# VS Brain Changelog
 
 ## v0.5.1
 
 - Fixed EN help modal title/button localization:
-  - `Hướng dẫn CrossCritic` → `CrossCritic guide`
+  - `Hướng dẫn VS Brain` → `VS Brain guide`
   - `Đóng` → `Close`
 - Improved `Finalize & Save` output:
   - exports `final-<provider>-<timestamp>.md`
@@ -16,7 +16,7 @@
   - Remaining assumptions / Giả định, giới hạn còn lại
   - Next actions / Việc cần làm tiếp theo
   - Audit trail
-- Final JSON now uses schema `crosscritic.final_report.v1`.
+- Final JSON now uses schema `vs-brain.final_report.v1`.
 
 ## v0.5.0
 
