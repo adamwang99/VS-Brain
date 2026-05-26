@@ -259,9 +259,13 @@ function escapeHtml(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 }
 
-function extractLatestResponseInPage() {
+function extractLatestResponseInPage(mode = 'latest') {
   function cleanText(text) {
     return (text || '').replace(/\r\n/g, '\n').replace(/[ \t]+$/gm, '').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  if (mode === 'selection') {
+    const selected = cleanText(String(window.getSelection?.() || ''));
+    if (selected) return { platform: 'selection', title: document.title, url: location.href, content: selected };
   }
   const host = location.hostname;
   const platform = host.includes('gemini.google.com') ? 'gemini'
@@ -331,17 +335,74 @@ function buildRelayPrompt(kind, source) {
   return `${base}\n\nVAI TRÒ: Phản biện nghiêm khắc.\nTìm lỗi, thiếu evidence, mâu thuẫn, giả định yếu.\nOutput:\n1. Điểm mạnh\n2. Lỗi/thiếu sót\n3. Câu hỏi cần làm rõ\n4. Đề xuất sửa\n5. score 0-10\n6. should_continue=true/false.`;
 }
 
+
+function hashText(str) {
+  let h = 2166136261;
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return (h >>> 0).toString(16).padStart(8, '0');
+}
+
+async function relayStateKey(sourceId, targetId, kind, mode) {
+  return `relay:${sourceId}:${targetId}:${kind}:${mode}`;
+}
+
+async function getRelayState(key) {
+  const obj = await chrome.storage.local.get(key);
+  return obj[key] || null;
+}
+
+async function setRelayState(key, state) {
+  await chrome.storage.local.set({ [key]: state });
+}
+
+async function clearRelayStates() {
+  const all = await chrome.storage.local.get(null);
+  const keys = Object.keys(all).filter((k) => k.startsWith('relay:'));
+  if (keys.length) await chrome.storage.local.remove(keys);
+  return keys.length;
+}
+
 async function executeRelay() {
   const sourceId = Number($('sourceTab').value);
   const targetId = Number($('targetTab').value);
+  const kind = $('relayTemplate').value;
+  const mode = $('relayMode').value;
   if (!sourceId || !targetId || sourceId === targetId) throw new Error('Chọn 2 tab khác nhau');
-  const [{ result: source }] = await chrome.scripting.executeScript({ target: { tabId: sourceId }, func: extractLatestResponseInPage });
-  if (!source?.content) throw new Error('Không lấy được câu trả lời từ tab nguồn');
-  const prompt = buildRelayPrompt($('relayTemplate').value, source);
+
+  const [{ result: source }] = await chrome.scripting.executeScript({
+    target: { tabId: sourceId },
+    func: extractLatestResponseInPage,
+    args: [mode]
+  });
+  if (!source?.content) throw new Error(mode === 'selection' ? 'Chưa bôi chọn đoạn nào trong tab nguồn' : 'Không lấy được câu trả lời mới nhất từ tab nguồn');
+
+  const contentHash = hashText(source.content);
+  const key = await relayStateKey(sourceId, targetId, kind, mode);
+  const prev = await getRelayState(key);
+  if (prev?.contentHash === contentHash) {
+    log('chưa có phản hồi mới từ tab nguồn; đã chặn dán trùng');
+    return;
+  }
+
+  const prompt = buildRelayPrompt(kind, source);
   await chrome.tabs.update(targetId, { active: true });
   const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: targetId }, func: fillPromptInPage, args: [prompt] });
   if (!result?.ok) throw new Error(result?.error || 'Không dán được prompt');
-  log(`đã dán prompt từ ${source.platform} sang tab đích; Sếp bấm gửi thủ công`);
+
+  await setRelayState(key, {
+    sourceId,
+    targetId,
+    kind,
+    mode,
+    provider: source.platform,
+    contentHash,
+    relayedAt: new Date().toISOString(),
+    preview: source.content.slice(0, 180)
+  });
+  log(`đã dán nội dung mới hash=${contentHash}; Sếp bấm gửi thủ công`);
 }
 
 $('refreshTabsBtn')?.addEventListener('click', async () => {
@@ -350,6 +411,13 @@ $('refreshTabsBtn')?.addEventListener('click', async () => {
 
 $('relayBtn')?.addEventListener('click', async () => {
   try { await executeRelay(); } catch (e) { log(e.message); }
+});
+
+$('resetRelayBtn')?.addEventListener('click', async () => {
+  try {
+    const n = await clearRelayStates();
+    log(`đã xóa ${n} mốc relay`);
+  } catch (e) { log(e.message); }
 });
 
 refreshTabs().catch(() => {});

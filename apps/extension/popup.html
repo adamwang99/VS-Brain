@@ -48,7 +48,14 @@
           <option value="final">Tổng hợp bản cuối</option>
         </select>
       </label>
-      <button id="relayBtn" disabled>Lấy từ nguồn → dán sang đích <span class="q" title="Extension lấy nội dung mới nhất từ tab nguồn, tạo prompt, dán vào ô chat tab đích. Không tự bấm gửi.">?</span></button>
+      <label>Chế độ lấy nội dung
+        <select id="relayMode">
+          <option value="latest">Chỉ phản hồi mới nhất</option>
+          <option value="selection">Đoạn đang bôi chọn</option>
+        </select>
+      </label>
+      <button id="relayBtn" disabled>Lấy từ nguồn → dán sang đích <span class="q" title="Mặc định chỉ lấy phản hồi mới nhất và chặn dán trùng bằng hash. Không tự bấm gửi.">?</span></button>
+      <button id="resetRelayBtn">Xóa mốc relay <span class="q" title="Xóa dấu vết phản hồi đã chuyển trước đó. Dùng khi muốn dán lại cùng một phản hồi.">?</span></button>
     </section>
 
     <details class="guide">
