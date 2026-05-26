@@ -10,7 +10,7 @@
   <main>
     <header class="hero glass">
       <div>
-        <h1>🧠 VS Brain <span class="version">v0.8.0</span></h1>
+        <h1>🧠 VS Brain <span class="version">v0.8.1</span></h1>
         <p class="subtitle" data-i18n="subtitle">AI debate relay · archive · checkpoint</p>
       </div>
       <div class="head-actions"><button id="helpBtn" class="help-round" title="Hướng dẫn sử dụng">?</button><select id="langMode" class="glass-select" title="Ngôn ngữ prompt"><option value="en">🇺🇸</option><option value="vi">🇻🇳</option></select></div>
@@ -61,6 +61,7 @@
         <details class="advanced">
           <summary data-i18n="advanced">Tuỳ chọn nâng cao</summary>
           <label><span data-i18n="stopPhraseLabel">Cụm chốt dừng</span><input id="stopPhrase" type="text" value="CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN" /></label>
+          <label><span data-i18n="actionDelayLabel">Delay thao tác (ms)</span><input id="actionDelayMs" type="number" min="300" max="10000" value="1200" /></label>
           <label><span data-i18n="promptTemplateLabel">Prompt phản biện</span><textarea id="promptTemplate" rows="8" placeholder="Prompt mặc định sẽ hiện mờ ở đây. Nhập nội dung để override..." data-placeholder-vi="Prompt mặc định sẽ hiện mờ ở đây. Nhập nội dung để override..." data-placeholder-en="Default prompt appears here as a faint guide. Type to override..."></textarea></label>
           <div class="toolbar"><button id="resetPromptBtn" class="chip" type="button" data-i18n="resetPrompt">Reset prompt mặc định</button></div>
         </details>

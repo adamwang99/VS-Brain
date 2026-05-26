@@ -45,6 +45,7 @@ const I18N = {
     autoModeNote: 'Mặc định: Auto source/target · Latest · Auto-send · 100 steps',
     manualMode: 'Manual / tuỳ chỉnh',
     loopCounterLabel: 'vòng',
+    actionDelayLabel: 'Delay thao tác (ms)',
     auto: 'Auto',
     noAiTabs: 'Không thấy tab AI',
     jsonlNew: 'JSONL mới',
@@ -88,6 +89,7 @@ const I18N = {
     autoModeNote: 'Default: Auto source/target · Latest · Auto-send · 100 steps',
     manualMode: 'Manual / custom',
     loopCounterLabel: 'rds',
+    actionDelayLabel: 'Action delay (ms)',
     auto: 'Auto',
     noAiTabs: 'No AI tabs',
     jsonlNew: 'New JSONL',
@@ -812,6 +814,11 @@ async function autoPickNewestDirection() {
   return { source, target };
 }
 
+
+function getActionDelayMs() {
+  return Math.max(300, Math.min(10000, Number($('actionDelayMs')?.value || 1200)));
+}
+
 async function executeRelay(sourceOverride, targetOverride) {
   let sourceId = Number(sourceOverride || $('sourceTab').value) || 0;
   let targetId = Number(targetOverride || $('targetTab').value) || 0;
@@ -845,7 +852,7 @@ async function executeRelay(sourceOverride, targetOverride) {
   const stopPhrase = $('stopPhrase')?.value?.trim() || defaultStopPhrase();
   const prompt = buildRelayPrompt(kind, source, $('extraInstruction')?.value || '', stopPhrase, getLang());
   await chrome.tabs.update(targetId, { active: true });
-  await new Promise((r) => setTimeout(r, 500));
+  await new Promise((r) => setTimeout(r, getActionDelayMs()));
   const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: targetId }, func: fillPromptInPage, args: [prompt] });
   if (!result?.ok) throw new Error(result?.error || 'Không dán được prompt');
   let sendResult = null;
@@ -1034,7 +1041,7 @@ async function finalizeAndSave() {
 
   const prompt = buildFinalizePrompt(source, getLang());
   await chrome.tabs.update(tabId, { active: true });
-  await new Promise((r) => setTimeout(r, 500));
+  await new Promise((r) => setTimeout(r, getActionDelayMs()));
   const [{ result: fill }] = await chrome.scripting.executeScript({ target: { tabId }, func: fillPromptInPage, args: [prompt] });
   if (!fill?.ok) throw new Error(fill?.error || 'Không dán được prompt chốt');
   const [{ result: sent }] = await chrome.scripting.executeScript({ target: { tabId }, func: clickSendInPage });
