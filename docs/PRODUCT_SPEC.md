@@ -90,13 +90,17 @@ Outputs:
 
 #### Layer A — Provider runtime
 
-Supported web providers:
+Supported web providers (target state):
 - ChatGPT
 - Gemini
 - Claude
 - DeepSeek
 - Perplexity
 - Grok
+
+Near-term stability scope:
+- Phase 1 production focus: ChatGPT + Gemini only
+- Other providers are expansion phases after selector/runtime health is proven on the stable pair
 
 Responsibilities:
 - detect tab
@@ -393,6 +397,8 @@ Every handoff must record:
 - [ ] read/fill/send diagnostics
 - [ ] compatibility matrix doc
 - [ ] login/quota/error detection where possible
+- [ ] stable pair certification: ChatGPT + Gemini
+- [ ] provider rollout gate before enabling next provider
 
 ### Phase 7 — Multi-provider orchestration
 

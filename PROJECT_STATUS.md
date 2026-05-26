@@ -145,3 +145,8 @@ Required architecture before monetization:
 ## Sequential implementation spec
 
 See `docs/PRODUCT_SPEC.md` for the phased checklist from pairwise blueprint relay to multi-agent verified execution packet.
+
+
+## Demo trial scope
+
+Current demo recommendation: restrict user trial builds to **ChatGPT + Gemini** only. Additional providers should be re-enabled only after provider-specific selector/runtime certification.

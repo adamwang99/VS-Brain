@@ -6,7 +6,7 @@ Move VS Brain from internal beta to reliable long-run critique orchestration.
 
 ## Current priority
 
-1. Stabilize pairwise loop under real provider usage.
+1. Stabilize pairwise loop under real ChatGPT + Gemini usage first.
 2. Reduce long-run hallucination and context degradation.
 3. Make logs readable, English-only, bounded, and self-pruning.
 4. Add provider health checks before adding paid gating.
@@ -29,9 +29,11 @@ Move VS Brain from internal beta to reliable long-run critique orchestration.
 
 ### Provider stability
 
+- certify ChatGPT + Gemini as the stable pair first
 - selector health check per provider
 - paste/send/read test button
 - provider compatibility matrix
+- expand to Claude/DeepSeek only after stable-pair certification
 
 ### Multi-provider phase
 
