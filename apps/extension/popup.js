@@ -1,7 +1,13 @@
 let currentScan = null;
 
 const $ = (id) => document.getElementById(id);
-const log = (msg) => { $('log').textContent = `${new Date().toLocaleTimeString()} ${msg}\n` + $('log').textContent; };
+const debugLines = [];
+const log = (msg) => {
+  const line = `${new Date().toLocaleTimeString()} ${msg}`;
+  debugLines.unshift(line);
+  if (debugLines.length > 300) debugLines.pop();
+  $('log').textContent = debugLines.join('\n');
+};
 const setStatus = (msg) => { $('status').textContent = msg; };
 
 async function activeTab() {
@@ -537,6 +543,7 @@ async function executeRelay(sourceOverride, targetOverride) {
   const kind = 'comprehensive';
   const mode = $('relayMode').value;
   if (!sourceId || !targetId || sourceId === targetId) throw new Error('Chọn 2 tab khác nhau');
+  log(`relay chuẩn bị: source=${sourceId} target=${targetId} autoSend=${$('autoSendToggle')?.checked ? 'ON' : 'OFF'}`);
 
   const [{ result: source }] = await chrome.scripting.executeScript({
     target: { tabId: sourceId },
@@ -544,6 +551,7 @@ async function executeRelay(sourceOverride, targetOverride) {
     args: [mode]
   });
   if (!source?.content) throw new Error(mode === 'selection' ? 'Chưa bôi chọn đoạn nào trong tab nguồn' : 'Không lấy được câu trả lời mới nhất từ tab nguồn');
+  log(`relay nguồn đọc được: provider=${source.platform} chars=${source.content.length}`);
 
   const contentHash = hashText(source.content);
   const key = await relayStateKey(sourceId, targetId, kind, mode);
@@ -564,6 +572,7 @@ async function executeRelay(sourceOverride, targetOverride) {
     const [{ result: sr }] = await chrome.scripting.executeScript({ target: { tabId: targetId }, func: clickSendInPage });
     sendResult = sr;
     if (!sendResult?.ok) log(`auto-send fail: ${sendResult?.error || 'unknown'}`);
+    else log(`auto-send ok selector=${sendResult.selector || '?'}`);
   }
 
   await setRelayState(key, {
@@ -714,5 +723,22 @@ $('startLoopBtn')?.addEventListener('click', async () => {
 });
 
 $('stopLoopBtn')?.addEventListener('click', () => stopLoop('Sếp bấm dừng'));
+
+
+$('exportLogBtn')?.addEventListener('click', async () => {
+  try {
+    const text = [
+      `CrossCritic debug log`,
+      `version: v0.2.2`,
+      `time: ${new Date().toISOString()}`,
+      '',
+      ...debugLines
+    ].join('\n');
+    await downloadText(`crosscritic/debug-log-${Date.now()}.txt`, text, 'text/plain');
+    log('đã xuất log debug');
+  } catch (e) { log(e.message); }
+});
+
+
 
 refreshTabs().catch(() => {});
