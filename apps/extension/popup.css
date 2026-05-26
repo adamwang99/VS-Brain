@@ -261,6 +261,9 @@ pre {
 .start-card + .manual-panel { margin-top: 12px; }
 .manual-panel > summary, .archive-panel > summary { cursor: pointer; font-weight: 700; }
 .manual-panel .relay, .archive-panel .archive { padding: 10px 0 0; }
+.relay .grid2 + .toolbar { margin-top: 14px; }
+.relay .toolbar + .primary { margin-top: 12px; }
+
 .loop-counter {
   display: flex;
   align-items: baseline;
