@@ -1,5 +1,15 @@
 # VS Brain Changelog
 
+## v0.8.7
+
+- Added supplied VS Brain logo asset to the extension:
+  - copied source image to `apps/extension/icons/vs-brain-logo.png`
+  - regenerated Chrome extension icons at 16/32/48/128px
+  - added logo to the side-panel header
+  - added logo to the help modal
+  - added animated glow/floating logo styling matching the existing glass/CTA effects
+- Updated README branding section and version.
+
 ## v0.8.6
 
 - Added Context Handoff Mode:

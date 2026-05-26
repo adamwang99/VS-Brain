@@ -1,15 +1,15 @@
 # VS Brain Checkpoint
 
-Saved: 2026-05-27 00:55 GMT+7
+Saved: 2026-05-27 01:02 GMT+7
 
 ## Current version
 
-`v0.8.6`
+`v0.8.7`
 
 Latest commit:
 
 ```text
-pending commit: context handoff mode v0.8.6
+pending commit: add logo branding v0.8.7
 ```
 
 ## Current state
@@ -28,6 +28,7 @@ Main UX:
 - Auto relay restores the intended target tab before filling and stops safely on tab drift.
 - Finalize requires final agreement phrase or explicit draft confirmation; exports finalization metadata.
 - Context Handoff exports compressed reset package for long/degraded debates and can open a fresh tab.
+- Supplied logo appears in UI header, help modal, and Chrome extension icons with animated glow.
 - Manual/advanced controls hidden under details.
 
 Core flow:
@@ -52,12 +53,11 @@ Stop phrases:
 
 ## Last user-requested change completed
 
-- Context Handoff Mode:
-  - export Markdown/JSON handoff package
-  - estimate visible context usage
-  - capture latest answer + loop metadata + stop reason
-  - include bootstrap prompt for a clean new tab
-  - update README with full project value/features/status
+- Logo branding integration:
+  - use supplied logo source in app assets
+  - regenerate extension icons
+  - show animated logo in header and help modal
+  - update README branding section
 
 ## Pending possible refinements
 

@@ -9,9 +9,12 @@
 <body>
   <main>
     <header class="hero glass">
-      <div>
-        <h1>🧠 VS Brain <span class="version">v0.8.6</span></h1>
-        <p class="subtitle" data-i18n="subtitle">AI debate relay · archive · checkpoint</p>
+      <div class="brand-lockup">
+        <img class="brand-logo hero-logo" src="icons/vs-brain-logo.png" alt="VS Brain logo" />
+        <div>
+          <h1>VS Brain <span class="version">v0.8.7</span></h1>
+          <p class="subtitle" data-i18n="subtitle">AI debate relay · archive · checkpoint</p>
+        </div>
       </div>
       <div class="head-actions"><button id="helpBtn" class="help-round" title="Hướng dẫn sử dụng">?</button><select id="langMode" class="glass-select" title="Ngôn ngữ prompt"><option value="en">🇺🇸</option><option value="vi">🇻🇳</option></select></div>
     </header>
@@ -80,7 +83,7 @@
       </section>
     </details>
 
-    <div id="helpModal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card glass"><div class="section-head"><h2 data-i18n="helpTitle">Hướng dẫn VS Brain</h2><button id="closeHelpBtn" class="chip" data-i18n="close">Đóng</button></div><div id="helpContent" class="help-content"></div></div></div>
+    <div id="helpModal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card glass"><div class="section-head"><h2 data-i18n="helpTitle">Hướng dẫn VS Brain</h2><button id="closeHelpBtn" class="chip" data-i18n="close">Đóng</button></div><div class="modal-logo-wrap"><img class="brand-logo modal-logo" src="icons/vs-brain-logo.png" alt="VS Brain logo" /></div><div id="helpContent" class="help-content"></div></div></div>
 
     <details class="glass logbox"><summary data-i18n="logDebug">Log / debug</summary><button id="exportLogBtn" class="chip" data-i18n="exportLog">Xuất log</button><pre id="log" aria-label="Nhật ký thao tác"></pre></details>
   </main>
