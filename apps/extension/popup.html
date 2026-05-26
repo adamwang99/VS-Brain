@@ -40,14 +40,9 @@
       <label>Tab đích <span class="hint">dán prompt phản biện</span>
         <select id="targetTab"></select>
       </label>
-      <label>Kiểu phản biện
-        <select id="relayTemplate">
-          <option value="critique">Phản biện lỗi/thiếu</option>
-          <option value="verify">Kiểm tra logic/kỹ thuật</option>
-          <option value="revise">Yêu cầu sửa bản nháp</option>
-          <option value="final">Tổng hợp bản cuối</option>
-        </select>
-      </label>
+      <div class="fixed-template">
+        <b>Prompt mặc định:</b> phản biện tổng hợp — logic, kỹ thuật, fact, thiếu sót, rủi ro, cấu trúc, hành động tiếp theo.
+      </div>
       <label>Chế độ lấy nội dung
         <select id="relayMode">
           <option value="latest">Chỉ phản hồi mới nhất</option>

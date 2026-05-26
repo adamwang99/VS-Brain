@@ -41,15 +41,15 @@ function pageScanner() {
   }
 
   function roleFromNode(node, idx) {
-    const text = (node.getAttribute('data-message-author-role') || node.getAttribute('aria-label') || node.className || '').toString().toLowerCase();
-    if (text.includes('user') || text.includes('you')) return 'user';
-    if (text.includes('assistant') || text.includes('model') || text.includes('chatgpt') || text.includes('gemini')) return 'assistant';
+    const text = (node.getAttribute('data-message-author-role') || node.getAttribute('aria-label') || node.getAttribute('data-testid') || node.className || '').toString().toLowerCase();
+    if (text.includes('user') || text.includes('you') || text.includes('human')) return 'user';
+    if (text.includes('assistant') || text.includes('model') || text.includes('chatgpt') || text.includes('gemini') || text.includes('bot')) return 'assistant';
     return idx % 2 === 0 ? 'user' : 'assistant';
   }
 
   let nodes = [];
   if (platform === 'chatgpt') {
-    nodes = Array.from(document.querySelectorAll('[data-message-author-role], article, main [class*="group"]'));
+    nodes = Array.from(document.querySelectorAll('[data-message-author-role], [data-testid^="conversation-turn-"], article, main [class*="group"], .markdown'));
   } else if (platform === 'gemini') {
     nodes = Array.from(document.querySelectorAll('user-query, model-response, message-content, .conversation-container [class*="query"], .conversation-container [class*="response"]'));
   }
@@ -276,7 +276,7 @@ function extractLatestResponseInPage(mode = 'latest') {
     : 'unknown';
 
   const selectors = platform === 'chatgpt'
-    ? ['[data-message-author-role="assistant"]', 'article', '.markdown']
+    ? ['[data-message-author-role="assistant"]', '[data-testid^="conversation-turn-"] [class*="markdown"]', '[data-testid^="conversation-turn-"] .markdown', 'article .markdown', '.markdown', 'article']
     : platform === 'gemini'
       ? ['model-response', 'message-content', '.model-response-text']
       : platform === 'deepseek'
@@ -328,11 +328,31 @@ function fillPromptInPage(prompt) {
 
 function buildRelayPrompt(kind, source) {
   const content = source.content;
-  const base = `Nguồn: ${source.platform}\nYêu cầu: Đọc nội dung dưới đây và phản hồi theo đúng vai trò.\n\nNỘI DUNG:\n${content}`;
-  if (kind === 'verify') return `${base}\n\nVAI TRÒ: Kiểm tra logic/kỹ thuật.\nOutput:\n1. Lỗi logic/kỹ thuật\n2. Giả định yếu\n3. Rủi ro triển khai\n4. Kết luận pass/fail\n5. Nếu cần tiếp tục phản biện, ghi should_continue=true.`;
-  if (kind === 'revise') return `${base}\n\nVAI TRÒ: Sửa bản nháp dựa trên phản biện.\nOutput:\n1. Bản sửa hoàn chỉnh\n2. Những điểm đã sửa\n3. Điểm còn chưa chắc\n4. should_continue=true/false.`;
-  if (kind === 'final') return `${base}\n\nVAI TRÒ: Tổng hợp bản cuối.\nChỉ giữ nội dung đã đủ chắc, bỏ phần mơ hồ.\nOutput:\n1. Final answer\n2. Confidence 0-10\n3. Critical issues còn lại\n4. should_continue=true/false.`;
-  return `${base}\n\nVAI TRÒ: Phản biện nghiêm khắc.\nTìm lỗi, thiếu evidence, mâu thuẫn, giả định yếu.\nOutput:\n1. Điểm mạnh\n2. Lỗi/thiếu sót\n3. Câu hỏi cần làm rõ\n4. Đề xuất sửa\n5. score 0-10\n6. should_continue=true/false.`;
+  return `Bạn là AI phản biện tổng hợp, nghiêm khắc, không nể ý tưởng gốc.
+
+Nhiệm vụ: chỉ phản biện NỘI DUNG MỚI bên dưới, không lặp lại lịch sử cũ, không viết lan man. Hãy kiểm tra đồng thời tất cả nhóm sau:
+
+1. Logic: mâu thuẫn, nhảy bước, kết luận không theo tiền đề.
+2. Kỹ thuật: feasibility, edge case, lỗi triển khai, dependency, giới hạn nền tảng.
+3. Fact/evidence: điểm thiếu nguồn, giả định chưa chứng minh, thông tin có thể sai.
+4. Product/UX: có dễ dùng không, có lỗi thao tác không, có đường undo/recovery không.
+5. Security/privacy: rò dữ liệu, quyền quá rộng, auto-send nguy hiểm, lưu trữ nhạy cảm.
+6. Hiệu suất/context: có copy lặp, phình prompt, tốn token, vòng lặp vô hạn không.
+7. Cấu trúc output: thiếu schema, thiếu tiêu chí dừng, thiếu bước kiểm chứng.
+8. Hành động tiếp theo: sửa gì trước, bỏ gì, giữ gì.
+
+Output bắt buộc, ngắn gọn:
+- Verdict: PASS / PARTIAL / FAIL
+- Critical issues: ...
+- Missing pieces: ...
+- Suggested fixes: ...
+- Score: 0-10
+- should_continue: true/false
+
+Nguồn: ${source.platform}
+
+NỘI DUNG MỚI:
+${content}`;
 }
 
 
@@ -368,7 +388,7 @@ async function clearRelayStates() {
 async function executeRelay() {
   const sourceId = Number($('sourceTab').value);
   const targetId = Number($('targetTab').value);
-  const kind = $('relayTemplate').value;
+  const kind = 'comprehensive';
   const mode = $('relayMode').value;
   if (!sourceId || !targetId || sourceId === targetId) throw new Error('Chọn 2 tab khác nhau');
 
