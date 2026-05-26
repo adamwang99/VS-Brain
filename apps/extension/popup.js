@@ -300,7 +300,7 @@ function extractLatestResponseInPage(mode = 'latest') {
   return { platform, title: document.title, url: location.href, content };
 }
 
-async function fillPromptInPage(prompt) {
+async function fillPromptInPage(prompt, autoSend = false) {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
   function visible(el) {
@@ -369,7 +369,38 @@ async function fillPromptInPage(prompt) {
   return { ok: false, error: 'Không tìm thấy hoặc không set được ô nhập chat. Hãy click vào ô chat Gemini rồi thử lại.' };
 }
 
-function buildRelayPrompt(kind, source, extraInstruction = '') {
+async function clickSendInPage() {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const selectors = [
+    'button[data-testid="send-button"]',
+    'button[aria-label*="Send" i]',
+    'button[aria-label*="Gửi" i]',
+    'button[aria-label*="Submit" i]',
+    'button.send-button',
+    'button:has(mat-icon)',
+    'button'
+  ];
+  await sleep(250);
+  for (const sel of selectors) {
+    let buttons = [];
+    try { buttons = Array.from(document.querySelectorAll(sel)); } catch (_) { continue; }
+    buttons = buttons.filter((b) => {
+      const txt = `${b.innerText || ''} ${b.getAttribute('aria-label') || ''} ${b.getAttribute('data-testid') || ''}`.toLowerCase();
+      const r = b.getBoundingClientRect?.();
+      return r && r.width > 0 && r.height > 0 && !b.disabled && (txt.includes('send') || txt.includes('gửi') || txt.includes('submit') || txt.includes('arrow') || txt.includes('send-button'));
+    });
+    const btn = buttons[buttons.length - 1];
+    if (btn) { btn.click(); return { ok: true, selector: sel }; }
+  }
+  return { ok: false, error: 'Không tìm thấy nút gửi' };
+}
+
+function pageContainsStopPhrase(stopPhrase) {
+  return (document.body?.innerText || '').includes(stopPhrase);
+}
+
+
+function buildRelayPrompt(kind, source, extraInstruction = '', stopPhrase = 'CROSSCRITIC_FINAL_AGREE') {
   const content = source.content;
   const extra = extraInstruction.trim() ? `\n\nYÊU CẦU BỔ SUNG TỪ NGƯỜI DÙNG:\n${extraInstruction.trim()}` : '';
   return `Bạn là AI phản biện tổng hợp, nghiêm khắc, không nể ý tưởng gốc.
@@ -499,11 +530,18 @@ async function executeRelay(sourceOverride, targetOverride) {
     return { pasted: false, reason: 'duplicate' };
   }
 
-  const prompt = buildRelayPrompt(kind, source, $('extraInstruction')?.value || '');
+  const stopPhrase = $('stopPhrase')?.value?.trim() || 'CROSSCRITIC_FINAL_AGREE';
+  const prompt = buildRelayPrompt(kind, source, $('extraInstruction')?.value || '', stopPhrase);
   await chrome.tabs.update(targetId, { active: true });
   await new Promise((r) => setTimeout(r, 500));
   const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: targetId }, func: fillPromptInPage, args: [prompt] });
   if (!result?.ok) throw new Error(result?.error || 'Không dán được prompt');
+  let sendResult = null;
+  if ($('autoSendToggle')?.checked) {
+    const [{ result: sr }] = await chrome.scripting.executeScript({ target: { tabId: targetId }, func: clickSendInPage });
+    sendResult = sr;
+    if (!sendResult?.ok) log(`auto-send fail: ${sendResult?.error || 'unknown'}`);
+  }
 
   await setRelayState(key, {
     sourceId,
@@ -516,8 +554,9 @@ async function executeRelay(sourceOverride, targetOverride) {
     preview: source.content.slice(0, 180)
   });
   const hasExtra = ($('extraInstruction')?.value || '').trim() ? ' có yêu cầu bổ sung' : '';
-  log(`đã dán nội dung mới hash=${contentHash}${hasExtra} method=${result.method || '?'} selector=${result.selector || '?'}; Sếp bấm gửi thủ công`);
-  return { pasted: true, contentHash };
+  const sendText = $('autoSendToggle')?.checked ? ` autoSend=${sendResult?.ok ? 'ok' : 'fail'}` : '; Sếp bấm gửi thủ công';
+  log(`đã dán nội dung mới hash=${contentHash}${hasExtra} method=${result.method || '?'} selector=${result.selector || '?'}${sendText}`);
+  return { pasted: true, contentHash, autoSent: !!sendResult?.ok };
 }
 
 $('refreshTabsBtn')?.addEventListener('click', async () => {
@@ -567,6 +606,13 @@ function stopLoop(reason = 'stopped') {
 
 async function loopStep() {
   if (!loopState) return;
+  const stopPhrase = $('stopPhrase')?.value?.trim() || 'CROSSCRITIC_FINAL_AGREE';
+  for (const tabId of [loopState.a, loopState.b]) {
+    try {
+      const [{ result: hasStop }] = await chrome.scripting.executeScript({ target: { tabId }, func: pageContainsStopPhrase, args: [stopPhrase] });
+      if (hasStop) return stopLoop(`gặp cụm từ chốt: ${stopPhrase}`);
+    } catch (_) {}
+  }
   if (loopState.step >= loopState.maxSteps) return stopLoop('đạt số bước tối đa');
   let sourceId, targetId;
   try {
@@ -601,7 +647,7 @@ $('startLoopBtn')?.addEventListener('click', async () => {
       delayMs: Math.max(3, Math.min(120, Number($('loopDelaySec').value || 12))) * 1000
     };
     setLoopRunning(true);
-    log(`auto-loop bắt đầu: max=${loopState.maxSteps}, delay=${loopState.delayMs / 1000}s. Bản an toàn: tự dán, chưa tự gửi.`);
+    log(`auto-loop bắt đầu: max=${loopState.maxSteps}, delay=${loopState.delayMs / 1000}s. autoSend=${$('autoSendToggle')?.checked ? 'ON' : 'OFF'}`);
     await loopStep();
   } catch (e) { log(e.message); }
 });

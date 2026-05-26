@@ -64,7 +64,14 @@
         <label>Khoảng chờ mỗi bước (giây)
           <input id="loopDelaySec" type="number" min="3" max="120" value="12" />
         </label>
-        <button id="startLoopBtn" disabled>Bắt đầu auto A ↔ B <span class="q" title="Tự chuyển qua lại giữa tab nguồn và tab đích. Bản an toàn: chỉ tự dán, chưa tự bấm gửi.">?</span></button>
+        <label>Cụm từ chốt để dừng
+          <input id="stopPhrase" type="text" value="CROSSCRITIC_FINAL_AGREE" />
+        </label>
+        <label class="checkline">
+          <input id="autoSendToggle" type="checkbox" />
+          Tự bấm gửi sau khi dán
+        </label>
+        <button id="startLoopBtn" disabled>Bắt đầu auto A ↔ B <span class="q" title="Tự chuyển qua lại giữa tab nguồn và tab đích. Nếu bật tự gửi, app sẽ click nút Send sau khi dán.">?</span></button>
         <button id="stopLoopBtn" disabled>Dừng auto</button>
       </div>
     </section>

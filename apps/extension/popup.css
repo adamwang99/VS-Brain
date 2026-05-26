@@ -15,7 +15,9 @@ h1 { font-size: 18px; margin: 0 0 3px; }
 .relay label { display: grid; gap: 4px; color: #c7d0df; font-size: 12px; }
 .fixed-template, .loop-box { color: #c7d0df; font-size: 12px; background: #090b10; border: 1px solid #30394b; border-radius: 7px; padding: 7px; line-height: 1.35; }
 .loop-box { display: grid; gap: 6px; }
-.loop-box input { width: 100%; box-sizing: border-box; background: #0f1115; color: #eef2ff; border: 1px solid #30394b; border-radius: 7px; padding: 7px; }
+.loop-box input[type="number"], .loop-box input[type="text"] { width: 100%; box-sizing: border-box; background: #0f1115; color: #eef2ff; border: 1px solid #30394b; border-radius: 7px; padding: 7px; }
+.checkline { display: flex !important; grid-template-columns: auto 1fr; align-items: center; gap: 8px; }
+.checkline input { width: auto; }
 .relay select, .relay textarea { width: 100%; box-sizing: border-box; background: #090b10; color: #eef2ff; border: 1px solid #30394b; border-radius: 7px; padding: 7px; }
 .relay textarea { resize: vertical; min-height: 76px; font-family: inherit; }
 .hint { color: #8791a3; font-size: 11px; font-weight: 400; }
