@@ -1336,6 +1336,11 @@ $('closeHelpBtn')?.addEventListener('click', () => $('helpModal')?.classList.add
 $('helpModal')?.addEventListener('click', (e) => { if (e.target?.id === 'helpModal') $('helpModal')?.classList.add('hidden'); });
 
 $('stepsSlider')?.addEventListener('input', syncSliderStep);
+$('loopMaxSteps')?.addEventListener('change', () => setRoundLimit($('loopMaxSteps').value, 'input'));
+$('roundDecBtn')?.addEventListener('click', () => setRoundLimit((Number($('loopMaxSteps')?.value || 100) - 10), '-10'));
+$('roundIncBtn')?.addEventListener('click', () => setRoundLimit((Number($('loopMaxSteps')?.value || 100) + 10), '+10'));
+qsa('.round-preset').forEach((btn) => btn.addEventListener('click', () => setRoundLimit(btn.dataset.round, 'preset')));
+
 $('refreshTabsBtn')?.addEventListener('click', async () => {
   try { await refreshTabs(); } catch (e) { log(e.message); }
 });
@@ -1493,26 +1498,27 @@ async function loopStep() {
 
 
 
-function syncSliderStep() {
+function setRoundLimit(raw, reason = 'manual') {
   const slider = $('stepsSlider');
   const input = $('loopMaxSteps');
   const display = $('sliderValue');
-  if (!slider || !input) return;
-  const val = Number(slider.value) || 1;
   const current = Number($('loopCounter')?.textContent?.split('/')[0] || 0);
-  // block reduce if loop is running
+  let val = Math.max(1, Math.min(1000, Number(raw) || 1));
   if (loopState && val < current) {
-    slider.value = String(loopState.maxSteps);
-    if (display) display.textContent = String(loopState.maxSteps);
-    input.value = String(loopState.maxSteps);
-    if ($('loopCounter')) $('loopCounter').textContent = `${current}/${loopState.maxSteps}`;
-    log(`không thể kéo xuống dưới số vòng đang chạy: ${current}`);
-    return;
+    val = loopState.maxSteps;
+    log(`không thể giảm dưới số vòng đang chạy: ${current}`);
   }
-  input.value = String(val);
+  if (input) input.value = String(val);
+  if (slider) slider.value = String(Math.round(val / 10) * 10 || 1);
   if (display) display.textContent = String(val);
   if (loopState) loopState.maxSteps = val;
   if ($('loopCounter')) $('loopCounter').textContent = `${current}/${val}`;
+  qsa('.round-preset').forEach((btn) => btn.classList.toggle('active', Number(btn.dataset.round) === val));
+  if (reason !== 'slider') log(`đặt số vòng=${val} (${reason})`);
+}
+
+function syncSliderStep() {
+  setRoundLimit(Number($('stepsSlider')?.value || 100), 'slider');
 }
 $('oneClickStartBtn')?.addEventListener('click', async () => {
   try {
@@ -1547,7 +1553,7 @@ $('startLoopBtn')?.addEventListener('click', async () => {
       currentSource: a,
       currentTarget: b,
       step: 0,
-      maxSteps: Math.max(1, Math.min(100, Number($('loopMaxSteps').value || 100))),
+      maxSteps: Math.max(1, Math.min(1000, Number($('loopMaxSteps').value || 100))),
       delayMs: Math.max(3, Math.min(120, Number($('loopDelaySec').value || 12))) * 1000,
       waitMs: Math.max(15, Math.min(300, Number($('loopDelaySec').value || 12) * 5)) * 1000
     };

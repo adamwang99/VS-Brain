@@ -1,5 +1,14 @@
 # VS Brain Changelog
 
+## v0.8.10
+
+- Improved round selection UX:
+  - added preset buttons: 25/50/100/200/500/1000
+  - added `-10` / `+10` stepper buttons
+  - kept direct numeric input up to 1000
+  - changed slider to coarse `step=10` so values stop jumping uncontrollably
+  - keeps guard that running loops cannot reduce max below the current round
+
 ## v0.8.9
 
 - Regenerated extension icons with maximum-size content crop and no extra padding to improve small-icon readability.
