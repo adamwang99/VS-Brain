@@ -353,6 +353,47 @@ function estimateScanTokens(scan) {
   return { chars: text.length, tokens_est: estimateTokens(text) };
 }
 
+function extractQualitySignals(text) {
+  const t = String(text || '');
+  const lower = t.toLowerCase();
+  const confidenceMatch = lower.match(/confidence\s*[:：]?\s*(\d+(?:\.\d+)?)/i) || lower.match(/điểm tin cậy\s*[:：]?\s*(\d+(?:\.\d+)?)/i);
+  const confidence = confidenceMatch ? Math.max(0, Math.min(10, Number(confidenceMatch[1]))) : null;
+  const shouldContinue = /should_continue\s*[:：]?\s*true/i.test(t) || /tiếp tục\s*[:：]?\s*(có|true)/i.test(lower);
+  const noNewIssues = /(no new issues|không có lỗi mới|không còn lỗi mới|no material issues)/i.test(t);
+  const contradiction = /(contradiction|mâu thuẫn|inconsistent|không nhất quán)/i.test(t);
+  const critical = /(critical issues?\s*[:：]\s*(?!none|không)|lỗi nghiêm trọng\s*[:：]\s*(?!không)|blocker|chặn)/i.test(t);
+  return { confidence, shouldContinue, noNewIssues, contradiction, critical };
+}
+
+function updateQualityGuard(tabId, contentHash, content) {
+  if (!loopState) return { ok: true };
+  if (!loopState.quality) loopState.quality = { hashes: [], repeatedCount: 0, noNewIssuesCount: 0, lowConfidenceCount: 0, contradictionCount: 0, criticalCount: 0 };
+  const q = loopState.quality;
+  const prev = q.hashes[q.hashes.length - 1];
+  if (contentHash && prev === contentHash) q.repeatedCount += 1;
+  else if (contentHash) q.hashes.push(contentHash);
+  if (q.hashes.length > 8) q.hashes.shift();
+  const sig = extractQualitySignals(content);
+  if (sig.noNewIssues) q.noNewIssuesCount += 1; else q.noNewIssuesCount = 0;
+  if (sig.confidence != null && sig.confidence < 7) q.lowConfidenceCount += 1; else if (sig.confidence != null) q.lowConfidenceCount = 0;
+  if (sig.contradiction) q.contradictionCount += 1;
+  if (sig.critical) q.criticalCount += 1;
+  q.last = { tabId, contentHash, ...sig, checkedAt: new Date().toISOString() };
+  log(`quality tab=${tabId} repeat=${q.repeatedCount} noNew=${q.noNewIssuesCount} lowConf=${q.lowConfidenceCount} contradiction=${q.contradictionCount} critical=${q.criticalCount}`);
+  if (q.repeatedCount >= 2) return { ok: false, reason: 'quality_guard_repeated_hash' };
+  if (q.contradictionCount >= 2) return { ok: false, reason: 'quality_guard_contradiction' };
+  if (q.lowConfidenceCount >= 2) return { ok: false, reason: 'quality_guard_low_confidence' };
+  return { ok: true };
+}
+
+async function checkLatestQuality(tabId) {
+  const latest = await executeInAiTab(tabId, extractLatestResponseInPage, ['latest'], 'quality-tab');
+  if (!latest?.content) return { ok: true };
+  let h = null;
+  try { h = await getLatestContentHash(tabId); } catch (_) {}
+  return updateQualityGuard(tabId, h, latest.content);
+}
+
 function buildHandoffState(scan, reason = 'manual_context_handoff') {
   const latest = (scan.messages || [])[scan.messages.length - 1] || null;
   const est = estimateScanTokens(scan);
@@ -411,19 +452,23 @@ This handoff resets the provider session without losing the useful state. Do not
 
 ## Required compressed state
 
-Fill or refine these sections before continuing:
+Before continuing, distill the old debate into a clean state. Do not copy the whole history. Extract only durable facts:
 
 ### Requirements / invariants
--
+- Extract hard requirements that must remain true.
 
 ### Decisions already accepted
--
+- Extract decisions that are no longer disputed.
 
 ### Resolved issues
--
+- Extract issues that were fixed or explicitly accepted.
 
 ### Unresolved issues / blockers
--
+- Extract remaining blockers, contradictions, missing evidence, or assumptions.
+
+### Quality guard
+- If confidence is below 9/10, or blockers remain, do not write the final agreement stop phrase.
+- If the latest answer contradicts any invariant, mark it as unresolved.
 
 ### Latest answer to continue from
 
@@ -431,7 +476,7 @@ ${state.latest_answer?.content || ''}
 
 ## Bootstrap prompt for new tab
 
-Continue the VS Brain critique from this compressed handoff. Treat the sections above as source-of-truth. Do not rely on previous chat history. First, reconstruct a concise state: requirements, decisions, resolved issues, unresolved issues. Then continue critique only on unresolved issues and the latest answer. Do not write the final agreement stop phrase unless all final-confirm conditions are satisfied.
+Continue the VS Brain critique from this compressed handoff. Treat the sections above as source-of-truth. Do not rely on previous chat history. First, reconstruct a concise state with exactly these sections: requirements, decisions, resolved issues, unresolved issues, quality risks. Then continue critique only on unresolved issues and the latest answer. If no unresolved issue remains, perform one final verification pass before writing any stop phrase. Do not write the final agreement stop phrase unless confidence is >= 9/10, there are no contradictions, no critical blockers, and no missing evidence that changes the decision.
 `;
 }
 
@@ -1552,6 +1597,8 @@ async function loopStep() {
       log(`chưa có phản hồi mới từ tab ${targetId}: ${waited.reason}; vẫn thử bước kế sau delay`);
     } else {
       log(`đã thấy phản hồi mới từ tab ${targetId} hash=${waited.contentHash}`);
+      const q = await checkLatestQuality(targetId);
+      if (!q.ok) return stopLoop(q.reason);
     }
   }
 

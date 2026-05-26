@@ -1,5 +1,16 @@
 # VS Brain Changelog
 
+## v0.8.13
+
+- Added Quality Guard v1:
+  - tracks repeated latest-answer hash
+  - parses confidence signals
+  - detects no-new-issues, contradiction, critical/blocker markers
+  - stops loop on repeated hash, repeated contradiction, or repeated low confidence
+  - logs per-round quality counters
+- Upgraded Context Handoff bootstrap instructions to require distillation of requirements, decisions, resolved issues, unresolved issues, and quality risks before continuing.
+- Updated README with Quality Guard section.
+
 ## v0.8.12
 
 - Added deferred monetization/free-pro upgrade debt to `PROJECT_STATUS.md`:

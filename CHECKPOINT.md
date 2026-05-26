@@ -1,15 +1,15 @@
 # VS Brain Checkpoint
 
-Saved: 2026-05-27 01:32 GMT+7
+Saved: 2026-05-27 01:40 GMT+7
 
 ## Current version
 
-`v0.8.12`
+`v0.8.13`
 
 Latest commit:
 
 ```text
-pending commit: record monetization upgrade debt v0.8.12
+pending commit: quality guard v1 and handoff distill v2
 ```
 
 ## Current state
@@ -32,6 +32,8 @@ Main UX:
 - Chrome icons are max-cropped with no extra padding so the logo fills the icon area at small sizes.
 - Round selection uses presets, direct input, +/-10, and coarse slider step=10 for controllable selection.
 - Auto Handoff Runtime can trigger at 70% estimated context, open replacement tab, inject bootstrap, swap loop tab id, and resume.
+- Quality Guard v1 stops long loops on repeated hash, repeated contradiction, or repeated low confidence signals.
+- Handoff bootstrap now asks model to distill requirements/decisions/resolved/unresolved/quality risks before continuing.
 - Monetization/free-pro split is recorded as upgrade debt; current focus remains stabilizing full internal beta first.
 - Manual/advanced controls hidden under details.
 
@@ -57,11 +59,12 @@ Stop phrases:
 
 ## Last user-requested change completed
 
-- Recorded monetization upgrade debt in `PROJECT_STATUS.md`:
-  - Free: 20 rounds / 2 providers / basic export / manual handoff
-  - Pro: 1000 rounds / multi-provider / Roundtable/Judge / Auto Handoff / advanced gates
-  - distribution: one Chrome Web Store extension, Free default, Pro via license/billing later
-  - no paid gating until core runtime is stable
+- Quality Guard v1 + Handoff distill v2:
+  - repeated hash detection
+  - confidence/no-new-issues/contradiction/critical marker parsing
+  - stop loop on repeated hash, repeated contradiction, repeated low confidence
+  - per-round quality logs
+  - handoff bootstrap forces compressed state distillation before continuing
 
 ## Pending possible refinements
 

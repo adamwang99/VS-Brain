@@ -4,7 +4,7 @@ VS Brain is a Chrome side-panel extension for running structured AI-to-AI critiq
 
 It turns ad-hoc copy/paste between AI tools into a governed workflow: scan conversations, relay only the latest answer, force structured critique, stop on explicit agreement, finalize a blueprint, and preserve checkpoints when context gets too large.
 
-Current extension version: `v0.8.11`.
+Current extension version: `v0.8.13`.
 
 ## Why it is useful
 
@@ -70,7 +70,19 @@ VS Brain uses explicit stop phrases:
 
 This prevents a manually stopped or degraded debate from being silently treated as fully agreed.
 
-### 4. Safe tab restore / drift guard
+### 4. Quality Guard v1
+
+During auto loops, VS Brain now tracks lightweight quality signals from the latest answer:
+
+- repeated content hash
+- no-new-issues streak
+- low confidence streak
+- contradiction markers
+- critical/blocker markers
+
+If repeated hash, contradiction, or low-confidence signals persist, the loop stops with a quality guard reason instead of continuing blindly. This does not prove factual correctness, but it reduces long-run drift and false confidence.
+
+### 5. Safe tab restore / drift guard
 
 When the user switches tabs during an auto loop, VS Brain restores the intended target tab before filling.
 
@@ -84,7 +96,7 @@ Guard behavior:
 
 This avoids writing into the wrong tab or continuing blindly after UI drift.
 
-### 5. Context Handoff Mode
+### 6. Context Handoff Mode
 
 Context Handoff Mode solves the “200 rounds + high context + weaker model” failure mode. It supports manual export and an automatic runtime path during loops.
 
@@ -116,7 +128,7 @@ Auto runtime behavior: during each loop step, VS Brain estimates visible context
 
 Important: web UI mode cannot know true provider context usage. VS Brain marks these values as estimates. They are still useful as a guardrail.
 
-### 6. Conversation archive and checkpointing
+### 7. Conversation archive and checkpointing
 
 VS Brain can scan the current AI chat and export:
 
@@ -127,7 +139,7 @@ VS Brain can scan the current AI chat and export:
 
 It stores per-conversation checkpoints in `chrome.storage.local` to avoid duplicate exports.
 
-### 7. Final blueprint export
+### 8. Final blueprint export
 
 After finalization, VS Brain exports:
 
