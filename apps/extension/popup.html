@@ -31,6 +31,26 @@
       <button id="clearCheckpointBtn" disabled>Xóa mốc đã lưu <span class="q" title="Xóa checkpoint của cuộc chat này. Sau đó nút xuất mới sẽ lấy lại toàn bộ tin đang thấy.">?</span></button>
     </section>
 
+    <section class="relay" aria-label="Điều phối phản biện">
+      <h2>Phản biện tuần tự</h2>
+      <button id="refreshTabsBtn">Quét tab AI đang mở <span class="q" title="Tìm các tab ChatGPT, Gemini, DeepSeek, Claude, Perplexity đang mở trong Chrome.">?</span></button>
+      <label>Tab nguồn <span class="hint">lấy câu trả lời mới nhất</span>
+        <select id="sourceTab"></select>
+      </label>
+      <label>Tab đích <span class="hint">dán prompt phản biện</span>
+        <select id="targetTab"></select>
+      </label>
+      <label>Kiểu phản biện
+        <select id="relayTemplate">
+          <option value="critique">Phản biện lỗi/thiếu</option>
+          <option value="verify">Kiểm tra logic/kỹ thuật</option>
+          <option value="revise">Yêu cầu sửa bản nháp</option>
+          <option value="final">Tổng hợp bản cuối</option>
+        </select>
+      </label>
+      <button id="relayBtn" disabled>Lấy từ nguồn → dán sang đích <span class="q" title="Extension lấy nội dung mới nhất từ tab nguồn, tạo prompt, dán vào ô chat tab đích. Không tự bấm gửi.">?</span></button>
+    </section>
+
     <details class="guide">
       <summary>Hướng dẫn nhanh</summary>
       <ol>

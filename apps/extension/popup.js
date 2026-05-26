@@ -226,3 +226,130 @@ $('checkpointBtn').addEventListener('click', async () => {
 });
 
 scan().catch((e) => log(e.message));
+
+const AI_HOSTS = [
+  ['chatgpt', ['chatgpt.com', 'chat.openai.com']],
+  ['gemini', ['gemini.google.com']],
+  ['deepseek', ['chat.deepseek.com']],
+  ['claude', ['claude.ai']],
+  ['perplexity', ['perplexity.ai']],
+  ['grok', ['grok.com', 'x.com/i/grok']]
+];
+
+function providerFromUrl(url = '') {
+  for (const [name, hosts] of AI_HOSTS) if (hosts.some((h) => url.includes(h))) return name;
+  return 'unknown';
+}
+
+let aiTabs = [];
+
+async function refreshTabs() {
+  const tabs = await chrome.tabs.query({});
+  aiTabs = tabs
+    .filter((t) => providerFromUrl(t.url) !== 'unknown')
+    .map((t) => ({ id: t.id, title: t.title || 'Untitled', url: t.url || '', provider: providerFromUrl(t.url) }));
+  const html = aiTabs.map((t) => `<option value="${t.id}">${t.provider} — ${escapeHtml(t.title).slice(0, 70)}</option>`).join('');
+  $('sourceTab').innerHTML = html || '<option value="">Không thấy tab AI</option>';
+  $('targetTab').innerHTML = html || '<option value="">Không thấy tab AI</option>';
+  $('relayBtn').disabled = aiTabs.length < 2;
+  log(`đã quét tab AI: ${aiTabs.length}`);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+
+function extractLatestResponseInPage() {
+  function cleanText(text) {
+    return (text || '').replace(/\r\n/g, '\n').replace(/[ \t]+$/gm, '').replace(/\n{3,}/g, '\n\n').trim();
+  }
+  const host = location.hostname;
+  const platform = host.includes('gemini.google.com') ? 'gemini'
+    : host.includes('deepseek.com') ? 'deepseek'
+    : host.includes('claude.ai') ? 'claude'
+    : host.includes('perplexity.ai') ? 'perplexity'
+    : host.includes('chatgpt.com') || host.includes('chat.openai.com') ? 'chatgpt'
+    : 'unknown';
+
+  const selectors = platform === 'chatgpt'
+    ? ['[data-message-author-role="assistant"]', 'article', '.markdown']
+    : platform === 'gemini'
+      ? ['model-response', 'message-content', '.model-response-text']
+      : platform === 'deepseek'
+        ? ['.ds-markdown', '[class*="message"]', '[class*="answer"]']
+        : platform === 'claude'
+          ? ['[data-testid*="assistant"]', '.font-claude-message', '[class*="assistant"]']
+          : platform === 'perplexity'
+            ? ['[data-testid*="answer"]', '.prose', '[class*="answer"]']
+            : ['main article', '.markdown', 'p'];
+
+  let candidates = [];
+  for (const sel of selectors) candidates.push(...Array.from(document.querySelectorAll(sel)));
+  candidates = candidates
+    .map((node) => cleanText(node.innerText || node.textContent || ''))
+    .filter((text) => text && text.length > 30)
+    .filter((text, idx, arr) => arr.indexOf(text) === idx);
+  const content = candidates[candidates.length - 1] || '';
+  return { platform, title: document.title, url: location.href, content };
+}
+
+function fillPromptInPage(prompt) {
+  function setValue(el, value) {
+    el.focus();
+    if (el.isContentEditable) {
+      el.textContent = value;
+      el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: value }));
+      return true;
+    }
+    const proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+    const desc = Object.getOwnPropertyDescriptor(proto, 'value');
+    desc?.set?.call(el, value);
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  }
+  const selectors = [
+    'div[contenteditable="true"]',
+    'textarea',
+    '[role="textbox"]',
+    'div.ProseMirror'
+  ];
+  for (const sel of selectors) {
+    const els = Array.from(document.querySelectorAll(sel)).filter((el) => !el.disabled && el.offsetParent !== null);
+    const el = els[els.length - 1];
+    if (el && setValue(el, prompt)) return { ok: true };
+  }
+  return { ok: false, error: 'Không tìm thấy ô nhập chat' };
+}
+
+function buildRelayPrompt(kind, source) {
+  const content = source.content;
+  const base = `Nguồn: ${source.platform}\nYêu cầu: Đọc nội dung dưới đây và phản hồi theo đúng vai trò.\n\nNỘI DUNG:\n${content}`;
+  if (kind === 'verify') return `${base}\n\nVAI TRÒ: Kiểm tra logic/kỹ thuật.\nOutput:\n1. Lỗi logic/kỹ thuật\n2. Giả định yếu\n3. Rủi ro triển khai\n4. Kết luận pass/fail\n5. Nếu cần tiếp tục phản biện, ghi should_continue=true.`;
+  if (kind === 'revise') return `${base}\n\nVAI TRÒ: Sửa bản nháp dựa trên phản biện.\nOutput:\n1. Bản sửa hoàn chỉnh\n2. Những điểm đã sửa\n3. Điểm còn chưa chắc\n4. should_continue=true/false.`;
+  if (kind === 'final') return `${base}\n\nVAI TRÒ: Tổng hợp bản cuối.\nChỉ giữ nội dung đã đủ chắc, bỏ phần mơ hồ.\nOutput:\n1. Final answer\n2. Confidence 0-10\n3. Critical issues còn lại\n4. should_continue=true/false.`;
+  return `${base}\n\nVAI TRÒ: Phản biện nghiêm khắc.\nTìm lỗi, thiếu evidence, mâu thuẫn, giả định yếu.\nOutput:\n1. Điểm mạnh\n2. Lỗi/thiếu sót\n3. Câu hỏi cần làm rõ\n4. Đề xuất sửa\n5. score 0-10\n6. should_continue=true/false.`;
+}
+
+async function executeRelay() {
+  const sourceId = Number($('sourceTab').value);
+  const targetId = Number($('targetTab').value);
+  if (!sourceId || !targetId || sourceId === targetId) throw new Error('Chọn 2 tab khác nhau');
+  const [{ result: source }] = await chrome.scripting.executeScript({ target: { tabId: sourceId }, func: extractLatestResponseInPage });
+  if (!source?.content) throw new Error('Không lấy được câu trả lời từ tab nguồn');
+  const prompt = buildRelayPrompt($('relayTemplate').value, source);
+  await chrome.tabs.update(targetId, { active: true });
+  const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: targetId }, func: fillPromptInPage, args: [prompt] });
+  if (!result?.ok) throw new Error(result?.error || 'Không dán được prompt');
+  log(`đã dán prompt từ ${source.platform} sang tab đích; Sếp bấm gửi thủ công`);
+}
+
+$('refreshTabsBtn')?.addEventListener('click', async () => {
+  try { await refreshTabs(); } catch (e) { log(e.message); }
+});
+
+$('relayBtn')?.addEventListener('click', async () => {
+  try { await executeRelay(); } catch (e) { log(e.message); }
+});
+
+refreshTabs().catch(() => {});

@@ -9,10 +9,15 @@ h1 { font-size: 18px; margin: 0 0 3px; }
 .meta div { display: flex; justify-content: space-between; gap: 12px; border: 1px solid #252a34; padding: 7px; border-radius: 8px; }
 .meta span { color: #8791a3; display: inline-flex; align-items: center; gap: 5px; }
 .meta strong { text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 220px; }
-.actions { display: grid; gap: 6px; margin-bottom: 10px; }
+.actions, .relay { display: grid; gap: 6px; margin-bottom: 10px; }
+.relay { border: 1px solid #252a34; border-radius: 8px; padding: 8px; }
+.relay h2 { margin: 0 0 4px; font-size: 14px; }
+.relay label { display: grid; gap: 4px; color: #c7d0df; font-size: 12px; }
+.relay select { width: 100%; background: #090b10; color: #eef2ff; border: 1px solid #30394b; border-radius: 7px; padding: 7px; }
+.hint { color: #8791a3; font-size: 11px; font-weight: 400; }
 button { border: 0; border-radius: 8px; font-weight: 700; cursor: pointer; }
-.actions > button { width: 100%; padding: 9px; background: #4f7cff; color: white; }
-.actions > button:disabled { background: #2b3140; color: #778196; cursor: not-allowed; }
+.actions > button, .relay > button { width: 100%; padding: 9px; background: #4f7cff; color: white; }
+.actions > button:disabled, .relay > button:disabled { background: #2b3140; color: #778196; cursor: not-allowed; }
 .help, .q { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border-radius: 50%; background: #263044; color: #dce6ff; font-size: 11px; font-weight: 800; }
 .help { border: 1px solid #3a4560; padding: 0; }
 .q { margin-left: 6px; background: rgba(255,255,255,.15); }
