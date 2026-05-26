@@ -451,6 +451,66 @@ async function createContextHandoff(reason = 'manual_context_handoff') {
   return state;
 }
 
+async function scanTabForHandoff(tabId) {
+  const [{ result: scan }] = await chrome.scripting.executeScript({ target: { tabId: Number(tabId) }, func: pageScanner });
+  return scan;
+}
+
+function buildHandoffBootstrapPrompt(state) {
+  return buildHandoffMarkdown(state).replace(/^# VS Brain Context Handoff/, '# VS Brain Auto Handoff Bootstrap');
+}
+
+async function openReplacementAiTab(url) {
+  const tab = await chrome.tabs.create({ url, active: true });
+  await new Promise((r) => setTimeout(r, Math.max(2500, getActionDelayMs())));
+  return tab;
+}
+
+async function autoHandoffIfNeeded() {
+  if (!loopState || loopState.handoffInProgress) return false;
+  const threshold = 70;
+  const candidates = [loopState.currentSource, loopState.currentTarget].filter(Boolean);
+  for (const tabId of candidates) {
+    let scan = null;
+    try { scan = await scanTabForHandoff(tabId); } catch (e) { log(`auto-handoff scan fail tab=${tabId}: ${e.message}`); continue; }
+    if (!scan?.messages?.length) continue;
+    const state = buildHandoffState(scan, 'auto_context_threshold');
+    const pct = Number(state.context_estimate?.usage_pct_est || 0);
+    if (pct < threshold) continue;
+
+    loopState.handoffInProgress = true;
+    log(`auto-handoff kích hoạt tab=${tabId} usage=${pct}% threshold=${threshold}%`);
+    const base = `vs-brain/context-handoff-auto-${safeName(state.provider)}-${Date.now()}`;
+    await downloadText(`${base}.md`, buildHandoffMarkdown(state), 'text/markdown');
+    await downloadText(`${base}.json`, JSON.stringify(state, null, 2), 'application/json');
+    await chrome.storage.local.set({ latestContextHandoff: state });
+
+    const newTab = await openReplacementAiTab(state.url);
+    const prompt = buildHandoffBootstrapPrompt(state);
+    const oldHash = await getLatestContentHash(newTab.id).catch(() => '');
+    const fill = await fillTargetSafely(newTab.id, prompt);
+    if (!fill?.ok) throw new Error('auto-handoff không inject được bootstrap prompt');
+    if ($('autoSendToggle')?.checked) {
+      const sent = await executeInAiTab(newTab.id, clickSendInPage, [], 'handoff-new-tab');
+      if (!sent?.ok) throw new Error(`auto-handoff không gửi được bootstrap: ${sent?.error || 'unknown'}`);
+      log(`auto-handoff đã gửi bootstrap tab mới=${newTab.id}; chờ response đầu`);
+      const waited = await waitForTabNewResponse(newTab.id, oldHash, Math.max(60000, loopState.waitMs), 2000);
+      if (!waited.changed && !waited.stop) log(`auto-handoff chưa thấy response mới: ${waited.reason}`);
+    }
+
+    if (loopState.a === tabId) loopState.a = newTab.id;
+    if (loopState.b === tabId) loopState.b = newTab.id;
+    if (loopState.currentSource === tabId) loopState.currentSource = newTab.id;
+    if (loopState.currentTarget === tabId) loopState.currentTarget = newTab.id;
+    $('sourceTab').value = String(loopState.currentSource);
+    $('targetTab').value = String(loopState.currentTarget);
+    loopState.handoffInProgress = false;
+    log(`auto-handoff hoàn tất: ${tabId} → ${newTab.id}; tiếp tục loop`);
+    return true;
+  }
+  return false;
+}
+
 
 async function scan() {
   setStatus('Đang quét...');
@@ -1452,6 +1512,8 @@ async function waitForTabNewResponse(tabId, oldHash, timeoutMs, intervalMs = 150
 }
 
 async function loopStep() {
+  if (!loopState) return;
+  try { await autoHandoffIfNeeded(); } catch (e) { return stopLoop(`auto_handoff_failed: ${e.message}`); }
   if (!loopState) return;
   const stopPhrase = $('stopPhrase')?.value?.trim() || defaultStopPhrase();
   for (const tabId of [loopState.a, loopState.b]) {

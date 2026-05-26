@@ -1,5 +1,18 @@
 # VS Brain Changelog
 
+## v0.8.11
+
+- Added Auto Handoff Runtime:
+  - checks visible context estimate during each loop step
+  - triggers automatically at 70% estimated context usage
+  - exports auto handoff Markdown/JSON
+  - opens a replacement AI tab
+  - injects the handoff bootstrap prompt
+  - auto-sends bootstrap when Auto-send is enabled
+  - swaps old tab id to the new tab id inside `loopState`
+  - resumes the debate loop after handoff
+  - stops safely with `auto_handoff_failed` if restore/inject fails
+
 ## v0.8.10
 
 - Improved round selection UX:

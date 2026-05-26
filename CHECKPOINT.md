@@ -1,15 +1,15 @@
 # VS Brain Checkpoint
 
-Saved: 2026-05-27 01:18 GMT+7
+Saved: 2026-05-27 01:25 GMT+7
 
 ## Current version
 
-`v0.8.10`
+`v0.8.11`
 
 Latest commit:
 
 ```text
-pending commit: round control presets v0.8.10
+pending commit: auto handoff runtime v0.8.11
 ```
 
 ## Current state
@@ -31,6 +31,7 @@ Main UX:
 - Supplied logo appears in UI header, help modal, and Chrome extension icons with animated glow.
 - Chrome icons are max-cropped with no extra padding so the logo fills the icon area at small sizes.
 - Round selection uses presets, direct input, +/-10, and coarse slider step=10 for controllable selection.
+- Auto Handoff Runtime can trigger at 70% estimated context, open replacement tab, inject bootstrap, swap loop tab id, and resume.
 - Manual/advanced controls hidden under details.
 
 Core flow:
@@ -55,12 +56,14 @@ Stop phrases:
 
 ## Last user-requested change completed
 
-- Round control UX:
-  - preset buttons 25/50/100/200/500/1000
-  - direct numeric input up to 1000
-  - +/-10 buttons
-  - slider step=10 for coarse adjustment
-  - cannot reduce below current running round
+- Auto Handoff Runtime:
+  - estimate visible context each loop step
+  - trigger at 70% threshold
+  - export handoff artifacts
+  - open replacement tab
+  - inject/send bootstrap prompt
+  - replace old tab id in loopState
+  - resume loop or stop safely on failure
 
 ## Pending possible refinements
 

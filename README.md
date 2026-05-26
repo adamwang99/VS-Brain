@@ -4,7 +4,7 @@ VS Brain is a Chrome side-panel extension for running structured AI-to-AI critiq
 
 It turns ad-hoc copy/paste between AI tools into a governed workflow: scan conversations, relay only the latest answer, force structured critique, stop on explicit agreement, finalize a blueprint, and preserve checkpoints when context gets too large.
 
-Current extension version: `v0.8.7`.
+Current extension version: `v0.8.11`.
 
 ## Why it is useful
 
@@ -86,7 +86,7 @@ This avoids writing into the wrong tab or continuing blindly after UI drift.
 
 ### 5. Context Handoff Mode
 
-Context Handoff Mode solves the “200 rounds + high context + weaker model” failure mode.
+Context Handoff Mode solves the “200 rounds + high context + weaker model” failure mode. It supports manual export and an automatic runtime path during loops.
 
 When a conversation becomes too long, the user can create a handoff checkpoint instead of copying full history into a new tab.
 
@@ -95,7 +95,7 @@ The handoff exports:
 - `vs-brain/context-handoff-<provider>-<timestamp>.md`
 - `vs-brain/context-handoff-<provider>-<timestamp>.json`
 
-The handoff includes:
+Manual and auto handoff include:
 
 - provider, title, URL, conversation id
 - message count
@@ -111,6 +111,8 @@ The handoff includes:
   - unresolved issues / blockers
   - next critique focus
 - bootstrap prompt for a new tab
+
+Auto runtime behavior: during each loop step, VS Brain estimates visible context usage for the active source/target tabs. If estimated usage reaches 70%, it exports a handoff, opens a replacement tab, injects the bootstrap prompt, auto-sends when auto-send is enabled, replaces the old tab id in loop state, and resumes the loop.
 
 Important: web UI mode cannot know true provider context usage. VS Brain marks these values as estimates. They are still useful as a guardrail.
 
