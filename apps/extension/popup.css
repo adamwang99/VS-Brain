@@ -19,11 +19,12 @@ body {
   margin: 0;
   color: var(--text);
   background:
-    radial-gradient(circle at 16% 6%, rgba(255,255,255,.24), transparent 10%),
-    radial-gradient(circle at 10% 12%, rgba(159,140,255,.62), transparent 28%),
-    radial-gradient(circle at 85% 0%, rgba(103,221,255,.38), transparent 28%),
-    radial-gradient(circle at 76% 88%, rgba(255,141,161,.28), transparent 30%),
-    linear-gradient(145deg, #151827 0%, #080a10 50%, #111421 100%);
+    radial-gradient(circle at 18% 10%, rgba(255,255,255,.30), transparent 9%),
+    radial-gradient(circle at 12% 18%, rgba(94,208,255,.58), transparent 30%),
+    radial-gradient(circle at 82% 8%, rgba(159,140,255,.62), transparent 32%),
+    radial-gradient(circle at 80% 82%, rgba(255,141,161,.42), transparent 34%),
+    radial-gradient(circle at 20% 92%, rgba(255,207,102,.22), transparent 28%),
+    linear-gradient(145deg, #0b1020 0%, #141a2e 38%, #090b12 70%, #17111f 100%);
   background-attachment: fixed;
 }
 main { padding: 10px;
@@ -318,3 +319,6 @@ html { overflow-x: hidden; }
 .loop-counter.running .timer {
   text-shadow: 0 0 16px rgba(103,221,255,.54);
 }
+
+textarea::placeholder { color: rgba(238,242,255,.42); opacity: 1; }
+#promptTemplate::placeholder { color: rgba(238,242,255,.34); font-size: 11px; line-height: 1.35; }

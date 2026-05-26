@@ -1056,13 +1056,16 @@ async function finalizeAndSave() {
 $('langMode')?.addEventListener('change', () => {
   ensureStopPhraseForLang();
   applyUiLang();
-  if ($('promptTemplate')) $('promptTemplate').value = defaultPromptTemplate(getLang(), $('stopPhrase')?.value || defaultStopPhrase());
+  if ($('promptTemplate')) { $('promptTemplate').value = ''; $('promptTemplate').placeholder = defaultPromptTemplate(getLang(), $('stopPhrase')?.value || defaultStopPhrase()); }
   log(`đổi ngôn ngữ prompt: ${getLang().toUpperCase()}`);
 });
 
 
 function initPromptTemplate() {
-  if ($('promptTemplate')) $('promptTemplate').value = defaultPromptTemplate(getLang(), $('stopPhrase')?.value || defaultStopPhrase());
+  if ($('promptTemplate')) {
+    $('promptTemplate').value = '';
+    $('promptTemplate').placeholder = defaultPromptTemplate(getLang(), $('stopPhrase')?.value || defaultStopPhrase());
+  }
 }
 
 $('resetPromptBtn')?.addEventListener('click', () => {
