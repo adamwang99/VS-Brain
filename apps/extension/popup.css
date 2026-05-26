@@ -28,7 +28,7 @@ body {
 main { padding: 12px 12px 12px 22px; display: grid; gap: 10px; }
 .glass {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   background: linear-gradient(135deg, rgba(255,255,255,.18), rgba(255,255,255,.075));
   border: 1px solid var(--glass-line);
   border-radius: 24px;
@@ -195,7 +195,7 @@ pre {
 }
 .glass-select-menu {
   position: absolute;
-  z-index: 1000;
+  z-index: 10000;
   left: 0;
   right: 0;
   top: calc(100% + 6px);
@@ -225,3 +225,8 @@ pre {
   background: rgba(255,255,255,.14);
   border-color: rgba(255,255,255,.18);
 }
+
+.hero { z-index: 50; }
+.relay { z-index: 40; }
+.archive { z-index: 30; }
+.logbox { z-index: 20; }
