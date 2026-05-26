@@ -225,3 +225,11 @@ pre {
   border-color: rgba(255,255,255,.18);
 }
 
+.start-card { padding: 14px; display: grid; gap: 10px; }
+.start-card h2 { font-size: 18px; margin-top: 2px; }
+.hintline { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
+.start-actions { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }
+.big { min-height: 48px; font-size: 15px; }
+.manual-panel, .archive-panel { padding: 12px; }
+.manual-panel > summary, .archive-panel > summary { cursor: pointer; font-weight: 700; }
+.manual-panel .relay, .archive-panel .archive { padding: 10px 0 0; }

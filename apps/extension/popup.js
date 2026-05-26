@@ -38,6 +38,11 @@ const I18N = {
     helpTitle: 'Hướng dẫn CrossCritic',
     close: 'Đóng',
     ready: 'Sẵn sàng',
+    oneClickTitle: 'Tự động phản biện giữa các AI',
+    oneClickHint: 'Mở 2 tab AI, bấm bắt đầu. CrossCritic tự chọn nguồn/đích, tự gửi, tự dừng khi đồng thuận.',
+    startAuto: 'Bắt đầu tự động',
+    autoModeNote: 'Mặc định: Auto source/target · Latest · Auto-send · 50 steps',
+    manualMode: 'Manual / tuỳ chỉnh',
     auto: 'Auto',
     noAiTabs: 'Không thấy tab AI',
     jsonlNew: 'JSONL mới',
@@ -74,6 +79,11 @@ const I18N = {
     helpTitle: 'CrossCritic guide',
     close: 'Close',
     ready: 'Ready',
+    oneClickTitle: 'Automatic AI-to-AI critique',
+    oneClickHint: 'Open 2 AI tabs, press start. CrossCritic auto-picks source/target, sends, and stops on agreement.',
+    startAuto: 'Start auto',
+    autoModeNote: 'Default: Auto source/target · Latest · Auto-send · 50 steps',
+    manualMode: 'Manual / custom',
     auto: 'Auto',
     noAiTabs: 'No AI tabs',
     jsonlNew: 'New JSONL',
@@ -935,7 +945,7 @@ function buildFinalJson(source, lang = getLang()) {
   const stop = $('stopPhrase')?.value || defaultStopPhrase(lang);
   return JSON.stringify({
     app: 'CrossCritic',
-    version: '0.5.1',
+    version: '0.6.0',
     language: lang,
     saved_at: new Date().toISOString(),
     provider: source.platform,
@@ -1174,6 +1184,20 @@ async function loopStep() {
 
   loopTimer = setTimeout(loopStep, loopState.delayMs);
 }
+
+
+$('oneClickStartBtn')?.addEventListener('click', async () => {
+  try {
+    await refreshTabs();
+    $('sourceTab').value = 'auto';
+    $('targetTab').value = 'auto';
+    $('relayMode').value = 'latest';
+    $('autoSendToggle').checked = true;
+    $('loopMaxSteps').value = '50';
+    syncGlassSelectLabels();
+    $('startLoopBtn').click();
+  } catch (e) { log(e.message); }
+});
 
 $('startLoopBtn')?.addEventListener('click', async () => {
   try {
