@@ -1,0 +1,16 @@
+{
+  "name": "crosscritic",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cross-provider AI chat archive and critique relay",
+  "type": "module",
+  "scripts": {
+    "lint": "echo 'TODO: lint'",
+    "test": "echo 'TODO: test'",
+    "build": "echo 'TODO: build'"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
