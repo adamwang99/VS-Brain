@@ -819,6 +819,44 @@ function getActionDelayMs() {
   return Math.max(300, Math.min(10000, Number($('actionDelayMs')?.value || 1200)));
 }
 
+
+async function getTabChecked(tabId, role = 'tab') {
+  let tab = null;
+  try { tab = await chrome.tabs.get(Number(tabId)); } catch (_) {}
+  if (!tab?.id) throw new Error(`${role} không còn tồn tại: tab=${tabId}`);
+  const provider = providerFromUrl(tab.url || '');
+  if (provider === 'unknown') throw new Error(`${role} không còn là tab AI hợp lệ: tab=${tabId}`);
+  return { tab, provider };
+}
+
+async function revealRunningTab(tabId, reason = 'restore') {
+  const { tab, provider } = await getTabChecked(tabId, 'target');
+  if (tab.windowId && chrome.windows?.update) {
+    await chrome.windows.update(tab.windowId, { focused: true }).catch(() => {});
+  }
+  await chrome.tabs.update(tab.id, { active: true });
+  await new Promise((r) => setTimeout(r, getActionDelayMs()));
+  log(`restore tab ${tab.id} (${provider}) reason=${reason}`);
+  return tab;
+}
+
+async function executeInAiTab(tabId, func, args = [], role = 'tab') {
+  await getTabChecked(tabId, role);
+  const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: Number(tabId) }, func, args });
+  return result;
+}
+
+async function fillTargetSafely(targetId, prompt) {
+  await revealRunningTab(targetId, 'before-fill');
+  let result = await executeInAiTab(targetId, fillPromptInPage, [prompt], 'target');
+  if (result?.ok) return result;
+  log(`fill fail lần 1 tab=${targetId}: ${result?.error || 'unknown'}; thử restore/rebind một lần`);
+  await revealRunningTab(targetId, 'fill-retry');
+  result = await executeInAiTab(targetId, fillPromptInPage, [prompt], 'target');
+  if (result?.ok) return result;
+  throw new Error(`${result?.error || 'Không dán được prompt'}; đã pause để tránh ghi sai tab`);
+}
+
 async function executeRelay(sourceOverride, targetOverride) {
   let sourceId = Number(sourceOverride || $('sourceTab').value) || 0;
   let targetId = Number(targetOverride || $('targetTab').value) || 0;
@@ -851,14 +889,10 @@ async function executeRelay(sourceOverride, targetOverride) {
 
   const stopPhrase = $('stopPhrase')?.value?.trim() || defaultStopPhrase();
   const prompt = buildRelayPrompt(kind, source, $('extraInstruction')?.value || '', stopPhrase, getLang());
-  await chrome.tabs.update(targetId, { active: true });
-  await new Promise((r) => setTimeout(r, getActionDelayMs()));
-  const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: targetId }, func: fillPromptInPage, args: [prompt] });
-  if (!result?.ok) throw new Error(result?.error || 'Không dán được prompt');
+  const result = await fillTargetSafely(targetId, prompt);
   let sendResult = null;
   if ($('autoSendToggle')?.checked) {
-    const [{ result: sr }] = await chrome.scripting.executeScript({ target: { tabId: targetId }, func: clickSendInPage });
-    sendResult = sr;
+    sendResult = await executeInAiTab(targetId, clickSendInPage, [], 'target');
     if (!sendResult?.ok) log(`auto-send fail: ${sendResult?.error || 'unknown'}`);
     else log(`auto-send ok selector=${sendResult.selector || '?'}`);
   }
@@ -1252,7 +1286,7 @@ async function waitForTabNewResponse(tabId, oldHash, timeoutMs, intervalMs = 150
   while (loopState && Date.now() - started < timeoutMs) {
     const stopPhrase = $('stopPhrase')?.value?.trim() || defaultStopPhrase();
     try {
-      const [{ result: hasStop }] = await chrome.scripting.executeScript({ target: { tabId }, func: latestResponseContainsStopPhrase, args: [stopPhrase] });
+      const hasStop = await executeInAiTab(tabId, latestResponseContainsStopPhrase, [stopPhrase], 'loop-tab');
       if (hasStop) return { stop: true, reason: `gặp cụm từ chốt trong phản hồi mới nhất: ${stopPhrase}` };
     } catch (_) {}
     const h = await getLatestContentHash(tabId);
@@ -1267,7 +1301,7 @@ async function loopStep() {
   const stopPhrase = $('stopPhrase')?.value?.trim() || defaultStopPhrase();
   for (const tabId of [loopState.a, loopState.b]) {
     try {
-      const [{ result: hasStop }] = await chrome.scripting.executeScript({ target: { tabId }, func: latestResponseContainsStopPhrase, args: [stopPhrase] });
+      const hasStop = await executeInAiTab(tabId, latestResponseContainsStopPhrase, [stopPhrase], 'loop-tab');
       if (hasStop) return stopLoop(`gặp cụm từ chốt trong phản hồi mới nhất: ${stopPhrase}`);
     } catch (_) {}
   }
@@ -1284,7 +1318,7 @@ async function loopStep() {
   try {
     relayResult = await executeRelay(sourceId, targetId);
   } catch (e) {
-    log(`auto-loop lỗi: ${e.message}`);
+    return stopLoop(`needs_attention: ${e.message}`);
   }
 
   // Sau khi dán/gửi sang target, target phải trở thành source cho bước kế tiếp.

@@ -1,15 +1,15 @@
 # VS Brain Checkpoint
 
-Saved: 2026-05-26 23:36 GMT+7
+Saved: 2026-05-26 23:59 GMT+7
 
 ## Current version
 
-`v0.8.3`
+`v0.8.4`
 
 Latest commit:
 
 ```text
-956e69c style: stronger CTA glow for finalize button v0.8.3
+pending commit: safe tab restore / drift guard v0.8.4
 ```
 
 ## Current state
@@ -25,6 +25,7 @@ Main UX:
 - Running state has animated color effect.
 - Loop counter shows current/limit + elapsed timer.
 - Finalize button glows strongly as CTA after loop stops.
+- Auto relay restores the intended target tab before filling and stops safely on tab drift.
 - Manual/advanced controls hidden under details.
 
 Core flow:
@@ -49,10 +50,11 @@ Stop phrases:
 
 ## Last user-requested change completed
 
-- Stronger CTA glow for `Finalize & Save` button when loop stops:
-  - pulse animation
-  - shine sweep
-  - stronger cyan/purple glow
+- Safe tab restore / drift guard for auto relay:
+  - validate target/source AI tabs before script execution
+  - focus target window/tab before filling
+  - retry fill once after restore/rebind
+  - stop as `needs_attention` instead of continuing on mismatch
 
 ## Pending possible refinements
 

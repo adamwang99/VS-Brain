@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VS Brain",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "AI-to-AI critique relay, agreement loop, and final blueprint export.",
   "permissions": [
     "activeTab",
@@ -9,7 +9,8 @@
     "storage",
     "downloads",
     "tabs",
-    "sidePanel"
+    "sidePanel",
+    "windows"
   ],
   "host_permissions": [
     "https://chatgpt.com/*",

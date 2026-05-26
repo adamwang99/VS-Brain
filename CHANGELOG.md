@@ -1,5 +1,14 @@
 # VS Brain Changelog
 
+## v0.8.4
+
+- Added safe tab restore for auto relay/fill:
+  - validates source/target tab still exists and is an AI tab
+  - focuses target window/tab before fill
+  - retries fill once after restore/rebind
+  - stops loop with `needs_attention` instead of continuing when target drift remains
+- Added `windows` permission for controlled focus restore.
+
 ## v0.5.1
 
 - Fixed EN help modal title/button localization:
