@@ -1143,6 +1143,7 @@ $('helpBtn')?.addEventListener('click', () => {
 $('closeHelpBtn')?.addEventListener('click', () => $('helpModal')?.classList.add('hidden'));
 $('helpModal')?.addEventListener('click', (e) => { if (e.target?.id === 'helpModal') $('helpModal')?.classList.add('hidden'); });
 
+$('stepsSlider')?.addEventListener('input', syncSliderStep);
 $('refreshTabsBtn')?.addEventListener('click', async () => {
   try { await refreshTabs(); } catch (e) { log(e.message); }
 });
@@ -1296,6 +1297,18 @@ async function loopStep() {
 }
 
 
+
+function syncSliderStep() {
+  const slider = $('stepsSlider');
+  const input = $('loopMaxSteps');
+  const display = $('sliderValue');
+  if (!slider || !input) return;
+  const val = Number(slider.value) || 0;
+  const current = Number($('loopCounter')?.textContent?.split('/')[0] || 0);
+  input.value = String(val);
+  if (display) display.textContent = String(val);
+  if ($('loopCounter')) $('loopCounter').textContent = `${current}/${Math.max(1, val)}`;
+}
 $('oneClickStartBtn')?.addEventListener('click', async () => {
   try {
     await refreshTabs();
@@ -1304,6 +1317,8 @@ $('oneClickStartBtn')?.addEventListener('click', async () => {
     $('relayMode').value = 'latest';
     $('autoSendToggle').checked = true;
     $('loopMaxSteps').value = '100';
+    if ($('stepsSlider')) $('stepsSlider').value = '100';
+    syncSliderStep();
     syncGlassSelectLabels();
     $('startLoopBtn').click();
   } catch (e) { log(e.message); }
