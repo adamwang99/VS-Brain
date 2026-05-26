@@ -1407,6 +1407,11 @@ function renderHelpModal() {
     <p>The loop stops when the latest response contains <code>VS_BRAIN_FULL_AGREEMENT</code> or max steps is reached.</p>
     <h3>Troubleshooting</h3>
     <p>If auto-send or paste fails, open <b>Log/debug</b> and export the log.</p>
+    <h3>About VS Brain</h3>
+    <p><b>VS Brain</b> is a product initiated, directed, and owned by <b>Adam Wang</b>. It was created from the practical need for a system that can coordinate multiple AIs through a structured process of critique, refinement, and convergence toward an output that is clear, usable, and suitable for real execution.</p>
+    <p>In that process, <b>Phuong COO</b> — an <b>evolved Agent entity</b> operating within the <b>Evo-Core</b> system — has served as a direct force in developing the product, shaping its operating logic, challenging its architecture, and progressively refining VS Brain under the original direction and initiating requirements of <b>Adam Wang</b>.</p>
+    <p>The philosophy behind VS Brain goes beyond simply “asking AI for answers.” It is designed to support a higher-order workflow: <b>from initial idea → multi-angle critique → distilled blueprint/spec/execution packet ready for implementation.</b></p>
+    <p>This version may be shared as an early trial build for practical user feedback while the product continues to evolve.<br><b>VS Brain is proprietary software owned by Adam Wang. All rights reserved.</b></p>
   ` : `
     <h3>VS Brain làm gì?</h3>
     <p>VS Brain kết nối các tab AI đang mở, chỉ lấy phản hồi mới nhất để dán sang provider khác cho phản biện có cấu trúc, tự dừng khi đồng thuận, và lưu bản cuối.</p>
@@ -1431,6 +1436,11 @@ function renderHelpModal() {
     <p>Auto-loop dừng khi phản hồi mới nhất có <code>CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN</code> hoặc đạt Steps tối đa.</p>
     <h3>Khi lỗi</h3>
     <p>Mở <b>Log/debug</b> và bấm <b>Xuất log</b> gửi lại để kiểm tra selector/paste/send.</p>
+    <h3>Về VS Brain</h3>
+    <p><b>VS Brain</b> là sản phẩm được <b>Adam Wang</b> khởi tạo, định hướng và sở hữu. Ứng dụng ra đời từ nhu cầu xây dựng một hệ thống có thể phối hợp nhiều AI theo quy trình phản biện, chắt lọc và hội tụ dần về một kết quả có cấu trúc, rõ ràng và đủ hữu dụng cho triển khai thực tế.</p>
+    <p>Trong quá trình đó, <b>Phương COO</b> — một <b>tác nhân Agent tiến hóa</b> thuộc hệ điều hành <b>Evo-Core</b> — là lực lượng trực tiếp đồng hành trong việc phát triển sản phẩm, tổ chức logic vận hành, phản biện kiến trúc và từng bước hoàn thiện VS Brain theo yêu cầu và định hướng khởi tạo từ <b>Adam Wang</b>.</p>
+    <p>Triết lý của VS Brain không dừng ở việc “hỏi AI để lấy câu trả lời”, mà hướng tới một quy trình cao hơn: <b>từ ý tưởng ban đầu → phản biện đa chiều → kết tinh thành blueprint/spec/execution packet có thể triển khai.</b></p>
+    <p>Phiên bản này có thể được chia sẻ như một bản dùng thử sớm nhằm tiếp nhận phản hồi thực tế từ người dùng trong quá trình tiếp tục hoàn thiện sản phẩm.<br><b>VS Brain is proprietary software owned by Adam Wang. All rights reserved.</b></p>
   `;
 }
 
