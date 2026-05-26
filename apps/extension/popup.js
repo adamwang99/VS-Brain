@@ -297,33 +297,73 @@ function extractLatestResponseInPage(mode = 'latest') {
   return { platform, title: document.title, url: location.href, content };
 }
 
-function fillPromptInPage(prompt) {
+async function fillPromptInPage(prompt) {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  function visible(el) {
+    const r = el.getBoundingClientRect?.();
+    return !!r && r.width > 0 && r.height > 0;
+  }
+
+  async function setByClipboard(el, value) {
+    try {
+      el.focus();
+      el.click();
+      await navigator.clipboard.writeText(value);
+      const ok = document.execCommand?.('paste');
+      el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertFromPaste', data: value }));
+      await sleep(80);
+      return ok || (el.innerText || el.value || '').includes(value.slice(0, 40));
+    } catch (_) {
+      return false;
+    }
+  }
+
   function setValue(el, value) {
+    el.scrollIntoView?.({ block: 'center' });
     el.focus();
-    if (el.isContentEditable) {
+    el.click();
+    if (el.isContentEditable || el.getAttribute('contenteditable') === 'true' || el.getAttribute('role') === 'textbox') {
+      el.textContent = '';
+      el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'deleteContentBackward' }));
       el.textContent = value;
       el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText', data: value }));
-      return true;
+      el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: ' ' }));
+      return (el.innerText || el.textContent || '').includes(value.slice(0, 40));
     }
-    const proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
-    const desc = Object.getOwnPropertyDescriptor(proto, 'value');
-    desc?.set?.call(el, value);
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-    el.dispatchEvent(new Event('change', { bubbles: true }));
-    return true;
+    if ('value' in el) {
+      const proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
+      const desc = Object.getOwnPropertyDescriptor(proto, 'value');
+      desc?.set?.call(el, value);
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+      return (el.value || '').includes(value.slice(0, 40));
+    }
+    return false;
   }
+
   const selectors = [
+    'rich-textarea .ql-editor',
+    '.ql-editor[contenteditable="true"]',
+    'div[contenteditable="true"][role="textbox"]',
     'div[contenteditable="true"]',
+    'textarea[placeholder]',
     'textarea',
     '[role="textbox"]',
     'div.ProseMirror'
   ];
-  for (const sel of selectors) {
-    const els = Array.from(document.querySelectorAll(sel)).filter((el) => !el.disabled && el.offsetParent !== null);
-    const el = els[els.length - 1];
-    if (el && setValue(el, prompt)) return { ok: true };
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    for (const sel of selectors) {
+      const els = Array.from(document.querySelectorAll(sel)).filter((el) => !el.disabled && visible(el));
+      const el = els[els.length - 1];
+      if (!el) continue;
+      if (setValue(el, prompt)) return { ok: true, method: 'setValue', selector: sel };
+      if (await setByClipboard(el, prompt)) return { ok: true, method: 'clipboard', selector: sel };
+    }
+    await sleep(250);
   }
-  return { ok: false, error: 'Không tìm thấy ô nhập chat' };
+  return { ok: false, error: 'Không tìm thấy hoặc không set được ô nhập chat. Hãy click vào ô chat Gemini rồi thử lại.' };
 }
 
 function buildRelayPrompt(kind, source) {
@@ -409,6 +449,7 @@ async function executeRelay() {
 
   const prompt = buildRelayPrompt(kind, source);
   await chrome.tabs.update(targetId, { active: true });
+  await new Promise((r) => setTimeout(r, 500));
   const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: targetId }, func: fillPromptInPage, args: [prompt] });
   if (!result?.ok) throw new Error(result?.error || 'Không dán được prompt');
 
@@ -422,7 +463,7 @@ async function executeRelay() {
     relayedAt: new Date().toISOString(),
     preview: source.content.slice(0, 180)
   });
-  log(`đã dán nội dung mới hash=${contentHash}; Sếp bấm gửi thủ công`);
+  log(`đã dán nội dung mới hash=${contentHash} method=${result.method || '?'} selector=${result.selector || '?'}; Sếp bấm gửi thủ công`);
 }
 
 $('refreshTabsBtn')?.addEventListener('click', async () => {
