@@ -10,7 +10,7 @@
   <main>
     <header class="hero glass">
       <div>
-        <h1>🧠 CrossCritic <span class="version">v0.4.2</span></h1>
+        <h1>🧠 CrossCritic <span class="version">v0.4.3</span></h1>
         <p class="subtitle">AI debate relay · archive · checkpoint</p>
       </div>
       <div class="head-actions"><select id="langMode" class="glass-select" title="Ngôn ngữ prompt"><option value="vi">VI</option><option value="en">EN</option></select><div id="status">Sẵn sàng</div></div>
@@ -63,7 +63,8 @@
         <label>Cụm chốt dừng
           <input id="stopPhrase" type="text" value="CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN" />
         </label>
-        <div class="fixed-template">Prompt mặc định: phản biện sâu đa góc nhìn — logic, kỹ thuật, fact, UX, bảo mật, context, vận hành.</div>
+        <label>Prompt phản biện <textarea id="promptTemplate" rows="8" placeholder="Prompt phản biện có thể chỉnh sửa..."></textarea></label>
+        <div class="toolbar"><button id="resetPromptBtn" class="chip" type="button">Reset prompt mặc định</button></div>
       </details>
     </section>
 

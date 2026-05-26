@@ -437,9 +437,7 @@ function ensureStopPhraseForLang() {
   if (!el.value || el.value === vi || el.value === en) el.value = defaultStopPhrase(lang);
 }
 
-function buildRelayPrompt(kind, source, extraInstruction = '', stopPhrase = defaultStopPhrase(), lang = getLang()) {
-  const content = source.content;
-  const extra = extraInstruction.trim();
+function defaultPromptTemplate(lang = getLang(), stopPhrase = defaultStopPhrase(lang)) {
   if (lang === 'en') {
     return `You are a senior multi-angle critique agent. Use deep reasoning and review the NEW CONTENT below as a panel: systems architect, implementation engineer, UX reviewer, security/privacy reviewer, fact/evidence checker, and product manager.
 
@@ -480,14 +478,8 @@ You may write the stop phrase only if ALL are true:
 If and only if all 6 conditions are true, write EXACTLY this phrase on the final line:
 ${stopPhrase}
 
-If any condition is not met, never write the stop phrase.
-
-Source: ${source.platform}${extra ? `\n\nUSER EXTRA INSTRUCTIONS:\n${extra}` : ''}
-
-NEW CONTENT:
-${content}`;
+If any condition is not met, never write the stop phrase.`;
   }
-
   return `Bạn là AI phản biện tổng hợp cấp cao. Hãy kích hoạt suy luận sâu, kiểm tra đa góc nhìn, phản biện như hội đồng gồm: kiến trúc sư hệ thống, kỹ sư triển khai, chuyên gia UX, chuyên gia bảo mật, kiểm định fact/evidence, và quản lý sản phẩm.
 
 Nguyên tắc bắt buộc:
@@ -528,12 +520,19 @@ Chỉ được ghi cụm từ chốt nếu TẤT CẢ điều kiện sau đều 
 Nếu và chỉ nếu đồng ý hoàn toàn theo 6 điều kiện trên, hãy ghi CHÍNH XÁC cụm từ sau ở dòng cuối cùng:
 ${stopPhrase}
 
-Nếu chưa đạt đủ 6 điều kiện, tuyệt đối không ghi cụm từ chốt.
+Nếu chưa đạt đủ 6 điều kiện, tuyệt đối không ghi cụm từ chốt.`;
+}
 
-Nguồn: ${source.platform}${extra ? `\n\nYÊU CẦU BỔ SUNG TỪ NGƯỜI DÙNG:\n${extra}` : ''}
-
-NỘI DUNG MỚI:
-${content}`;
+function buildRelayPrompt(kind, source, extraInstruction = '', stopPhrase = defaultStopPhrase(), lang = getLang()) {
+  const content = source.content;
+  const extra = extraInstruction.trim();
+  const custom = ($('promptTemplate')?.value || '').trim() || defaultPromptTemplate(lang, stopPhrase);
+  const extraBlock = lang === 'en'
+    ? (extra ? `\n\nUSER EXTRA INSTRUCTIONS:\n${extra}` : '')
+    : (extra ? `\n\nYÊU CẦU BỔ SUNG TỪ NGƯỜI DÙNG:\n${extra}` : '');
+  const sourceLabel = lang === 'en' ? 'Source' : 'Nguồn';
+  const contentLabel = lang === 'en' ? 'NEW CONTENT' : 'NỘI DUNG MỚI';
+  return `${custom}\n\n${sourceLabel}: ${source.platform}${extraBlock}\n\n${contentLabel}:\n${content}`;
 }
 
 function hashText(str) {
@@ -685,7 +684,7 @@ function buildFinalMarkdown(source, lang = getLang()) {
 function buildFinalJson(source, lang = getLang()) {
   return JSON.stringify({
     app: 'CrossCritic',
-    version: '0.4.2',
+    version: '0.4.3',
     language: lang,
     saved_at: new Date().toISOString(),
     provider: source.platform,
@@ -714,7 +713,18 @@ async function finalizeAndSave() {
 
 $('langMode')?.addEventListener('change', () => {
   ensureStopPhraseForLang();
+  if ($('promptTemplate')) $('promptTemplate').value = defaultPromptTemplate(getLang(), $('stopPhrase')?.value || defaultStopPhrase());
   log(`đổi ngôn ngữ prompt: ${getLang().toUpperCase()}`);
+});
+
+
+function initPromptTemplate() {
+  if ($('promptTemplate')) $('promptTemplate').value = defaultPromptTemplate(getLang(), $('stopPhrase')?.value || defaultStopPhrase());
+}
+
+$('resetPromptBtn')?.addEventListener('click', () => {
+  initPromptTemplate();
+  log('đã reset prompt mặc định');
 });
 
 $('finalizeBtn')?.addEventListener('click', async () => {
@@ -887,4 +897,5 @@ $('exportLogBtn')?.addEventListener('click', async () => {
 
 
 
+initPromptTemplate();
 refreshTabs().catch(() => {});
