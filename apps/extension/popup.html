@@ -10,7 +10,7 @@
   <main>
     <header class="hero glass">
       <div>
-        <h1>🧠 CrossCritic <span class="version">v0.6.1</span></h1>
+        <h1>🧠 CrossCritic <span class="version">v0.6.2</span></h1>
         <p class="subtitle" data-i18n="subtitle">AI debate relay · archive · checkpoint</p>
       </div>
       <div class="head-actions"><button id="helpBtn" class="help-round" title="Hướng dẫn sử dụng">?</button><select id="langMode" class="glass-select" title="Ngôn ngữ prompt"><option value="vi">Tiếng Việt</option><option value="en">English</option></select></div>
@@ -26,7 +26,7 @@
         <button id="stopLoopBtn" data-i18n="stop">Dừng</button>
         <button id="finalizeBtn" data-i18n="finalize">Chốt & lưu</button>
       </div>
-      <div class="mini-meta"><span data-i18n="autoModeNote">Mặc định: Auto source/target · Latest · Auto-send · 50 steps</span></div>
+      <div class="loop-counter"><span id="loopCounter">0/50</span><span data-i18n="loopCounterLabel">vòng phản biện</span></div><div class="mini-meta"><span data-i18n="autoModeNote">Mặc định: Auto source/target · Latest · Auto-send · 50 steps</span></div>
     </section>
 
     <details class="glass manual-panel">

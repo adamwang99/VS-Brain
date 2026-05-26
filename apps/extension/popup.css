@@ -233,3 +233,19 @@ pre {
 .manual-panel, .archive-panel { padding: 12px; }
 .manual-panel > summary, .archive-panel > summary { cursor: pointer; font-weight: 700; }
 .manual-panel .relay, .archive-panel .archive { padding: 10px 0 0; }
+.loop-counter {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.09);
+  border: 1px solid rgba(255,255,255,.16);
+}
+#loopCounter {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -.04em;
+  color: #fff;
+}
+.loop-counter span:last-child { color: var(--muted); font-size: 12px; }

@@ -43,6 +43,7 @@ const I18N = {
     startAuto: 'Bắt đầu tự động',
     autoModeNote: 'Mặc định: Auto source/target · Latest · Auto-send · 50 steps',
     manualMode: 'Manual / tuỳ chỉnh',
+    loopCounterLabel: 'vòng phản biện',
     auto: 'Auto',
     noAiTabs: 'Không thấy tab AI',
     jsonlNew: 'JSONL mới',
@@ -84,6 +85,7 @@ const I18N = {
     startAuto: 'Start auto',
     autoModeNote: 'Default: Auto source/target · Latest · Auto-send · 50 steps',
     manualMode: 'Manual / custom',
+    loopCounterLabel: 'debate rounds',
     auto: 'Auto',
     noAiTabs: 'No AI tabs',
     jsonlNew: 'New JSONL',
@@ -945,7 +947,7 @@ function buildFinalJson(source, lang = getLang()) {
   const stop = $('stopPhrase')?.value || defaultStopPhrase(lang);
   return JSON.stringify({
     app: 'CrossCritic',
-    version: '0.6.1',
+    version: '0.6.2',
     language: lang,
     saved_at: new Date().toISOString(),
     provider: source.platform,
@@ -1174,11 +1176,18 @@ function setLoopRunning(running) {
   $('stopLoopBtn').disabled = !running;
 }
 
+function updateLoopCounter(step = 0, max = Number($('loopMaxSteps')?.value || 50)) {
+  if ($('loopCounter')) $('loopCounter').textContent = `${step}/${max}`;
+}
+
 function stopLoop(reason = 'stopped') {
   if (loopTimer) clearTimeout(loopTimer);
+  const lastMax = loopState?.maxSteps || Number($('loopMaxSteps')?.value || 50);
+  const lastStep = loopState?.step || 0;
   loopTimer = null;
   loopState = null;
   setLoopRunning(false);
+  updateLoopCounter(lastStep, lastMax);
   log(`auto-loop dừng: ${reason}`);
 }
 
@@ -1219,6 +1228,7 @@ async function loopStep() {
   const targetOldHash = await getLatestContentHash(targetId);
 
   loopState.step += 1;
+  updateLoopCounter(loopState.step, loopState.maxSteps);
   log(`auto-loop bước ${loopState.step}/${loopState.maxSteps}: ${sourceId} → ${targetId}`);
   let relayResult = null;
   try {
@@ -1283,6 +1293,7 @@ $('startLoopBtn')?.addEventListener('click', async () => {
       waitMs: Math.max(15, Math.min(300, Number($('loopDelaySec').value || 12) * 5)) * 1000
     };
     setLoopRunning(true);
+    updateLoopCounter(0, loopState.maxSteps);
     log(`auto-loop bắt đầu: max=${loopState.maxSteps}, delay=${loopState.delayMs / 1000}s. autoSend=${$('autoSendToggle')?.checked ? 'ON' : 'OFF'}`);
     await loopStep();
   } catch (e) { log(e.message); }
@@ -1309,5 +1320,6 @@ $('exportLogBtn')?.addEventListener('click', async () => {
 
 initGlassSelects();
 applyUiLang();
+updateLoopCounter();
 initPromptTemplate();
 refreshTabs().catch(() => {});
