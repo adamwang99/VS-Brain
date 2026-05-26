@@ -44,7 +44,7 @@ const I18N = {
     running: 'Đang chạy…',
     autoModeNote: 'Mặc định: Auto source/target · Latest · Auto-send · 100 steps',
     manualMode: 'Manual / tuỳ chỉnh',
-    loopCounterLabel: 'vòng phản biện',
+    loopCounterLabel: 'vòng',
     auto: 'Auto',
     noAiTabs: 'Không thấy tab AI',
     jsonlNew: 'JSONL mới',
@@ -87,7 +87,7 @@ const I18N = {
     running: 'Running…',
     autoModeNote: 'Default: Auto source/target · Latest · Auto-send · 100 steps',
     manualMode: 'Manual / custom',
-    loopCounterLabel: 'debate rounds',
+    loopCounterLabel: 'rds',
     auto: 'Auto',
     noAiTabs: 'No AI tabs',
     jsonlNew: 'New JSONL',
@@ -1070,6 +1070,7 @@ $('resetPromptBtn')?.addEventListener('click', () => {
   log('đã reset prompt mặc định');
 });
 
+$('finalizeBtn')?.classList.remove('glow-save');
 $('finalizeBtn')?.addEventListener('click', async () => {
   try { await finalizeAndSave(); } catch (e) { log(e.message); }
 });
@@ -1193,6 +1194,28 @@ function updateLoopCounter(step = 0, max = Number($('loopMaxSteps')?.value || 10
   if ($('loopCounter')) $('loopCounter').textContent = `${step}/${max}`;
 }
 
+
+let timerInterval = null;
+let elapsedSeconds = 0;
+
+function startTimer() {
+  elapsedSeconds = 0;
+  updateTimer();
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => { elapsedSeconds++; updateTimer(); }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(timerInterval);
+  timerInterval = null;
+}
+
+function updateTimer() {
+  const m = String(Math.floor(elapsedSeconds / 60)).padStart(2, '0');
+  const s = String(elapsedSeconds % 60).padStart(2, '0');
+  if ($('elapsedTimer')) $('elapsedTimer').textContent = `${m}:${s}`;
+}
+
 function stopLoop(reason = 'stopped') {
   if (loopTimer) clearTimeout(loopTimer);
   const lastMax = loopState?.maxSteps || Number($('loopMaxSteps')?.value || 100);
@@ -1201,6 +1224,8 @@ function stopLoop(reason = 'stopped') {
   loopState = null;
   setLoopRunning(false);
   updateLoopCounter(lastStep, lastMax);
+  stopTimer();
+  $('finalizeBtn')?.classList.add('glow-save');
   log(`auto-loop dừng: ${reason}`);
 }
 
@@ -1307,6 +1332,8 @@ $('startLoopBtn')?.addEventListener('click', async () => {
     };
     setLoopRunning(true);
     updateLoopCounter(0, loopState.maxSteps);
+    startTimer();
+    $('finalizeBtn')?.classList.remove('glow-save');
     log(`auto-loop bắt đầu: max=${loopState.maxSteps}, delay=${loopState.delayMs / 1000}s. autoSend=${$('autoSendToggle')?.checked ? 'ON' : 'OFF'}`);
     await loopStep();
   } catch (e) { log(e.message); }

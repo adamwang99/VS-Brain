@@ -263,3 +263,12 @@ html { overflow-x: hidden; }
 .glass, .start-card, .manual-panel, .archive-panel, .logbox { max-width: 100%; }
 .toolbar, .start-actions { flex-wrap: wrap; }
 .head-actions { flex-shrink: 0; }
+.loop-counter { display: flex; align-items: baseline; gap: 8px; padding: 10px 12px; border-radius: 16px; background: rgba(255,255,255,.09); border: 1px solid rgba(255,255,255,.16); }
+#loopCounter { font-size: 24px; font-weight: 800; letter-spacing: -.04em; color: #fff; }
+.loop-counter span:last-child { color: var(--muted); font-size: 12px; }
+.timer { margin-left: auto; font-variant-numeric: tabular-nums; color: #f4f8ff; font-size: 14px; font-weight: 700; }
+.glow-save {
+  box-shadow: 0 0 20px rgba(103,221,255,.48), 0 0 50px rgba(103,221,255,.18);
+  border-color: rgba(103,221,255,.58);
+  transition: box-shadow .2s ease;
+}
