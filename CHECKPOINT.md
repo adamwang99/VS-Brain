@@ -1,15 +1,15 @@
 # VS Brain Checkpoint
 
-Saved: 2026-05-26 23:59 GMT+7
+Saved: 2026-05-27 00:40 GMT+7
 
 ## Current version
 
-`v0.8.4`
+`v0.8.5`
 
 Latest commit:
 
 ```text
-pending commit: safe tab restore / drift guard v0.8.4
+pending commit: finalize confirm gate v0.8.5
 ```
 
 ## Current state
@@ -26,6 +26,7 @@ Main UX:
 - Loop counter shows current/limit + elapsed timer.
 - Finalize button glows strongly as CTA after loop stops.
 - Auto relay restores the intended target tab before filling and stops safely on tab drift.
+- Finalize requires final agreement phrase or explicit draft confirmation; exports finalization metadata.
 - Manual/advanced controls hidden under details.
 
 Core flow:
@@ -50,11 +51,10 @@ Stop phrases:
 
 ## Last user-requested change completed
 
-- Safe tab restore / drift guard for auto relay:
-  - validate target/source AI tabs before script execution
-  - focus target window/tab before filling
-  - retry fill once after restore/rebind
-  - stop as `needs_attention` instead of continuing on mismatch
+- Finalize confirm gate aligned with spec:
+  - require final agreement phrase before normal finalize
+  - warn and require explicit confirmation for draft blueprint
+  - export `finalization_mode`, `stop_reason`, `require_final_confirm`
 
 ## Pending possible refinements
 

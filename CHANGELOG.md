@@ -1,5 +1,14 @@
 # VS Brain Changelog
 
+## v0.8.5
+
+- Added `require_final_confirm` gate to Finalize & Save:
+  - checks stop phrase before sending final blueprint prompt
+  - warns user when final agreement is missing
+  - allows explicit draft finalize via browser confirm only
+  - exports `finalization_mode`, `stop_reason`, and `require_final_confirm` in JSON
+  - includes finalization metadata in MD report
+
 ## v0.8.4
 
 - Added safe tab restore for auto relay/fill:
