@@ -10,10 +10,10 @@
   <main>
     <header class="hero glass">
       <div>
-        <h1>🧠 CrossCritic <span class="version">v0.3.0</span></h1>
+        <h1>🧠 CrossCritic <span class="version">v0.4.0</span></h1>
         <p class="subtitle">AI debate relay · archive · checkpoint</p>
       </div>
-      <div id="status">Sẵn sàng</div>
+      <div class="head-actions"><select id="langMode" title="Ngôn ngữ prompt"><option value="vi">VI</option><option value="en">EN</option></select><div id="status">Sẵn sàng</div></div>
     </header>
 
     <section class="glass relay" aria-label="Điều phối phản biện">
@@ -53,6 +53,7 @@
       <div class="toolbar">
         <button id="startLoopBtn" disabled>Auto A↔B</button>
         <button id="stopLoopBtn" disabled>Dừng</button>
+        <button id="finalizeBtn">Chốt & lưu</button>
         <button id="resetRelayBtn">Reset relay</button>
       </div>
 

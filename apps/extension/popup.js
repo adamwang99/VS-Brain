@@ -418,12 +418,75 @@ function latestResponseContainsStopPhrase(stopPhrase) {
 }
 
 
-function buildRelayPrompt(kind, source, extraInstruction = '', stopPhrase = 'CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN') {
-  const content = source.content;
-  const extra = extraInstruction.trim() ? `
 
-YÊU CẦU BỔ SUNG TỪ NGƯỜI DÙNG:
-${extraInstruction.trim()}` : '';
+function getLang() {
+  return $('langMode')?.value || 'vi';
+}
+
+function defaultStopPhrase(lang = getLang()) {
+  return lang === 'en' ? 'CROSSCRITIC_FULL_AGREEMENT' : 'CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN';
+}
+
+function ensureStopPhraseForLang() {
+  const el = $('stopPhrase');
+  if (!el) return;
+  const lang = getLang();
+  const vi = 'CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN';
+  const en = 'CROSSCRITIC_FULL_AGREEMENT';
+  if (!el.value || el.value === vi || el.value === en) el.value = defaultStopPhrase(lang);
+}
+
+function buildRelayPrompt(kind, source, extraInstruction = '', stopPhrase = defaultStopPhrase(), lang = getLang()) {
+  const content = source.content;
+  const extra = extraInstruction.trim();
+  if (lang === 'en') {
+    return `You are a senior multi-angle critique agent. Use deep reasoning and review the NEW CONTENT below as a panel: systems architect, implementation engineer, UX reviewer, security/privacy reviewer, fact/evidence checker, and product manager.
+
+Rules:
+- Critique only the NEW CONTENT below. Do not repeat old history.
+- Do not agree socially. Agree only when there are no material issues left.
+- Separate critical issues, medium gaps, and minor notes.
+- If fixes are needed, make them specific and actionable.
+
+Review checklist:
+1. Logic: contradictions, leaps, invalid conclusions.
+2. Technical feasibility: edge cases, implementation limits, browser/provider constraints.
+3. Facts/evidence: weak assumptions, missing verification.
+4. Product/UX: clarity, recovery path, error states.
+5. Security/privacy: overbroad permissions, auto-send risk, sensitive storage/clipboard.
+6. Context/performance: repeated copying, prompt bloat, infinite loop risk, weak stop gates.
+7. Operations: logging, versioning, rollback, compatibility, user guidance.
+8. Finality: is it ready to stop or does another provider need to critique?
+
+Required output:
+- Verdict: PASS / PARTIAL / FAIL
+- Critical issues:
+- Missing pieces:
+- Minor notes:
+- Suggested fixes:
+- Confidence: 0-10
+- should_continue: true/false
+
+FULL AGREEMENT STOP CONDITIONS:
+You may write the stop phrase only if ALL are true:
+1. No critical issues remain.
+2. No missing pieces that change the conclusion/product.
+3. No unresolved security/operational risk.
+4. No logical contradiction or unclear requirement remains.
+5. Confidence >= 9/10.
+6. should_continue=false.
+
+If and only if all 6 conditions are true, write EXACTLY this phrase on the final line:
+${stopPhrase}
+
+If any condition is not met, never write the stop phrase.
+
+Source: ${source.platform}${extra ? `\n\nUSER EXTRA INSTRUCTIONS:\n${extra}` : ''}
+
+NEW CONTENT:
+${content}`;
+  }
+
   return `Bạn là AI phản biện tổng hợp cấp cao. Hãy kích hoạt suy luận sâu, kiểm tra đa góc nhìn, phản biện như hội đồng gồm: kiến trúc sư hệ thống, kỹ sư triển khai, chuyên gia UX, chuyên gia bảo mật, kiểm định fact/evidence, và quản lý sản phẩm.
 
 Nguyên tắc bắt buộc:
@@ -466,7 +529,7 @@ ${stopPhrase}
 
 Nếu chưa đạt đủ 6 điều kiện, tuyệt đối không ghi cụm từ chốt.
 
-Nguồn: ${source.platform}${extra}
+Nguồn: ${source.platform}${extra ? `\n\nYÊU CẦU BỔ SUNG TỪ NGƯỜI DÙNG:\n${extra}` : ''}
 
 NỘI DUNG MỚI:
 ${content}`;
@@ -579,8 +642,8 @@ async function executeRelay(sourceOverride, targetOverride) {
     return { pasted: false, reason: 'duplicate' };
   }
 
-  const stopPhrase = $('stopPhrase')?.value?.trim() || 'CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN';
-  const prompt = buildRelayPrompt(kind, source, $('extraInstruction')?.value || '', stopPhrase);
+  const stopPhrase = $('stopPhrase')?.value?.trim() || defaultStopPhrase();
+  const prompt = buildRelayPrompt(kind, source, $('extraInstruction')?.value || '', stopPhrase, getLang());
   await chrome.tabs.update(targetId, { active: true });
   await new Promise((r) => setTimeout(r, 500));
   const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: targetId }, func: fillPromptInPage, args: [prompt] });
@@ -608,6 +671,54 @@ async function executeRelay(sourceOverride, targetOverride) {
   log(`đã dán nội dung mới hash=${contentHash}${hasExtra} method=${result.method || '?'} selector=${result.selector || '?'}${sendText}`);
   return { pasted: true, contentHash, autoSent: !!sendResult?.ok };
 }
+
+
+function buildFinalMarkdown(source, lang = getLang()) {
+  const stamp = new Date().toISOString();
+  if (lang === 'en') {
+    return `# CrossCritic Final Summary\n\n- Saved: ${stamp}\n- Provider: ${source.platform}\n- Stop phrase: ${$('stopPhrase')?.value || defaultStopPhrase('en')}\n\n## Final agreed content\n\n${source.content}\n`;
+  }
+  return `# CrossCritic - Bản thống nhất cuối\n\n- Lưu lúc: ${stamp}\n- Provider: ${source.platform}\n- Cụm chốt: ${$('stopPhrase')?.value || defaultStopPhrase('vi')}\n\n## Nội dung thống nhất cuối\n\n${source.content}\n`;
+}
+
+function buildFinalJson(source, lang = getLang()) {
+  return JSON.stringify({
+    app: 'CrossCritic',
+    version: '0.4.0',
+    language: lang,
+    saved_at: new Date().toISOString(),
+    provider: source.platform,
+    title: source.title,
+    url: source.url,
+    stop_phrase: $('stopPhrase')?.value || defaultStopPhrase(lang),
+    final_agreement: source.content.includes($('stopPhrase')?.value || defaultStopPhrase(lang)),
+    final_content: source.content
+  }, null, 2);
+}
+
+async function finalizeAndSave() {
+  ensureStopPhraseForLang();
+  let tabId = Number($('sourceTab').value);
+  if (!tabId) {
+    const picked = await autoPickNewestDirection();
+    tabId = picked.source.tabId;
+  }
+  const [{ result: source }] = await chrome.scripting.executeScript({ target: { tabId }, func: extractLatestResponseInPage, args: ['latest'] });
+  if (!source?.content) throw new Error('Không lấy được phản hồi cuối để lưu');
+  const base = `crosscritic/final-${safeName(source.platform)}-${Date.now()}`;
+  await downloadText(`${base}.md`, buildFinalMarkdown(source, getLang()), 'text/markdown');
+  await downloadText(`${base}.json`, buildFinalJson(source, getLang()), 'application/json');
+  log(`đã chốt & lưu final provider=${source.platform} chars=${source.content.length}`);
+}
+
+$('langMode')?.addEventListener('change', () => {
+  ensureStopPhraseForLang();
+  log(`đổi ngôn ngữ prompt: ${getLang().toUpperCase()}`);
+});
+
+$('finalizeBtn')?.addEventListener('click', async () => {
+  try { await finalizeAndSave(); } catch (e) { log(e.message); }
+});
 
 $('refreshTabsBtn')?.addEventListener('click', async () => {
   try { await refreshTabs(); } catch (e) { log(e.message); }
@@ -663,7 +774,7 @@ async function getLatestContentHash(tabId) {
 async function waitForTabNewResponse(tabId, oldHash, timeoutMs, intervalMs = 1500) {
   const started = Date.now();
   while (loopState && Date.now() - started < timeoutMs) {
-    const stopPhrase = $('stopPhrase')?.value?.trim() || 'CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN';
+    const stopPhrase = $('stopPhrase')?.value?.trim() || defaultStopPhrase();
     try {
       const [{ result: hasStop }] = await chrome.scripting.executeScript({ target: { tabId }, func: latestResponseContainsStopPhrase, args: [stopPhrase] });
       if (hasStop) return { stop: true, reason: `gặp cụm từ chốt trong phản hồi mới nhất: ${stopPhrase}` };
@@ -677,7 +788,7 @@ async function waitForTabNewResponse(tabId, oldHash, timeoutMs, intervalMs = 150
 
 async function loopStep() {
   if (!loopState) return;
-  const stopPhrase = $('stopPhrase')?.value?.trim() || 'CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN';
+  const stopPhrase = $('stopPhrase')?.value?.trim() || defaultStopPhrase();
   for (const tabId of [loopState.a, loopState.b]) {
     try {
       const [{ result: hasStop }] = await chrome.scripting.executeScript({ target: { tabId }, func: latestResponseContainsStopPhrase, args: [stopPhrase] });
