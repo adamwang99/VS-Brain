@@ -1,15 +1,15 @@
 # VS Brain Checkpoint
 
-Saved: 2026-05-27 00:40 GMT+7
+Saved: 2026-05-27 00:55 GMT+7
 
 ## Current version
 
-`v0.8.5`
+`v0.8.6`
 
 Latest commit:
 
 ```text
-pending commit: finalize confirm gate v0.8.5
+pending commit: context handoff mode v0.8.6
 ```
 
 ## Current state
@@ -27,6 +27,7 @@ Main UX:
 - Finalize button glows strongly as CTA after loop stops.
 - Auto relay restores the intended target tab before filling and stops safely on tab drift.
 - Finalize requires final agreement phrase or explicit draft confirmation; exports finalization metadata.
+- Context Handoff exports compressed reset package for long/degraded debates and can open a fresh tab.
 - Manual/advanced controls hidden under details.
 
 Core flow:
@@ -51,10 +52,12 @@ Stop phrases:
 
 ## Last user-requested change completed
 
-- Finalize confirm gate aligned with spec:
-  - require final agreement phrase before normal finalize
-  - warn and require explicit confirmation for draft blueprint
-  - export `finalization_mode`, `stop_reason`, `require_final_confirm`
+- Context Handoff Mode:
+  - export Markdown/JSON handoff package
+  - estimate visible context usage
+  - capture latest answer + loop metadata + stop reason
+  - include bootstrap prompt for a clean new tab
+  - update README with full project value/features/status
 
 ## Pending possible refinements
 

@@ -1,5 +1,16 @@
 # VS Brain Changelog
 
+## v0.8.6
+
+- Added Context Handoff Mode:
+  - manual `Context handoff` button in the start card
+  - exports handoff Markdown and JSON
+  - records visible context char/token estimates and estimated usage percent
+  - captures provider, URL, conversation id, loop step, stop reason, and latest answer
+  - includes structured compressed-state placeholders and a bootstrap prompt for a fresh tab
+  - optionally opens a new AI tab after handoff creation
+- Rewrote README with full project usefulness, features, safety model, and current status.
+
 ## v0.8.5
 
 - Added `require_final_confirm` gate to Finalize & Save:

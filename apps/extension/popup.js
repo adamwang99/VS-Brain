@@ -26,6 +26,7 @@ const I18N = {
     autoLoop: 'Auto A↔B',
     stop: 'Dừng',
     finalize: 'Chốt & lưu',
+    handoff: 'Handoff ngữ cảnh',
     resetRelay: 'Reset relay',
     advanced: 'Tuỳ chọn nâng cao',
     stopPhraseLabel: 'Cụm chốt dừng',
@@ -70,6 +71,7 @@ const I18N = {
     autoLoop: 'Auto A↔B',
     stop: 'Stop',
     finalize: 'Finalize & save',
+    handoff: 'Context handoff',
     resetRelay: 'Reset relay',
     advanced: 'Advanced options',
     stopPhraseLabel: 'Stop phrase',
@@ -336,6 +338,119 @@ function toMarkdown(scan, messages) {
   }
   return lines.join('\n');
 }
+
+function estimateTokens(text) {
+  const raw = String(text || '');
+  if (!raw) return 0;
+  const nonAscii = (raw.match(/[^\x00-\x7F]/g) || []).length;
+  const ratio = nonAscii / Math.max(1, raw.length);
+  const charsPerToken = ratio > 0.2 ? 2.8 : 4;
+  return Math.ceil(raw.length / charsPerToken);
+}
+
+function estimateScanTokens(scan) {
+  const text = (scan?.messages || []).map((m) => `${m.role}: ${m.content}`).join('\n\n');
+  return { chars: text.length, tokens_est: estimateTokens(text) };
+}
+
+function buildHandoffState(scan, reason = 'manual_context_handoff') {
+  const latest = (scan.messages || [])[scan.messages.length - 1] || null;
+  const est = estimateScanTokens(scan);
+  const limit = 128000;
+  return {
+    schema: 'vs-brain.context_handoff.v1',
+    created_at: new Date().toISOString(),
+    reason,
+    provider: scan.platform,
+    title: scan.title,
+    url: scan.url,
+    conversation_id: scan.conversationId,
+    message_count: scan.messages.length,
+    context_estimate: {
+      visible_context_chars: est.chars,
+      visible_context_tokens_est: est.tokens_est,
+      context_limit_assumption: limit,
+      usage_pct_est: Math.round((est.tokens_est / limit) * 1000) / 10,
+      confidence: 'low_web_ui_estimate'
+    },
+    loop: {
+      step: Number($('loopCounter')?.textContent?.split('/')[0] || 0),
+      max_steps: Number($('loopMaxSteps')?.value || 100),
+      stop_reason: lastStopReason || 'unknown'
+    },
+    latest_answer: latest ? { role: latest.role, content: latest.content, content_hash: latest.contentHash } : null,
+    compressed_state_template: {
+      requirements: [],
+      decisions: [],
+      resolved_issues: [],
+      unresolved_issues: [],
+      next_critique_focus: $('extraInstruction')?.value || ''
+    }
+  };
+}
+
+function buildHandoffMarkdown(state) {
+  return `# VS Brain Context Handoff
+
+- Created: ${state.created_at}
+- Reason: ${state.reason}
+- Provider: ${state.provider}
+- Title: ${state.title}
+- URL: ${state.url}
+- Messages: ${state.message_count}
+- Visible context chars: ${state.context_estimate.visible_context_chars}
+- Estimated tokens: ${state.context_estimate.visible_context_tokens_est}
+- Estimated usage: ${state.context_estimate.usage_pct_est}% of ${state.context_estimate.context_limit_assumption}
+- Estimate confidence: ${state.context_estimate.confidence}
+- Loop: ${state.loop.step}/${state.loop.max_steps}
+- Stop reason: ${state.loop.stop_reason}
+
+## What this solves
+
+This handoff resets the provider session without losing the useful state. Do not paste the full old debate. Use this compressed state as the new source-of-truth.
+
+## Required compressed state
+
+Fill or refine these sections before continuing:
+
+### Requirements / invariants
+-
+
+### Decisions already accepted
+-
+
+### Resolved issues
+-
+
+### Unresolved issues / blockers
+-
+
+### Latest answer to continue from
+
+${state.latest_answer?.content || ''}
+
+## Bootstrap prompt for new tab
+
+Continue the VS Brain critique from this compressed handoff. Treat the sections above as source-of-truth. Do not rely on previous chat history. First, reconstruct a concise state: requirements, decisions, resolved issues, unresolved issues. Then continue critique only on unresolved issues and the latest answer. Do not write the final agreement stop phrase unless all final-confirm conditions are satisfied.
+`;
+}
+
+async function createContextHandoff(reason = 'manual_context_handoff') {
+  const tab = await activeTab();
+  const [{ result: scan }] = await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: pageScanner });
+  if (!scan?.messages?.length) throw new Error('Không có chat để tạo handoff');
+  const state = buildHandoffState(scan, reason);
+  const base = `vs-brain/context-handoff-${safeName(state.provider)}-${Date.now()}`;
+  await downloadText(`${base}.md`, buildHandoffMarkdown(state), 'text/markdown');
+  await downloadText(`${base}.json`, JSON.stringify(state, null, 2), 'application/json');
+  await chrome.storage.local.set({ latestContextHandoff: state });
+  log(`đã tạo context handoff provider=${state.provider} tokens_est=${state.context_estimate.tokens_est} usage=${state.context_estimate.usage_pct_est}%`);
+  if (window.confirm(getLang() === 'en' ? 'Open a new AI tab for this handoff?' : 'Mở tab AI mới để tiếp tục từ handoff?')) {
+    await chrome.tabs.create({ url: state.url });
+  }
+  return state;
+}
+
 
 async function scan() {
   setStatus('Đang quét...');
@@ -1146,6 +1261,10 @@ $('resetPromptBtn')?.addEventListener('click', () => {
 $('finalizeBtn')?.classList.remove('glow-save');
 $('finalizeBtn')?.addEventListener('click', async () => {
   try { await finalizeAndSave(); } catch (e) { log(e.message); }
+});
+
+$('handoffBtn')?.addEventListener('click', async () => {
+  try { await createContextHandoff('manual_context_handoff'); } catch (e) { log(e.message); }
 });
 
 
