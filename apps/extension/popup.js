@@ -94,28 +94,45 @@ function initGlassSelects() {
     sel.parentNode.insertBefore(wrap, sel);
     wrap.appendChild(sel);
     wrap.appendChild(btn);
-    wrap.appendChild(menu);
+    document.body.appendChild(menu);
+    sel._glassMenu = menu;
+    sel._glassButton = btn;
     sel.classList.add('native-hidden');
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       qsa('.glass-select-menu').forEach((m) => { if (m !== menu) m.classList.add('hidden'); });
       rebuildGlassSelect(sel);
-      const r = btn.getBoundingClientRect();
-      menu.style.left = `${Math.max(8, r.left)}px`;
-      menu.style.top = `${Math.min(window.innerHeight - 80, r.bottom + 6)}px`;
-      menu.style.width = `${r.width}px`;
+      positionGlassMenu(sel);
       menu.classList.toggle('hidden');
     });
     sel.addEventListener('change', () => { syncOneGlassSelect(sel); });
   });
   document.addEventListener('click', () => qsa('.glass-select-menu').forEach((m) => m.classList.add('hidden')));
+  window.addEventListener('resize', () => qsa('.glass-select-menu').forEach((m) => m.classList.add('hidden')));
+  window.addEventListener('scroll', () => qsa('.glass-select-menu').forEach((m) => m.classList.add('hidden')), true);
   syncGlassSelectLabels();
 }
 
+
+function positionGlassMenu(sel) {
+  const btn = sel._glassButton;
+  const menu = sel._glassMenu;
+  if (!btn || !menu) return;
+  const r = btn.getBoundingClientRect();
+  const width = Math.min(r.width, window.innerWidth - 16);
+  const left = Math.max(8, Math.min(r.left, window.innerWidth - width - 8));
+  const below = r.bottom + 6;
+  const maxH = Math.min(260, window.innerHeight - 20);
+  const top = below + 80 < window.innerHeight ? below : Math.max(8, r.top - maxH - 6);
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
+  menu.style.width = `${width}px`;
+  menu.style.maxHeight = `${maxH}px`;
+}
+
 function rebuildGlassSelect(sel) {
-  const wrap = sel.closest('.glass-select-wrap');
-  if (!wrap) return;
-  const menu = wrap.querySelector('.glass-select-menu');
+  const menu = sel._glassMenu;
+  if (!menu) return;
   menu.innerHTML = '';
   Array.from(sel.options).forEach((opt) => {
     const item = document.createElement('button');
@@ -134,9 +151,8 @@ function rebuildGlassSelect(sel) {
 }
 
 function syncOneGlassSelect(sel) {
-  const wrap = sel.closest('.glass-select-wrap');
-  if (!wrap) return;
-  const btn = wrap.querySelector('.glass-select-btn');
+  const btn = sel._glassButton;
+  if (!btn) return;
   const opt = sel.selectedOptions?.[0];
   btn.textContent = opt?.textContent || 'Auto';
   rebuildGlassSelect(sel);
