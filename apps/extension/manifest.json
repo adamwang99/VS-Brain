@@ -1,9 +1,16 @@
 {
   "manifest_version": 3,
   "name": "CrossCritic",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Archive AI chats and relay critique across providers.",
-  "permissions": ["activeTab", "scripting", "storage", "downloads", "tabs", "sidePanel"],
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage",
+    "downloads",
+    "tabs",
+    "sidePanel"
+  ],
   "host_permissions": [
     "https://chatgpt.com/*",
     "https://chat.openai.com/*",

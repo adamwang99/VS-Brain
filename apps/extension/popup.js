@@ -400,36 +400,59 @@ function pageContainsStopPhrase(stopPhrase) {
 }
 
 
-function buildRelayPrompt(kind, source, extraInstruction = '', stopPhrase = 'CROSSCRITIC_FINAL_AGREE') {
+function buildRelayPrompt(kind, source, extraInstruction = '', stopPhrase = 'CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN') {
   const content = source.content;
-  const extra = extraInstruction.trim() ? `\n\nYÊU CẦU BỔ SUNG TỪ NGƯỜI DÙNG:\n${extraInstruction.trim()}` : '';
-  return `Bạn là AI phản biện tổng hợp, nghiêm khắc, không nể ý tưởng gốc.
+  const extra = extraInstruction.trim() ? `
 
-Nhiệm vụ: chỉ phản biện NỘI DUNG MỚI bên dưới, không lặp lại lịch sử cũ, không viết lan man. Hãy kiểm tra đồng thời tất cả nhóm sau:
+YÊU CẦU BỔ SUNG TỪ NGƯỜI DÙNG:
+${extraInstruction.trim()}` : '';
+  return `Bạn là AI phản biện tổng hợp cấp cao. Hãy kích hoạt suy luận sâu, kiểm tra đa góc nhìn, phản biện như hội đồng gồm: kiến trúc sư hệ thống, kỹ sư triển khai, chuyên gia UX, chuyên gia bảo mật, kiểm định fact/evidence, và quản lý sản phẩm.
 
-1. Logic: mâu thuẫn, nhảy bước, kết luận không theo tiền đề.
-2. Kỹ thuật: feasibility, edge case, lỗi triển khai, dependency, giới hạn nền tảng.
-3. Fact/evidence: điểm thiếu nguồn, giả định chưa chứng minh, thông tin có thể sai.
-4. Product/UX: có dễ dùng không, có lỗi thao tác không, có đường undo/recovery không.
-5. Security/privacy: rò dữ liệu, quyền quá rộng, auto-send nguy hiểm, lưu trữ nhạy cảm.
-6. Hiệu suất/context: có copy lặp, phình prompt, tốn token, vòng lặp vô hạn không.
-7. Cấu trúc output: thiếu schema, thiếu tiêu chí dừng, thiếu bước kiểm chứng.
-8. Hành động tiếp theo: sửa gì trước, bỏ gì, giữ gì.
+Nguyên tắc bắt buộc:
+- Chỉ phản biện NỘI DUNG MỚI bên dưới, không lặp lại lịch sử cũ.
+- Không đồng ý xã giao. Chỉ đồng ý khi thật sự không còn lỗi đáng kể.
+- Tách rõ lỗi nghiêm trọng, thiếu sót vừa, góp ý nhỏ.
+- Nếu cần sửa, nêu sửa cụ thể, không nói chung chung.
+- Nếu nội dung đã ổn, vẫn phải kiểm tra lần cuối các điều kiện chốt.
 
-Output bắt buộc, ngắn gọn:
-- Verdict: PASS / PARTIAL / FAIL
-- Critical issues: ...
-- Missing pieces: ...
-- Suggested fixes: ...
-- Score: 0-10
+Checklist phản biện đa góc nhìn:
+1. Logic: mâu thuẫn, nhảy bước, kết luận không theo tiền đề, vòng lặp lập luận.
+2. Kỹ thuật: tính khả thi, edge case, lỗi triển khai, dependency, giới hạn nền tảng/browser/provider.
+3. Fact/evidence: giả định chưa chứng minh, thiếu nguồn, điểm có thể sai hoặc cần kiểm chứng.
+4. Product/UX: thao tác có dễ hiểu không, có undo/recovery không, có trạng thái lỗi rõ không.
+5. Security/privacy: quyền quá rộng, auto-send nguy hiểm, rò dữ liệu, clipboard/storage nhạy cảm.
+6. Hiệu suất/context: copy lặp, prompt phình, tốn token, vòng lặp vô hạn, stop gate yếu.
+7. Vận hành: log/debug, versioning, rollback, compatibility, hướng dẫn người dùng.
+8. Kết quả cuối: có đủ tiêu chí để dừng chưa, còn cần provider khác phản biện không.
+
+Output bắt buộc bằng tiếng Việt, ngắn nhưng đủ sắc:
+- Kết luận: PASS / PARTIAL / FAIL
+- Lỗi nghiêm trọng: ...
+- Thiếu sót cần bổ sung: ...
+- Góp ý nhỏ: ...
+- Sửa đề xuất: ...
+- Điểm tin cậy: 0-10
 - should_continue: true/false
 
-Nguồn: ${source.platform}
+ĐIỀU KIỆN ĐỂ ĐƯỢC CHỐT ĐỒNG THUẬN HOÀN TOÀN:
+Chỉ được ghi cụm từ chốt nếu TẤT CẢ điều kiện sau đều đúng:
+1. Không còn lỗi nghiêm trọng.
+2. Không còn thiếu sót làm thay đổi kết luận/sản phẩm.
+3. Không còn rủi ro bảo mật/vận hành chưa có cách xử lý.
+4. Không còn mâu thuẫn logic hoặc yêu cầu chưa rõ.
+5. Điểm tin cậy >= 9/10.
+6. should_continue=false.
+
+Nếu và chỉ nếu đồng ý hoàn toàn theo 6 điều kiện trên, hãy ghi CHÍNH XÁC cụm từ sau ở dòng cuối cùng:
+${stopPhrase}
+
+Nếu chưa đạt đủ 6 điều kiện, tuyệt đối không ghi cụm từ chốt.
+
+Nguồn: ${source.platform}${extra}
 
 NỘI DUNG MỚI:
 ${content}`;
 }
-
 
 function hashText(str) {
   let h = 2166136261;
@@ -530,7 +553,7 @@ async function executeRelay(sourceOverride, targetOverride) {
     return { pasted: false, reason: 'duplicate' };
   }
 
-  const stopPhrase = $('stopPhrase')?.value?.trim() || 'CROSSCRITIC_FINAL_AGREE';
+  const stopPhrase = $('stopPhrase')?.value?.trim() || 'CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN';
   const prompt = buildRelayPrompt(kind, source, $('extraInstruction')?.value || '', stopPhrase);
   await chrome.tabs.update(targetId, { active: true });
   await new Promise((r) => setTimeout(r, 500));
@@ -606,7 +629,7 @@ function stopLoop(reason = 'stopped') {
 
 async function loopStep() {
   if (!loopState) return;
-  const stopPhrase = $('stopPhrase')?.value?.trim() || 'CROSSCRITIC_FINAL_AGREE';
+  const stopPhrase = $('stopPhrase')?.value?.trim() || 'CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN';
   for (const tabId of [loopState.a, loopState.b]) {
     try {
       const [{ result: hasStop }] = await chrome.scripting.executeScript({ target: { tabId }, func: pageContainsStopPhrase, args: [stopPhrase] });
