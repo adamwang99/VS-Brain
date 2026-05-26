@@ -41,6 +41,7 @@ const I18N = {
     oneClickTitle: 'Tự động phản biện giữa các AI',
     oneClickHint: 'Mở 2 tab AI, bấm bắt đầu. CrossCritic tự chọn nguồn/đích, tự gửi, tự dừng khi đồng thuận.',
     startAuto: 'Bắt đầu tự động',
+    running: 'Đang chạy…',
     autoModeNote: 'Mặc định: Auto source/target · Latest · Auto-send · 50 steps',
     manualMode: 'Manual / tuỳ chỉnh',
     loopCounterLabel: 'vòng phản biện',
@@ -83,6 +84,7 @@ const I18N = {
     oneClickTitle: 'Automatic AI-to-AI critique',
     oneClickHint: 'Open 2 AI tabs, press start. CrossCritic auto-picks source/target, sends, and stops on agreement.',
     startAuto: 'Start auto',
+    running: 'Running…',
     autoModeNote: 'Default: Auto source/target · Latest · Auto-send · 50 steps',
     manualMode: 'Manual / custom',
     loopCounterLabel: 'debate rounds',
@@ -119,6 +121,7 @@ function applyUiLang() {
   qsa('[data-placeholder-vi]').forEach((el) => { el.placeholder = el.dataset[`placeholder${lang === 'en' ? 'En' : 'Vi'}`] || el.placeholder; });
   qsa('option[data-label-vi]').forEach((opt) => { opt.textContent = opt.dataset[`label${lang === 'en' ? 'En' : 'Vi'}`] || opt.textContent; });
   const h = $('helpBtn'); if (h) h.title = lang === 'en' ? 'Help' : 'Hướng dẫn sử dụng';
+  updateRunButtonState(!!loopState);
   syncGlassSelectLabels();
 }
 
@@ -947,7 +950,7 @@ function buildFinalJson(source, lang = getLang()) {
   const stop = $('stopPhrase')?.value || defaultStopPhrase(lang);
   return JSON.stringify({
     app: 'CrossCritic',
-    version: '0.6.2',
+    version: '0.6.3',
     language: lang,
     saved_at: new Date().toISOString(),
     provider: source.platform,
@@ -1171,9 +1174,19 @@ $('resetRelayBtn')?.addEventListener('click', async () => {
 let loopTimer = null;
 let loopState = null;
 
+function updateRunButtonState(running) {
+  const t = I18N[getLang()] || I18N.vi;
+  if ($('oneClickStartBtn')) {
+    $('oneClickStartBtn').textContent = running ? t.running : t.startAuto;
+    $('oneClickStartBtn').disabled = !!running;
+    $('oneClickStartBtn').classList.toggle('running', !!running);
+  }
+}
+
 function setLoopRunning(running) {
   $('startLoopBtn').disabled = running || aiTabs.length < 2;
   $('stopLoopBtn').disabled = !running;
+  updateRunButtonState(running);
 }
 
 function updateLoopCounter(step = 0, max = Number($('loopMaxSteps')?.value || 50)) {
