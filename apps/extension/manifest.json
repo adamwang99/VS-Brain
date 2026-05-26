@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "CrossCritic",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Archive AI chats and relay critique across providers.",
   "permissions": [
     "activeTab",

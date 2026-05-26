@@ -401,8 +401,9 @@ async function clickSendInPage() {
   return { ok: false, error: 'Không tìm thấy nút gửi' };
 }
 
-function pageContainsStopPhrase(stopPhrase) {
-  return (document.body?.innerText || '').includes(stopPhrase);
+function latestResponseContainsStopPhrase(stopPhrase) {
+  const latest = extractLatestResponseInPage('latest');
+  return !!latest?.content && latest.content.includes(stopPhrase);
 }
 
 
@@ -647,8 +648,8 @@ async function waitForTabNewResponse(tabId, oldHash, timeoutMs, intervalMs = 150
   while (loopState && Date.now() - started < timeoutMs) {
     const stopPhrase = $('stopPhrase')?.value?.trim() || 'CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN';
     try {
-      const [{ result: hasStop }] = await chrome.scripting.executeScript({ target: { tabId }, func: pageContainsStopPhrase, args: [stopPhrase] });
-      if (hasStop) return { stop: true, reason: `gặp cụm từ chốt: ${stopPhrase}` };
+      const [{ result: hasStop }] = await chrome.scripting.executeScript({ target: { tabId }, func: latestResponseContainsStopPhrase, args: [stopPhrase] });
+      if (hasStop) return { stop: true, reason: `gặp cụm từ chốt trong phản hồi mới nhất: ${stopPhrase}` };
     } catch (_) {}
     const h = await getLatestContentHash(tabId);
     if (h && h !== oldHash) return { changed: true, contentHash: h };
@@ -662,8 +663,8 @@ async function loopStep() {
   const stopPhrase = $('stopPhrase')?.value?.trim() || 'CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN';
   for (const tabId of [loopState.a, loopState.b]) {
     try {
-      const [{ result: hasStop }] = await chrome.scripting.executeScript({ target: { tabId }, func: pageContainsStopPhrase, args: [stopPhrase] });
-      if (hasStop) return stopLoop(`gặp cụm từ chốt: ${stopPhrase}`);
+      const [{ result: hasStop }] = await chrome.scripting.executeScript({ target: { tabId }, func: latestResponseContainsStopPhrase, args: [stopPhrase] });
+      if (hasStop) return stopLoop(`gặp cụm từ chốt trong phản hồi mới nhất: ${stopPhrase}`);
     } catch (_) {}
   }
   if (loopState.step >= loopState.maxSteps) return stopLoop('đạt số bước tối đa');
