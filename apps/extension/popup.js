@@ -253,6 +253,7 @@ async function refreshTabs() {
   $('targetTab').innerHTML = html || '<option value="">Không thấy tab AI</option>';
   $('relayBtn').disabled = aiTabs.length < 2;
   $('startLoopBtn').disabled = aiTabs.length < 2;
+  $('autoPickBtn').disabled = aiTabs.length < 2;
   log(`đã quét tab AI: ${aiTabs.length}`);
 }
 
@@ -427,6 +428,54 @@ async function clearRelayStates() {
   return keys.length;
 }
 
+
+async function getLatestHashForTab(tabId) {
+  try {
+    const [{ result: source }] = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: extractLatestResponseInPage,
+      args: ['latest']
+    });
+    if (!source?.content) return null;
+    return {
+      tabId,
+      provider: source.platform,
+      title: source.title,
+      contentHash: hashText(source.content),
+      preview: source.content.slice(0, 120)
+    };
+  } catch (_) {
+    return null;
+  }
+}
+
+async function autoPickNewestDirection() {
+  if (aiTabs.length < 2) throw new Error('Cần ít nhất 2 tab AI');
+  const currentSource = Number($('sourceTab').value);
+  const currentTarget = Number($('targetTab').value);
+  const preferred = [currentSource, currentTarget].filter(Boolean);
+  const candidates = (preferred.length >= 2 ? aiTabs.filter((t) => preferred.includes(t.id)) : aiTabs).slice(0, 6);
+  const states = (await Promise.all(candidates.map((t) => getLatestHashForTab(t.id)))).filter(Boolean);
+  if (states.length < 2) throw new Error('Không đọc được đủ 2 tab để tự chọn');
+
+  const allStore = await chrome.storage.local.get(null);
+  const usedHashes = new Set(Object.values(allStore)
+    .filter((v) => v && typeof v === 'object' && v.contentHash && v.relayedAt)
+    .map((v) => v.contentHash));
+
+  const fresh = states.filter((s) => !usedHashes.has(s.contentHash));
+  const source = fresh[0] || states[0];
+  let target = states.find((s) => s.tabId !== source.tabId && s.tabId === currentTarget)
+    || states.find((s) => s.tabId !== source.tabId && s.tabId === currentSource)
+    || states.find((s) => s.tabId !== source.tabId);
+  if (!target) throw new Error('Không tìm được tab đích khác nguồn');
+
+  $('sourceTab').value = String(source.tabId);
+  $('targetTab').value = String(target.tabId);
+  log(`tự chọn: nguồn=${source.provider} hash=${source.contentHash}${fresh.length ? ' mới' : ' đã relay trước'} → đích=${target.provider}`);
+  return { source, target };
+}
+
 async function executeRelay(sourceOverride, targetOverride) {
   const sourceId = Number(sourceOverride || $('sourceTab').value);
   const targetId = Number(targetOverride || $('targetTab').value);
@@ -478,6 +527,10 @@ $('relayBtn')?.addEventListener('click', async () => {
   try { await executeRelay(); } catch (e) { log(e.message); }
 });
 
+$('autoPickBtn')?.addEventListener('click', async () => {
+  try { await autoPickNewestDirection(); } catch (e) { log(e.message); }
+});
+
 $('resetRelayBtn')?.addEventListener('click', async () => {
   try {
     const n = await clearRelayStates();
@@ -505,7 +558,14 @@ function stopLoop(reason = 'stopped') {
 async function loopStep() {
   if (!loopState) return;
   if (loopState.step >= loopState.maxSteps) return stopLoop('đạt số bước tối đa');
-  const [sourceId, targetId] = loopState.direction === 0 ? [loopState.a, loopState.b] : [loopState.b, loopState.a];
+  let sourceId, targetId;
+  try {
+    const picked = await autoPickNewestDirection();
+    sourceId = picked.source.tabId;
+    targetId = picked.target.tabId;
+  } catch (_) {
+    [sourceId, targetId] = loopState.direction === 0 ? [loopState.a, loopState.b] : [loopState.b, loopState.a];
+  }
   loopState.step += 1;
   log(`auto-loop bước ${loopState.step}/${loopState.maxSteps}: ${sourceId} → ${targetId}`);
   try {
