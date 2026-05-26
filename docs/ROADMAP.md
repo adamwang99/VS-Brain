@@ -49,3 +49,8 @@ Move VS Brain from internal beta to reliable long-run critique orchestration.
 ## Deferred monetization
 
 Free/Pro gating remains deferred until runtime is stable. See `PROJECT_STATUS.md`.
+
+
+## Execution spec
+
+Sequential implementation checklist lives in `docs/PRODUCT_SPEC.md`.

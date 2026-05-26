@@ -1,7 +1,7 @@
 # VS Brain Project Status
 
-Current version: `v0.8.11`
-Latest commit: `e531f63 feat: add auto handoff runtime v0.8.11`
+Current version: `v0.8.14`
+Latest commit: `9561859 chore: standardize logs and add roadmap v0.8.14`
 
 ## Product purpose
 
@@ -140,3 +140,8 @@ Required architecture before monetization:
 5. Add test matrix per provider and selector health checks.
 6. Package for Chrome Web Store beta.
 7. Only then implement Free/Pro gating and billing.
+
+
+## Sequential implementation spec
+
+See `docs/PRODUCT_SPEC.md` for the phased checklist from pairwise blueprint relay to multi-agent verified execution packet.

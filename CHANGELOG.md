@@ -1,5 +1,11 @@
 # VS Brain Changelog
 
+## v0.8.15
+
+- Rewrote `docs/PRODUCT_SPEC.md` into a phased implementation spec for evolving VS Brain from pairwise blueprint relay to multi-agent verified blueprint/spec/execution packet.
+- Added sequential checklist across artifact state, roles, judge gate, execution packet export, provider health, roundtable mode, packaging, and deferred monetization.
+- Linked roadmap and project status to the new phased spec.
+
 ## v0.8.14
 
 - Standardized runtime/debug logs toward English-only output.
