@@ -10,10 +10,10 @@
   <main>
     <header class="hero glass">
       <div>
-        <h1>🧠 CrossCritic <span class="version">v0.4.3</span></h1>
+        <h1>🧠 CrossCritic <span class="version">v0.4.4</span></h1>
         <p class="subtitle">AI debate relay · archive · checkpoint</p>
       </div>
-      <div class="head-actions"><select id="langMode" class="glass-select" title="Ngôn ngữ prompt"><option value="vi">VI</option><option value="en">EN</option></select><div id="status">Sẵn sàng</div></div>
+      <div class="head-actions"><button id="helpBtn" class="help-round" title="Hướng dẫn sử dụng">?</button><select id="langMode" class="glass-select" title="Ngôn ngữ prompt"><option value="vi">VI</option><option value="en">EN</option></select><div id="status">Sẵn sàng</div></div>
     </header>
 
     <section class="glass relay" aria-label="Điều phối phản biện">
@@ -59,7 +59,6 @@
 
       <details class="advanced">
         <summary>Tuỳ chọn nâng cao</summary>
-        <button id="helpBtn" class="chip" type="button">Hướng dẫn đầy đủ</button>
         <label>Cụm chốt dừng
           <input id="stopPhrase" type="text" value="CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN" />
         </label>
@@ -87,6 +86,16 @@
         <button id="clearCheckpointBtn" disabled>Xoá mốc</button>
       </div>
     </section>
+
+    <div id="helpModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="modal-card glass">
+        <div class="section-head">
+          <h2>Hướng dẫn CrossCritic</h2>
+          <button id="closeHelpBtn" class="chip">Đóng</button>
+        </div>
+        <div id="helpContent" class="help-content"></div>
+      </div>
+    </div>
 
     <details class="glass logbox">
       <summary>Log / debug</summary>

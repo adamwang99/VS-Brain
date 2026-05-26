@@ -684,7 +684,7 @@ function buildFinalMarkdown(source, lang = getLang()) {
 function buildFinalJson(source, lang = getLang()) {
   return JSON.stringify({
     app: 'CrossCritic',
-    version: '0.4.3',
+    version: '0.4.4',
     language: lang,
     saved_at: new Date().toISOString(),
     provider: source.platform,
@@ -737,9 +737,67 @@ function buildHelpText() {
   return `# Hướng dẫn đầy đủ CrossCritic\n\n1. Mở 2 tab AI, ví dụ ChatGPT và Gemini.\n2. Bấm Quét tab. Nguồn/Đích có thể để Auto.\n3. Nếu cần, nhập Yêu cầu bổ sung.\n4. Bấm Dán phản biện để chạy 1 lượt hỗ trợ.\n5. Muốn tự động: bật Auto-send, đặt Steps, bấm Auto A↔B.\n6. Vòng lặp dừng khi phản hồi mới nhất có cụm chốt: CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN, hoặc đạt số bước tối đa.\n7. Bấm Chốt & lưu để xuất MD + JSON.\n8. Nếu lỗi, mở Log/debug và Xuất log.\n\nChế độ:\n- Latest: chỉ gửi phản hồi mới nhất.\n- Selection: chỉ gửi đoạn đang bôi chọn.\n\nAn toàn:\nAuto-send là tuỳ chọn. Cụm chốt chỉ được kiểm tra trong phản hồi mới nhất.`;
 }
 
-$('helpBtn')?.addEventListener('click', async () => {
-  try { await downloadText(`crosscritic/guide-${getLang()}-${Date.now()}.md`, buildHelpText(), 'text/markdown'); log('đã xuất hướng dẫn đầy đủ'); } catch (e) { log(e.message); }
+
+function renderHelpModal() {
+  const en = getLang() === 'en';
+  $('helpContent').innerHTML = en ? `
+    <h3>What CrossCritic does</h3>
+    <p>CrossCritic connects open AI tabs and relays only the latest answer for structured critique, revision, agreement detection, and final export.</p>
+    <h3>Quick start</h3>
+    <ol>
+      <li>Open two AI tabs, e.g. ChatGPT and Gemini.</li>
+      <li>Click <b>Scan tabs</b>. Source/Target may stay <b>Auto</b>.</li>
+      <li>Add optional extra instruction.</li>
+      <li>Click <b>Paste critique →</b> for one manual relay.</li>
+      <li>Enable <b>Auto-send</b> and click <b>Auto A↔B</b> for automatic debate.</li>
+    </ol>
+    <h3>Main controls</h3>
+    <ul>
+      <li><b>Auto source/target</b>: app detects the latest unreplayed answer.</li>
+      <li><b>Latest</b>: sends only latest assistant reply.</li>
+      <li><b>Selection</b>: sends only selected text.</li>
+      <li><b>Steps</b>: maximum loop count.</li>
+      <li><b>Delay</b>: wait time between loop attempts.</li>
+      <li><b>Finalize & Save</b>: exports final MD + JSON.</li>
+    </ul>
+    <h3>Stop condition</h3>
+    <p>The loop stops when the latest response contains <code>CROSSCRITIC_FULL_AGREEMENT</code> or max steps is reached.</p>
+    <h3>Troubleshooting</h3>
+    <p>If auto-send or paste fails, open <b>Log/debug</b> and export the log.</p>
+  ` : `
+    <h3>CrossCritic làm gì?</h3>
+    <p>CrossCritic kết nối các tab AI đang mở, chỉ lấy phản hồi mới nhất để dán sang provider khác cho phản biện có cấu trúc, tự dừng khi đồng thuận, và lưu bản cuối.</p>
+    <h3>Bắt đầu nhanh</h3>
+    <ol>
+      <li>Mở hai tab AI, ví dụ ChatGPT và Gemini.</li>
+      <li>Bấm <b>Quét tab</b>. Nguồn/Đích có thể để <b>Auto</b>.</li>
+      <li>Nhập <b>Yêu cầu bổ sung</b> nếu cần.</li>
+      <li>Bấm <b>Dán phản biện →</b> để chạy một lượt.</li>
+      <li>Bật <b>Auto-send</b> rồi bấm <b>Auto A↔B</b> để chạy tự động.</li>
+    </ol>
+    <h3>Ý nghĩa nút chính</h3>
+    <ul>
+      <li><b>Auto nguồn/đích</b>: app tự dò tab có phản hồi mới nhất chưa chuyển.</li>
+      <li><b>Latest</b>: chỉ gửi phản hồi assistant mới nhất.</li>
+      <li><b>Selection</b>: chỉ gửi đoạn đang bôi chọn.</li>
+      <li><b>Steps</b>: số bước tối đa trước khi dừng.</li>
+      <li><b>Delay</b>: thời gian chờ giữa các bước.</li>
+      <li><b>Chốt & lưu</b>: xuất file MD + JSON của bản cuối.</li>
+    </ul>
+    <h3>Điều kiện dừng</h3>
+    <p>Auto-loop dừng khi phản hồi mới nhất có <code>CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN</code> hoặc đạt Steps tối đa.</p>
+    <h3>Khi lỗi</h3>
+    <p>Mở <b>Log/debug</b> và bấm <b>Xuất log</b> gửi lại để kiểm tra selector/paste/send.</p>
+  `;
+}
+
+$('helpBtn')?.addEventListener('click', () => {
+  renderHelpModal();
+  $('helpModal')?.classList.remove('hidden');
 });
+
+$('closeHelpBtn')?.addEventListener('click', () => $('helpModal')?.classList.add('hidden'));
+$('helpModal')?.addEventListener('click', (e) => { if (e.target?.id === 'helpModal') $('helpModal')?.classList.add('hidden'); });
 
 $('refreshTabsBtn')?.addEventListener('click', async () => {
   try { await refreshTabs(); } catch (e) { log(e.message); }
