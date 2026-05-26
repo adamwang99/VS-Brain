@@ -254,6 +254,7 @@ async function refreshTabs() {
   $('relayBtn').disabled = aiTabs.length < 2;
   $('startLoopBtn').disabled = aiTabs.length < 2;
   $('autoPickBtn').disabled = aiTabs.length < 2;
+  $('swapTabsBtn').disabled = aiTabs.length < 2;
   log(`đã quét tab AI: ${aiTabs.length}`);
 }
 
@@ -529,6 +530,15 @@ $('relayBtn')?.addEventListener('click', async () => {
 
 $('autoPickBtn')?.addEventListener('click', async () => {
   try { await autoPickNewestDirection(); } catch (e) { log(e.message); }
+});
+
+$('swapTabsBtn')?.addEventListener('click', () => {
+  const source = $('sourceTab').value;
+  const target = $('targetTab').value;
+  if (!source || !target || source === target) return log('không thể đổi: nguồn/đích chưa hợp lệ');
+  $('sourceTab').value = target;
+  $('targetTab').value = source;
+  log('đã đổi nguồn ↔ đích');
 });
 
 $('resetRelayBtn')?.addEventListener('click', async () => {
