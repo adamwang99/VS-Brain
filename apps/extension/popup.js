@@ -99,8 +99,12 @@ function initGlassSelects() {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
       qsa('.glass-select-menu').forEach((m) => { if (m !== menu) m.classList.add('hidden'); });
-      menu.classList.toggle('hidden');
       rebuildGlassSelect(sel);
+      const r = btn.getBoundingClientRect();
+      menu.style.left = `${Math.max(8, r.left)}px`;
+      menu.style.top = `${Math.min(window.innerHeight - 80, r.bottom + 6)}px`;
+      menu.style.width = `${r.width}px`;
+      menu.classList.toggle('hidden');
     });
     sel.addEventListener('change', () => { syncOneGlassSelect(sel); });
   });
