@@ -29,7 +29,7 @@ body {
 }
 main { padding: 10px;
   max-width: 100%;
-  overflow-x: hidden; display: grid; gap: 10px; }
+  overflow-x: hidden; display: grid; gap: 12px; }
 .glass {
   position: relative;
   overflow: hidden;
@@ -258,6 +258,7 @@ pre {
 .start-actions { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }
 .big { min-height: 48px; font-size: 15px; }
 .manual-panel, .archive-panel { padding: 12px; }
+.start-card + .manual-panel { margin-top: 4px; }
 .manual-panel > summary, .archive-panel > summary { cursor: pointer; font-weight: 700; }
 .manual-panel .relay, .archive-panel .archive { padding: 10px 0 0; }
 .loop-counter {
