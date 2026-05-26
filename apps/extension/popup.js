@@ -627,6 +627,27 @@ function stopLoop(reason = 'stopped') {
   log(`auto-loop dừng: ${reason}`);
 }
 
+
+async function getLatestContentHash(tabId) {
+  const latest = await getLatestHashForTab(tabId);
+  return latest?.contentHash || null;
+}
+
+async function waitForTabNewResponse(tabId, oldHash, timeoutMs, intervalMs = 1500) {
+  const started = Date.now();
+  while (loopState && Date.now() - started < timeoutMs) {
+    const stopPhrase = $('stopPhrase')?.value?.trim() || 'CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN';
+    try {
+      const [{ result: hasStop }] = await chrome.scripting.executeScript({ target: { tabId }, func: pageContainsStopPhrase, args: [stopPhrase] });
+      if (hasStop) return { stop: true, reason: `gặp cụm từ chốt: ${stopPhrase}` };
+    } catch (_) {}
+    const h = await getLatestContentHash(tabId);
+    if (h && h !== oldHash) return { changed: true, contentHash: h };
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+  return { changed: false, reason: 'timeout chờ phản hồi mới' };
+}
+
 async function loopStep() {
   if (!loopState) return;
   const stopPhrase = $('stopPhrase')?.value?.trim() || 'CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN';
@@ -637,22 +658,37 @@ async function loopStep() {
     } catch (_) {}
   }
   if (loopState.step >= loopState.maxSteps) return stopLoop('đạt số bước tối đa');
-  let sourceId, targetId;
-  try {
-    const picked = await autoPickNewestDirection();
-    sourceId = picked.source.tabId;
-    targetId = picked.target.tabId;
-  } catch (_) {
-    [sourceId, targetId] = loopState.direction === 0 ? [loopState.a, loopState.b] : [loopState.b, loopState.a];
-  }
+
+  const sourceId = loopState.currentSource;
+  const targetId = loopState.currentTarget;
+  const targetOldHash = await getLatestContentHash(targetId);
+
   loopState.step += 1;
   log(`auto-loop bước ${loopState.step}/${loopState.maxSteps}: ${sourceId} → ${targetId}`);
+  let relayResult = null;
   try {
-    await executeRelay(sourceId, targetId);
+    relayResult = await executeRelay(sourceId, targetId);
   } catch (e) {
     log(`auto-loop lỗi: ${e.message}`);
   }
-  loopState.direction = loopState.direction ? 0 : 1;
+
+  // Sau khi dán/gửi sang target, target phải trở thành source cho bước kế tiếp.
+  loopState.currentSource = targetId;
+  loopState.currentTarget = sourceId;
+  $('sourceTab').value = String(loopState.currentSource);
+  $('targetTab').value = String(loopState.currentTarget);
+
+  if ($('autoSendToggle')?.checked && relayResult?.autoSent) {
+    log(`đang chờ tab ${targetId} trả lời mới...`);
+    const waited = await waitForTabNewResponse(targetId, targetOldHash, loopState.waitMs);
+    if (waited.stop) return stopLoop(waited.reason);
+    if (!waited.changed) {
+      log(`chưa có phản hồi mới từ tab ${targetId}: ${waited.reason}; vẫn thử bước kế sau delay`);
+    } else {
+      log(`đã thấy phản hồi mới từ tab ${targetId} hash=${waited.contentHash}`);
+    }
+  }
+
   loopTimer = setTimeout(loopStep, loopState.delayMs);
 }
 
@@ -664,10 +700,12 @@ $('startLoopBtn')?.addEventListener('click', async () => {
     loopState = {
       a,
       b,
-      direction: 0,
+      currentSource: a,
+      currentTarget: b,
       step: 0,
       maxSteps: Math.max(1, Math.min(20, Number($('loopMaxSteps').value || 6))),
-      delayMs: Math.max(3, Math.min(120, Number($('loopDelaySec').value || 12))) * 1000
+      delayMs: Math.max(3, Math.min(120, Number($('loopDelaySec').value || 12))) * 1000,
+      waitMs: Math.max(15, Math.min(300, Number($('loopDelaySec').value || 12) * 5)) * 1000
     };
     setLoopRunning(true);
     log(`auto-loop bắt đầu: max=${loopState.maxSteps}, delay=${loopState.delayMs / 1000}s. autoSend=${$('autoSendToggle')?.checked ? 'ON' : 'OFF'}`);
