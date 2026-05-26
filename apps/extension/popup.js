@@ -539,11 +539,17 @@ async function autoPickNewestDirection() {
 }
 
 async function executeRelay(sourceOverride, targetOverride) {
-  const sourceId = Number(sourceOverride || $('sourceTab').value);
-  const targetId = Number(targetOverride || $('targetTab').value);
+  let sourceId = Number(sourceOverride || $('sourceTab').value);
+  let targetId = Number(targetOverride || $('targetTab').value);
+  if (!sourceId || !targetId || sourceId === targetId) {
+    log('dropdown chưa hợp lệ, tự dò tìm nguồn/đích...');
+    const picked = await autoPickNewestDirection();
+    sourceId = picked.source.tabId;
+    targetId = picked.target.tabId;
+  }
   const kind = 'comprehensive';
   const mode = $('relayMode').value;
-  if (!sourceId || !targetId || sourceId === targetId) throw new Error('Chọn 2 tab khác nhau');
+  if (!sourceId || !targetId || sourceId === targetId) throw new Error('Không tự dò được nguồn/đích');
   log(`relay chuẩn bị: source=${sourceId} target=${targetId} autoSend=${$('autoSendToggle')?.checked ? 'ON' : 'OFF'}`);
 
   const [{ result: source }] = await chrome.scripting.executeScript({
@@ -704,9 +710,15 @@ async function loopStep() {
 
 $('startLoopBtn')?.addEventListener('click', async () => {
   try {
-    const a = Number($('sourceTab').value);
-    const b = Number($('targetTab').value);
-    if (!a || !b || a === b) throw new Error('Chọn 2 tab khác nhau');
+    let a = Number($('sourceTab').value);
+    let b = Number($('targetTab').value);
+    if (!a || !b || a === b) {
+      log('dropdown chưa hợp lệ, tự dò tìm nguồn/đích...');
+      const picked = await autoPickNewestDirection();
+      a = picked.source.tabId;
+      b = picked.target.tabId;
+    }
+    if (!a || !b || a === b) throw new Error('Không tự dò được nguồn/đích');
     loopState = {
       a,
       b,
