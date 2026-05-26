@@ -366,8 +366,9 @@ async function fillPromptInPage(prompt) {
   return { ok: false, error: 'Không tìm thấy hoặc không set được ô nhập chat. Hãy click vào ô chat Gemini rồi thử lại.' };
 }
 
-function buildRelayPrompt(kind, source) {
+function buildRelayPrompt(kind, source, extraInstruction = '') {
   const content = source.content;
+  const extra = extraInstruction.trim() ? `\n\nYÊU CẦU BỔ SUNG TỪ NGƯỜI DÙNG:\n${extraInstruction.trim()}` : '';
   return `Bạn là AI phản biện tổng hợp, nghiêm khắc, không nể ý tưởng gốc.
 
 Nhiệm vụ: chỉ phản biện NỘI DUNG MỚI bên dưới, không lặp lại lịch sử cũ, không viết lan man. Hãy kiểm tra đồng thời tất cả nhóm sau:
@@ -447,7 +448,7 @@ async function executeRelay() {
     return;
   }
 
-  const prompt = buildRelayPrompt(kind, source);
+  const prompt = buildRelayPrompt(kind, source, $('extraInstruction')?.value || '');
   await chrome.tabs.update(targetId, { active: true });
   await new Promise((r) => setTimeout(r, 500));
   const [{ result }] = await chrome.scripting.executeScript({ target: { tabId: targetId }, func: fillPromptInPage, args: [prompt] });
@@ -463,7 +464,8 @@ async function executeRelay() {
     relayedAt: new Date().toISOString(),
     preview: source.content.slice(0, 180)
   });
-  log(`đã dán nội dung mới hash=${contentHash} method=${result.method || '?'} selector=${result.selector || '?'}; Sếp bấm gửi thủ công`);
+  const hasExtra = ($('extraInstruction')?.value || '').trim() ? ' có yêu cầu bổ sung' : '';
+  log(`đã dán nội dung mới hash=${contentHash}${hasExtra} method=${result.method || '?'} selector=${result.selector || '?'}; Sếp bấm gửi thủ công`);
 }
 
 $('refreshTabsBtn')?.addEventListener('click', async () => {

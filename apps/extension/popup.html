@@ -49,6 +49,9 @@
           <option value="selection">Đoạn đang bôi chọn</option>
         </select>
       </label>
+      <label>Yêu cầu bổ sung <span class="hint">tùy chọn, sẽ chèn vào prompt phản biện</span>
+        <textarea id="extraInstruction" rows="4" placeholder="Ví dụ: tập trung kiểm tra tính khả thi MVP, rủi ro bảo mật, cách giảm context... "></textarea>
+      </label>
       <button id="relayBtn" disabled>Lấy từ nguồn → dán sang đích <span class="q" title="Mặc định chỉ lấy phản hồi mới nhất và chặn dán trùng bằng hash. Không tự bấm gửi.">?</span></button>
       <button id="resetRelayBtn">Xóa mốc relay <span class="q" title="Xóa dấu vết phản hồi đã chuyển trước đó. Dùng khi muốn dán lại cùng một phản hồi.">?</span></button>
     </section>
