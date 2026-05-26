@@ -1,5 +1,14 @@
 # VS Brain Changelog
 
+## v0.8.12
+
+- Added deferred monetization/free-pro upgrade debt to `PROJECT_STATUS.md`:
+  - keep current build full-feature internal beta
+  - Free tier planned as 20 rounds / 2 providers
+  - Pro tier planned for full rounds, multi-provider, Auto Handoff, Roundtable/Judge, advanced gates
+  - Chrome Web Store + external license billing recommended later
+  - license/plan architecture noted as future requirement
+
 ## v0.8.11
 
 - Added Auto Handoff Runtime:
