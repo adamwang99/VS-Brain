@@ -65,35 +65,83 @@ const I18N = {
   }
 };
 
+function qs(sel) { return document.querySelector(sel); }
+function qsa(sel) { return Array.from(document.querySelectorAll(sel)); }
+
 function applyUiLang() {
   const lang = getLang();
   const t = I18N[lang] || I18N.vi;
   document.documentElement.lang = lang;
-  $('[data-i18n="subtitle"]').textContent = t.subtitle;
-  $('[data-i18n="critique"]').textContent = t.critique;
-  $('[data-i18n="scanTabs"]').textContent = t.scanTabs;
-  $('[data-i18n="source"]').textContent = t.source;
-  $('[data-i18n="target"]').textContent = t.target;
-  $('[data-i18n="autoPick"]').textContent = t.autoPick;
-  $('[data-i18n="swap"]').textContent = t.swap;
-  $('[data-i18n="pasteCritique"]').textContent = t.pasteCritique;
-  $('[data-i18n="steps"]').textContent = t.steps;
-  $('[data-i18n="delay"]').textContent = t.delay;
-  $('[data-i18n="autoSend"]').textContent = t.autoSend;
-  $('[data-i18n="autoLoop"]').textContent = t.autoLoop;
-  $('[data-i18n="stop"]').textContent = t.stop;
-  $('[data-i18n="finalize"]').textContent = t.finalize;
-  $('[data-i18n="resetRelay"]').textContent = t.resetRelay;
-  $('[data-i18n="advanced"]').textContent = t.advanced;
-  $('[data-i18n="stopPhraseLabel"]').textContent = t.stopPhraseLabel;
-  $('[data-i18n="promptTemplateLabel"]').textContent = t.promptTemplateLabel;
-  $('[data-i18n="resetPrompt"]').textContent = t.resetPrompt;
-  $('[data-i18n="archive"]').textContent = t.archive;
-  $('[data-i18n="scanChat"]').textContent = t.scanChat;
-  $('[data-i18n="logDebug"]').textContent = t.logDebug;
-  $('[data-i18n="exportLog"]').textContent = t.exportLog;
+  qsa('[data-i18n]').forEach((el) => {
+    const key = el.dataset.i18n;
+    if (t[key]) el.textContent = t[key];
+  });
   const h = $('helpBtn'); if (h) h.title = lang === 'en' ? 'Help' : 'Hướng dẫn sử dụng';
+  syncGlassSelectLabels();
 }
+
+function initGlassSelects() {
+  qsa('select.glass-select').forEach((sel) => {
+    if (sel.dataset.glassReady === '1') return;
+    sel.dataset.glassReady = '1';
+    const wrap = document.createElement('div');
+    wrap.className = 'glass-select-wrap';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'glass-select-btn';
+    const menu = document.createElement('div');
+    menu.className = 'glass-select-menu hidden';
+    sel.parentNode.insertBefore(wrap, sel);
+    wrap.appendChild(sel);
+    wrap.appendChild(btn);
+    wrap.appendChild(menu);
+    sel.classList.add('native-hidden');
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      qsa('.glass-select-menu').forEach((m) => { if (m !== menu) m.classList.add('hidden'); });
+      menu.classList.toggle('hidden');
+      rebuildGlassSelect(sel);
+    });
+    sel.addEventListener('change', () => { syncOneGlassSelect(sel); });
+  });
+  document.addEventListener('click', () => qsa('.glass-select-menu').forEach((m) => m.classList.add('hidden')));
+  syncGlassSelectLabels();
+}
+
+function rebuildGlassSelect(sel) {
+  const wrap = sel.closest('.glass-select-wrap');
+  if (!wrap) return;
+  const menu = wrap.querySelector('.glass-select-menu');
+  menu.innerHTML = '';
+  Array.from(sel.options).forEach((opt) => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'glass-select-item';
+    if (opt.value === sel.value) item.classList.add('active');
+    item.textContent = opt.textContent;
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      sel.value = opt.value;
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      menu.classList.add('hidden');
+    });
+    menu.appendChild(item);
+  });
+}
+
+function syncOneGlassSelect(sel) {
+  const wrap = sel.closest('.glass-select-wrap');
+  if (!wrap) return;
+  const btn = wrap.querySelector('.glass-select-btn');
+  const opt = sel.selectedOptions?.[0];
+  btn.textContent = opt?.textContent || 'Auto';
+  rebuildGlassSelect(sel);
+}
+
+function syncGlassSelectLabels() {
+  qsa('select.glass-select').forEach(syncOneGlassSelect);
+}
+
 
 async function activeTab() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -358,6 +406,7 @@ async function refreshTabs() {
       log(`fallback chọn mặc định: nguồn=${aiTabs[0].provider} → đích=${fallbackTarget.provider}`);
     }
   }
+  syncGlassSelectLabels();
   log(`đã quét tab AI: ${aiTabs.length}`);
 }
 
@@ -1041,6 +1090,7 @@ $('exportLogBtn')?.addEventListener('click', async () => {
 
 
 
+initGlassSelects();
 applyUiLang();
 initPromptTemplate();
 refreshTabs().catch(() => {});
