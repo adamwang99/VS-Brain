@@ -295,3 +295,24 @@ html { overflow-x: hidden; }
   cursor: pointer;
 }
 .slider-val { font-size: 13px; font-weight: 650; color: #f4f8ff; width: 32px; text-align: center; }
+@keyframes cc-flow {
+  0% { background-position: 0% 50%; filter: hue-rotate(0deg); }
+  50% { background-position: 100% 50%; filter: hue-rotate(38deg); }
+  100% { background-position: 0% 50%; filter: hue-rotate(0deg); }
+}
+#oneClickStartBtn.running {
+  background: linear-gradient(120deg, rgba(103,221,255,.95), rgba(159,140,255,.95), rgba(255,141,161,.86), rgba(103,221,255,.95));
+  background-size: 260% 260%;
+  animation: cc-flow 2.4s ease infinite;
+  box-shadow: 0 0 28px rgba(103,221,255,.45), 0 0 60px rgba(159,140,255,.25);
+}
+.loop-counter.running {
+  background: linear-gradient(120deg, rgba(103,221,255,.20), rgba(159,140,255,.20), rgba(255,141,161,.16), rgba(103,221,255,.20));
+  background-size: 260% 260%;
+  animation: cc-flow 3.2s ease infinite;
+  border-color: rgba(103,221,255,.42);
+}
+.loop-counter.running #loopCounter,
+.loop-counter.running .timer {
+  text-shadow: 0 0 16px rgba(103,221,255,.54);
+}

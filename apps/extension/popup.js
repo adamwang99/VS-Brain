@@ -1182,6 +1182,7 @@ function updateRunButtonState(running) {
     $('oneClickStartBtn').textContent = running ? t.running : t.startAuto;
     $('oneClickStartBtn').disabled = !!running;
     $('oneClickStartBtn').classList.toggle('running', !!running);
+    $('loopCounter')?.closest('.loop-counter')?.classList.toggle('running', !!running);
   }
 }
 
