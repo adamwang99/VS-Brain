@@ -3,14 +3,19 @@
   "name": "CrossCritic",
   "version": "0.1.0",
   "description": "Archive AI chats and relay critique across providers.",
-  "permissions": ["activeTab", "scripting", "storage", "downloads", "tabs"],
+  "permissions": ["activeTab", "scripting", "storage", "downloads", "tabs", "sidePanel"],
   "host_permissions": [
     "https://chatgpt.com/*",
     "https://chat.openai.com/*",
     "https://gemini.google.com/*"
   ],
   "action": {
-    "default_title": "CrossCritic",
-    "default_popup": "popup.html"
+    "default_title": "CrossCritic"
+  },
+  "side_panel": {
+    "default_path": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js"
   }
 }

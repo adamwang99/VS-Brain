@@ -25,7 +25,10 @@
       <button id="scanBtn">Quét chat hiện tại <span class="q" title="Đọc nội dung đang hiển thị trong tab ChatGPT/Gemini. Không tải file, không gửi dữ liệu ra ngoài.">?</span></button>
       <button id="exportJsonlBtn" disabled>Xuất JSONL mới <span class="q" title="Tải file .jsonl chỉ gồm tin mới sau checkpoint. JSONL là bản lưu chuẩn để gộp/chống trùng.">?</span></button>
       <button id="exportMdBtn" disabled>Xuất Markdown mới <span class="q" title="Tải file .md dễ đọc, chỉ gồm tin mới sau checkpoint. Dùng để xem/chia sẻ nhanh.">?</span></button>
+      <button id="exportAllJsonlBtn" disabled>Xuất lại toàn bộ JSONL <span class="q" title="Bỏ qua checkpoint và xuất toàn bộ tin đang thấy. Dùng khi lỡ đánh dấu mốc sai.">?</span></button>
+      <button id="exportAllMdBtn" disabled>Xuất lại toàn bộ Markdown <span class="q" title="Bỏ qua checkpoint và xuất toàn bộ tin đang thấy ra Markdown.">?</span></button>
       <button id="checkpointBtn" disabled>Đánh dấu mốc hiện tại <span class="q" title="Lưu vị trí tin cuối cùng hiện thấy. Lần sau chỉ xuất phần sau mốc này.">?</span></button>
+      <button id="clearCheckpointBtn" disabled>Xóa mốc đã lưu <span class="q" title="Xóa checkpoint của cuộc chat này. Sau đó nút xuất mới sẽ lấy lại toàn bộ tin đang thấy.">?</span></button>
     </section>
 
     <details class="guide">
@@ -35,6 +38,7 @@
         <li>Bấm <b>Quét chat hiện tại</b>.</li>
         <li>Lần đầu: xuất JSONL/Markdown để lưu toàn bộ phần đang thấy.</li>
         <li>Lần sau: extension tự dùng checkpoint, chỉ xuất tin mới.</li>
+        <li>Nếu đánh dấu nhầm: bấm <b>Xóa mốc đã lưu</b> hoặc <b>Xuất lại toàn bộ</b>.</li>
         <li>Nếu muốn tự chọn mốc: bấm <b>Đánh dấu mốc hiện tại</b>.</li>
       </ol>
     </details>

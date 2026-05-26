@@ -141,7 +141,10 @@ async function scan() {
   const newMessages = await filterNew(currentScan);
   $('exportJsonlBtn').disabled = !newMessages.length;
   $('exportMdBtn').disabled = !newMessages.length;
+  $('exportAllJsonlBtn').disabled = !currentScan.messages.length;
+  $('exportAllMdBtn').disabled = !currentScan.messages.length;
   $('checkpointBtn').disabled = !currentScan.messages.length;
+  $('clearCheckpointBtn').disabled = !cp;
   setStatus(`Tìm thấy ${currentScan.messages.length} tin, mới ${newMessages.length} tin.`);
   log(`quét provider=${currentScan.platform} thấy=${currentScan.messages.length} mới=${newMessages.length} checkpoint=${cp?.lastSeenMessageKey ? 'có' : 'chưa'}`);
 }
@@ -170,6 +173,45 @@ $('exportMdBtn').addEventListener('click', async () => {
     await downloadText(filename, toMarkdown(currentScan, messages), 'text/markdown');
     await setCheckpoint(currentScan, currentScan.messages);
     log(`đã xuất Markdown: ${messages.length} tin`);
+    await scan();
+  } catch (e) { log(e.message); }
+});
+
+
+$('exportAllJsonlBtn').addEventListener('click', async () => {
+  try {
+    if (!currentScan) await scan();
+    const messages = currentScan.messages;
+    const filename = `crosscritic/${currentScan.platform}/${safeName(currentScan.title)}-FULL-${Date.now()}.jsonl`;
+    await downloadText(filename, toJsonl(messages), 'application/jsonl');
+    await setCheckpoint(currentScan, currentScan.messages);
+    log(`đã xuất lại toàn bộ JSONL: ${messages.length} tin`);
+    await scan();
+  } catch (e) { log(e.message); }
+});
+
+$('exportAllMdBtn').addEventListener('click', async () => {
+  try {
+    if (!currentScan) await scan();
+    const messages = currentScan.messages;
+    const filename = `crosscritic/${currentScan.platform}/${safeName(currentScan.title)}-FULL-${Date.now()}.md`;
+    await downloadText(filename, toMarkdown(currentScan, messages), 'text/markdown');
+    await setCheckpoint(currentScan, currentScan.messages);
+    log(`đã xuất lại toàn bộ Markdown: ${messages.length} tin`);
+    await scan();
+  } catch (e) { log(e.message); }
+});
+
+async function clearCheckpoint(scan) {
+  const key = `checkpoint:${scan.platform}:${scan.conversationId}`;
+  await chrome.storage.local.remove(key);
+}
+
+$('clearCheckpointBtn').addEventListener('click', async () => {
+  try {
+    if (!currentScan) await scan();
+    await clearCheckpoint(currentScan);
+    log('đã xóa mốc đã lưu');
     await scan();
   } catch (e) { log(e.message); }
 });
