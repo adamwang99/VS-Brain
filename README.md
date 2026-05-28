@@ -4,7 +4,7 @@ VS Brain is a Chrome side-panel extension for running structured AI-to-AI critiq
 
 It turns ad-hoc copy/paste between AI tools into a governed workflow: scan conversations, relay only the latest answer, force structured critique, stop on explicit agreement, finalize a blueprint, and preserve checkpoints when context gets too large.
 
-Current extension version: `v0.8.14`.
+Current extension version: `v0.8.33-archivecanon`.
 
 ## Why it is useful
 
@@ -37,7 +37,7 @@ Open two supported AI tabs, then press **Start auto**. VS Brain can:
 - extract the latest assistant answer
 - build a structured critique prompt
 - paste it into the other provider
-- optionally auto-send
+- keep auto-send OFF by default for safe release
 - switch direction after each round
 - stop when agreement is detected or the max step limit is reached
 
@@ -61,12 +61,13 @@ VS Brain uses explicit stop phrases:
 - English: `VS_BRAIN_FULL_AGREEMENT`
 - Vietnamese: `CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN`
 
-`Finalize & Save` now enforces `require_final_confirm` behavior:
+Finalize runtime now uses a hardened confirmation flow:
 
 - if the final agreement phrase exists, finalization is `confirmed`
-- if not, the user must explicitly confirm draft finalization
-- draft outputs are marked as `draft_forced`
-- exports include `stop_reason` and `require_final_confirm`
+- if not, manual finalize requires explicit draft confirmation
+- finalization is now gated by termination envelope + nonce + fail-closed checks
+- judge gate can veto or require review before export
+- the hardened final export path emits a structured bundle artifact
 
 This prevents a manually stopped or degraded debate from being silently treated as fully agreed.
 
@@ -141,13 +142,11 @@ It stores per-conversation checkpoints in `chrome.storage.local` to avoid duplic
 
 ### 8. Final blueprint export
 
-After finalization, VS Brain exports:
+After finalization, VS Brain now defaults to exporting:
 
 - final blueprint Markdown
-- final blueprint JSON
-- finalization prompt Markdown
 
-The JSON includes machine-readable finalization metadata.
+Archive/bundle tools still exist separately for conversation export and internal artifacts.
 
 ## Operating model
 
@@ -165,12 +164,14 @@ Open 2 AI tabs
 
 ## Safety rules
 
-- Auto-send is optional but enabled in the one-click flow.
+- Auto-send is optional and OFF by default, including the one-click safe-release path.
 - Stop phrase is accepted only in the latest response.
+- Stop phrase alone is not enough to finalize.
+- Finalization requires deterministic fail-closed validation.
 - Manual stop does not equal final agreement.
 - Missing final agreement requires explicit user confirmation before blueprint generation.
 - Handoff mode should be used when context is high, model quality drops, or debate starts repeating.
-- Context estimates are heuristic in web UI mode; API mode would be required for exact token usage.
+- Context estimates are heuristic in web UI mode; unreliable estimator state blocks blind auto handoff.
 
 ## Current implementation status
 

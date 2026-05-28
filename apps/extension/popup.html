@@ -12,7 +12,7 @@
       <div class="brand-lockup">
         <img class="brand-logo hero-logo" src="icons/vs-brain-logo.png" alt="VS Brain logo" />
         <div>
-          <h1>VS Brain <span class="version">v0.8.17</span></h1>
+          <h1>VS Brain <span class="version">v0.8.33-archivecanon</span></h1>
           <p class="subtitle" data-i18n="subtitle">AI debate relay · archive · checkpoint</p>
         </div>
       </div>
@@ -20,16 +20,29 @@
     </header>
 
     <section class="glass start-card" aria-label="Bắt đầu">
-      <div id="status" data-i18n="ready">Sẵn sàng</div>
-      <h2 data-i18n="oneClickTitle">Tự động phản biện giữa các AI</h2>
-      <p class="hintline" data-i18n="oneClickHint">Mở 2 tab AI, bấm bắt đầu. VS Brain tự chọn nguồn/đích, tự gửi, tự dừng khi đồng thuận.</p>
-      <textarea id="extraInstruction" rows="3" placeholder="Yêu cầu bổ sung: tập trung UX, bảo mật, feasibility..." data-placeholder-vi="Yêu cầu bổ sung: tập trung UX, bảo mật, feasibility..." data-placeholder-en="Extra instruction: focus on UX, security, feasibility..."></textarea>
-      <div class="start-actions">
-        <button id="oneClickStartBtn" class="primary big" data-i18n="startAuto">Bắt đầu tự động</button>
-        <button id="stopLoopBtn" data-i18n="stop">Dừng</button>
-        <button id="finalizeBtn" data-i18n="finalize">Chốt & lưu</button><button id="handoffBtn" data-i18n="handoff">Handoff</button>
+      <div class="runtime-strip">
+        <div id="status" class="status-pill" data-state="idle" data-i18n="ready">Sẵn sàng</div>
+        <div class="runtime-pills">
+          <span class="runtime-pill">Auto</span>
+          <span class="runtime-pill">Latest</span>
+          <span class="runtime-pill">Send OFF</span>
+        </div>
       </div>
-      <div class="loop-counter"><span id="loopCounter">0/100</span><span data-i18n="loopCounterLabel">vòng</span><span id="elapsedTimer" class="timer">00:00</span></div><div class="round-control"><div class="preset-row"><button type="button" class="round-preset" data-round="25">25</button><button type="button" class="round-preset" data-round="50">50</button><button type="button" class="round-preset" data-round="100">100</button><button type="button" class="round-preset" data-round="200">200</button><button type="button" class="round-preset" data-round="500">500</button><button type="button" class="round-preset" data-round="1000">1000</button></div><div class="round-stepper"><button type="button" id="roundDecBtn">-10</button><input id="stepsSlider" type="range" min="1" max="1000" step="10" value="100" class="slider" /><button type="button" id="roundIncBtn">+10</button><span id="sliderValue" class="slider-val">100</span></div></div><div class="mini-meta"><span data-i18n="autoModeNote">Default: Auto source/target · Latest · Auto-send · 100 steps</span></div>
+      <h2 data-i18n="oneClickTitle">Tự động phản biện giữa các AI</h2>
+      <p class="hintline" data-i18n="oneClickHint">Mở 2 tab AI, bấm bắt đầu. VS Brain tự chọn nguồn/đích, chỉ dán an toàn mặc định; chỉ tự gửi khi Sếp bật Auto-send.</p>
+      <textarea id="extraInstruction" rows="2" placeholder="Yêu cầu bổ sung: tập trung UX, bảo mật, feasibility..." data-placeholder-vi="Yêu cầu bổ sung: tập trung UX, bảo mật, feasibility..." data-placeholder-en="Extra instruction: focus on UX, security, feasibility..."></textarea>
+      <div class="action-panel glass-subtle">
+        <div class="start-actions compact-actions">
+          <button id="oneClickStartBtn" class="primary big" data-i18n="startAuto">Start</button>
+          <button id="finalizeBtn" class="primary" data-i18n="finalize">Save</button>
+          <button id="stopLoopBtn" class="icon-action" data-i18n="stop">Stop</button>
+          <button id="handoffBtn" class="icon-action" data-i18n="handoff">Handoff</button>
+        </div>
+      </div>
+      <div class="metrics-grid single-card-metrics">
+        <div class="loop-counter volume-card"><div class="loop-topline"><span id="loopCounter" title="Double-click để sửa số vòng">0/100</span><span data-i18n="loopCounterLabel">vòng</span><span id="elapsedTimer" class="timer">00:00</span></div><div class="round-stepper simple volume-inline"><input id="stepsSlider" type="range" min="1" max="1000" step="10" value="100" class="slider" /><span id="sliderValue" class="slider-val">100</span></div></div>
+      </div>
+      <div class="mini-meta compact-meta"><span data-i18n="autoModeNote">Mặc định: Auto ON · Latest · auto-save vào Downloads/vs-brain/<session></span></div>
     </section>
 
     <details class="glass manual-panel">
@@ -55,7 +68,7 @@
         <div class="loop-row">
           <label><span data-i18n="steps">Steps</span> <input id="loopMaxSteps" type="number" min="1" max="1000" value="100" /></label>
           <label><span data-i18n="delay">Delay</span> <input id="loopDelaySec" type="number" min="3" max="120" value="12" /></label>
-          <label class="toggle"><input id="autoSendToggle" type="checkbox" checked /> <span data-i18n="autoSend">Auto-send</span></label>
+          <label class="toggle"><input id="autoSendToggle" type="checkbox" checked disabled /> <span data-i18n="autoSend">Auto-send</span></label>
         </div>
         <div class="toolbar">
           <button id="startLoopBtn" disabled data-i18n="autoLoop">Auto A↔B</button>
@@ -74,12 +87,21 @@
     <details class="glass archive-panel">
       <summary data-i18n="archive">Lưu trữ</summary>
       <section class="archive" aria-label="Lưu trữ chat">
-        <div class="section-head"><button id="scanBtn" class="chip" data-i18n="scanChat">Quét chat</button></div>
+        <div class="section-head"><h2 data-i18n="archive">Lưu trữ</h2></div>
         <div class="mini-meta"><span id="provider">-</span><span id="count">0 tin</span></div>
         <strong id="title" class="titleline">-</strong>
-        <div class="toolbar wrap">
-          <button id="exportJsonlBtn" disabled>JSONL mới</button><button id="exportMdBtn" disabled>MD mới</button><button id="exportAllJsonlBtn" disabled>JSONL full</button><button id="exportAllMdBtn" disabled>MD full</button><button id="checkpointBtn" disabled>Đánh mốc</button><button id="clearCheckpointBtn" disabled>Xoá mốc</button>
+        <div class="toolbar wrap archive-actions-simple">
+          <button id="scanBtn" class="chip" data-i18n="scanChat">Quét</button>
+          <button id="exportAllBundleBtn" class="primary" disabled>Tải archive chuẩn (.gz)</button>
         </div>
+        <div class="archive-note">Archive chuẩn chứa JSONL + Markdown + metadata phiên; đây là gói lưu trữ machine-safe mặc định. Các mốc/checkpoint vẫn nằm trong storage local.</div>
+        <details class="advanced archive-advanced">
+          <summary>Tuỳ chọn debug / tương thích</summary>
+          <div class="toolbar wrap">
+            <button id="exportMdBtn" disabled>MD mới</button><button id="exportAllMdBtn" disabled>MD full</button><button id="checkpointBtn" disabled>Đánh mốc</button><button id="clearCheckpointBtn" disabled>Xoá mốc</button><div hidden aria-hidden="true"><button id="exportJsonlBtn" disabled>JSONL raw</button><button id="exportAllJsonlBtn" disabled>JSONL raw full</button></div>
+          </div>
+          <div class="archive-note subtle">Khuyến nghị: dùng archive `.gz` làm bản lưu chuẩn, dùng `MD` để đọc nhanh. `JSONL raw` chỉ dành cho debug/tương thích và có thể bị browser đổi tên file.</div>
+        </details>
       </section>
     </details>
 
@@ -87,6 +109,11 @@
 
     <details class="glass logbox"><summary data-i18n="logDebug">Log / debug</summary><button id="exportLogBtn" class="chip" data-i18n="exportLog">Xuất log</button><pre id="log" aria-label="Nhật ký thao tác"></pre></details>
   </main>
+  <script src="action-journal.js"></script>
+  <script src="ipc-runtime.js"></script>
+  <script src="lease-runtime.js"></script>
+  <script src="runtime-recovery.js"></script>
+  <script src="judge-gate.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
