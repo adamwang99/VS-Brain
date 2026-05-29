@@ -1,5 +1,7 @@
 # VS Brain
 
+![VS Brain banner](./assets/github-banner.jpg)
+
 VS Brain is a Chrome side-panel extension for running structured AI-to-AI critique loops across web AI tabs such as ChatGPT, Gemini, Claude, DeepSeek, Perplexity, and Grok.
 
 It turns ad-hoc copy/paste between AI tools into a governed workflow: scan conversations, relay only the latest answer, force structured critique, stop on explicit agreement, finalize a blueprint, and preserve checkpoints when context gets too large.
