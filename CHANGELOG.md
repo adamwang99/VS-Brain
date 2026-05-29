@@ -1,5 +1,44 @@
 # VS Brain Changelog
 
+## v0.8.44-critical-stall-needs-real-stall
+
+- Hardened one-click/live runtime against stale popup/session state:
+  - `Start` now forces tab re-scan before launching a new loop
+  - `Start` clears recovered/stale loop state before new execution
+  - invalid `source===target` loop state now stops immediately instead of continuing
+- Fixed source/target fallback pairing so one-click no longer prefers `gemini -> gemini` / same-provider pairs when a different-provider AI tab is available.
+- Added explicit live surface classification in runtime detection:
+  - `conversation`
+  - `home`
+  - `signin`
+  - `interstitial`
+- Added explicit fail-fast runtime reasons for live providers:
+  - `CHATGPT_SIGNIN_REQUIRED`
+  - `CHATGPT_INTERSTITIAL_GATE`
+  - `GEMINI_HOME_NOT_BOOTSTRAPPED`
+  - `needs_permission_reload`
+- Gemini home/new-chat surfaces can now be auto-bootstrapped with a short readiness prompt before the debate relay starts.
+- Relay stop-check permission failures now abort clearly instead of spinning in repeated lease/retry loops.
+- Expanded host permissions to reduce false permission failures on Google/Gemini redirect surfaces during live runs.
+- Runtime result: the extension now surfaces real provider/runtime blockers more honestly instead of hiding them inside infinite `ERR_SOURCE_NOT_READY` churn.
+
+## v0.8.18-g2
+
+- Hardened the production runtime around a certified 2-provider baseline: `ChatGPT + Gemini`.
+- Kept the compact primary action UI with `Start`, `Save`, `Stop`, and `Handoff`.
+- Safe-release now defaults to `Auto-send OFF`, including the one-click path.
+- Auto-loop now requires `Auto-send ON`; otherwise the UI blocks with an explicit message instead of silently pasting and incrementing rounds.
+- Finalization no longer trusts stop phrase alone:
+  - requires termination envelope
+  - requires finalize nonce
+  - fails closed on malformed/multiple envelope, nonce mismatch, `should_continue=true`, or `critical_remaining=true`
+  - runs judge gate `veto | review_required | no_veto` before export
+- Recovery path restores into `recovered_blocked` and forces `Auto-send OFF`.
+- Auto handoff uses dual estimator and blocks unreliable handoff without killing the whole loop.
+- Added runtime status states for clearer operator feedback: `idle | running | blocked | recovered | ready_to_finalize`.
+- Shortened dropdown labels and normalized input typography for cleaner side-panel UX.
+- Added release-gate test coverage for runtime skeleton, recovery/finalize, judge fail-closed, handoff estimator, safe release, live official flow, and release matrix verification.
+
 ## v0.8.15
 
 - Rewrote `docs/PRODUCT_SPEC.md` into a phased implementation spec for evolving VS Brain from pairwise blueprint relay to multi-agent verified blueprint/spec/execution packet.

@@ -1,0 +1,17 @@
+{
+  "name": "duplicate-source-stall",
+  "provider": "mock",
+  "title": "Mock Provider - Duplicate Source Stall",
+  "responseDelayMs": 200,
+  "seedMessages": [
+    {
+      "role": "assistant",
+      "content": "Static baseline. This response never changes."
+    }
+  ],
+  "turns": [
+    {
+      "response": "Static baseline. This response never changes."
+    }
+  ]
+}

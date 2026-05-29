@@ -4,7 +4,7 @@ VS Brain is a Chrome side-panel extension for running structured AI-to-AI critiq
 
 It turns ad-hoc copy/paste between AI tools into a governed workflow: scan conversations, relay only the latest answer, force structured critique, stop on explicit agreement, finalize a blueprint, and preserve checkpoints when context gets too large.
 
-Current extension version: `v0.8.33-archivecanon`.
+Current extension version: `v0.8.44-critical-stall-needs-real-stall`.
 
 ## Why it is useful
 
@@ -190,6 +190,11 @@ Implemented in `apps/extension`:
 - context handoff export
 - JSONL/Markdown conversation export
 - debug log export
+- one-click start now hardens runtime by auto-refreshing tab inventory and clearing stale recovery state before a new loop
+- source/target auto-pick now avoids same-provider fallback pairs when a different-provider target is available
+- surface classification now distinguishes usable conversation vs `home` / `signin` / `interstitial` states for live providers
+- Gemini home/new-chat surfaces can now be auto-bootstrapped with a short readiness prompt before the real critique relay begins
+- permission/runtime failures now stop fast with explicit reasons instead of silently retrying forever
 
 ## Repo layout
 
@@ -215,6 +220,7 @@ After code changes, click **Reload** on the extension card.
 - Web UI mode cannot read exact model token usage or true provider context window usage.
 - Context usage is estimated from visible DOM text and prompt payload size.
 - Provider UI selectors may change; use the debug log when paste/send fails.
+- Live provider automation can still be blocked by auth/interstitial/anti-bot surfaces outside the extension's control; current runtime now classifies these more explicitly instead of retrying indefinitely.
 - API mode is not implemented yet.
 
 ## Version history

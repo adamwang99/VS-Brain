@@ -7,3 +7,11 @@ build/
 exports/**
 !exports/.gitkeep
 .DS_Store
+*.bak-*
+lab-page-dump.json
+lab-target-dump.json
+lab-post-start-state.json
+live-seed-*.json
+memory_snapshots/
+test-results/
+artifacts/

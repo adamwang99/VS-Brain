@@ -1,7 +1,7 @@
 # VS Brain Project Status
 
-Current version: `v0.8.33-archivecanon`
-Latest local state: `working tree includes 2-provider hardening, fail-closed finalize gate, safe-release default OFF, auto-handoff estimator hardening, and release-gate verification; not committed yet`
+Current version: `v0.8.44-critical-stall-needs-real-stall`
+Latest local state: `working tree includes 2-provider hardening, fail-closed finalize gate, safe-release default OFF, auto-handoff estimator hardening, runtime surface classification, Gemini home auto-bootstrap, fail-fast permission/source gates, and live-loop UX hardening; not committed yet`
 
 ## Product purpose
 
@@ -11,6 +11,11 @@ VS Brain is a Chrome side-panel extension that connects open AI provider tabs an
 
 New in current local dev state:
 - Runtime certification gate: production loop currently limited to certified providers `ChatGPT + Gemini`
+- One-click `Start` now auto-refreshes tab inventory and clears stale recovery state before launching a new loop
+- Source/target auto-pick now avoids same-provider fallback pairs when a different-provider target exists
+- Live surface classifier distinguishes `conversation`, `home`, `signin`, and `interstitial` states
+- Gemini home/new-chat can be auto-bootstrapped before relay so users do not need to manually seed the target first
+- Permission/source readiness failures now fail fast with actionable reasons instead of repeated lease/retry loops
 - Compact action layout with `Start / Save / Stop / Handoff`
 - Safe-release path now keeps `Auto-send OFF` by default, including one-click start
 - Auto-loop requires `Auto-send ON`; otherwise it blocks explicitly instead of silently pasting and advancing rounds
@@ -88,6 +93,7 @@ Current extension is still an internal/beta full-feature build. Do not implement
 - Web UI mode cannot measure true provider context usage; context usage is estimated from visible DOM and payload size.
 - Web UI mode cannot reliably detect provider model downgrade unless provider UI exposes model state in DOM.
 - Provider DOM selectors can break when web apps change their UI.
+- Live providers may still present auth, sign-in, interstitial, or anti-bot surfaces that the extension cannot bypass; current runtime classifies and stops clearly when this happens.
 - No license/paid feature gate yet.
 - No Chrome Web Store packaging/review workflow yet.
 
@@ -173,7 +179,7 @@ Deferred live validation checklist: `docs/TEST_DEBT_2PROVIDER_HARDENING.md`
 Provider certification contract: `docs/PROVIDER_CERTIFICATION_CONTRACT.md`
 Provider index: `docs/PROVIDER_INDEX.md`
 Adapter TODO map: `docs/ADAPTER_TODO_MAP.md`
-Internal release note: `docs/RELEASE_NOTE_v0.8.17_INTERNAL.md`
+Internal release note: `docs/RELEASE_NOTE_v0.8.43_INTERNAL.md`
 Owner short test form: `docs/OWNER_TEST_FORM_SHORT.md`
 Runtime settings spec: `docs/RUNTIME_SETTINGS_SPEC.md`
 Adapter contract spec: `docs/ADAPTER_CONTRACT_SPEC.md`

@@ -1,73 +1,88 @@
 # VS Brain Checkpoint
 
-Saved: 2026-05-27 02:05 GMT+7
+Saved: 2026-05-27 18:36 GMT+7
 
 ## Current version
 
-`v0.8.15`
+`v0.8.17`
 
-Latest commit:
+Latest state:
 
 ```text
-pending commit: phased implementation spec v0.8.15
+working tree: hardening wave complete, owner live validation pending
 ```
 
 ## Current state
 
 VS Brain is a Chrome side-panel extension for AI-to-AI critique loops.
 
-Main UX:
+### Certified production baseline
+- `chatgpt`
+- `gemini`
 
-- Simple-first UI.
-- One-click auto mode.
-- Default language: English with flag selector.
-- Default debate limit: 100 rounds, slider adjustable up to 1000.
-- Running state has animated color effect.
-- Loop counter shows current/limit + elapsed timer.
-- Finalize button glows strongly as CTA after loop stops.
-- Auto relay restores the intended target tab before filling and stops safely on tab drift.
-- Finalize requires final agreement phrase or explicit draft confirmation; exports finalization metadata.
-- Context Handoff exports compressed reset package for long/degraded debates and can open a fresh tab.
-- Supplied logo appears in UI header, help modal, and Chrome extension icons with animated glow.
-- Chrome icons are max-cropped with no extra padding so the logo fills the icon area at small sizes.
-- Round selection uses presets, direct input, +/-10, and coarse slider step=10 for controllable selection.
-- Auto Handoff Runtime can trigger at 70% estimated context, open replacement tab, inject bootstrap, swap loop tab id, and resume.
-- Quality Guard v1 stops long loops on repeated hash, repeated contradiction, or repeated low confidence signals.
-- Handoff bootstrap now asks model to distill requirements/decisions/resolved/unresolved/quality risks before continuing.
-- Runtime logs are being standardized to English and auto-pruned after 30 minutes / 120 lines.
-- Completion roadmap recorded in `docs/ROADMAP.md`.
-- Monetization/free-pro split is recorded as upgrade debt; current focus remains stabilizing full internal beta first.
-- Manual/advanced controls hidden under details.
+### Candidate providers
+- `claude`
+- `deepseek`
+- `perplexity`
+- `grok`
 
-Core flow:
+### Main UX now
+- 3 visible primary buttons only:
+  - `Start`
+  - `Stop`
+  - `Handoff`
+- manual `Save` hidden from primary UI
+- dropdown labels shortened with ellipsis
+- input typography normalized
+- one-click start resets counter to `0/100`
+- auto-finalize runs after non-manual stop
+- final export defaults to single Markdown blueprint
 
-```text
-Open 2 AI tabs
-→ Start auto
-→ app auto-picks source/target
-→ relays latest answer
-→ auto-sends
-→ stops on agreement phrase or max rounds
-→ user clicks Finalize & Save
-→ app sends final blueprint prompt
-→ waits for final answer
-→ exports MD/JSON/prompt
-```
+### Runtime architecture now
+- popup-level provider registry in `apps/extension/provider-registry.js`
+- self-contained in-page adapter registry inside injected page functions
+- certification gate blocks non-certified providers from production loop
+- finalize fallback readback exists across candidate tabs
 
-Stop phrases:
+## Current source-of-truth docs
+- `PROJECT_STATUS.md`
+- `docs/TEST_DEBT_2PROVIDER_HARDENING.md`
+- `docs/PROVIDER_CERTIFICATION_CONTRACT.md`
+- `docs/PROVIDER_INDEX.md`
+- `docs/ADAPTER_TODO_MAP.md`
+- `docs/RELEASE_NOTE_v0.8.17_INTERNAL.md`
+- `docs/OWNER_TEST_FORM_SHORT.md`
+- `docs/RUNTIME_SETTINGS_SPEC.md`
+- `docs/providers/claude-certification.md`
+- `docs/providers/deepseek-certification.md`
+- `docs/providers/perplexity-certification.md`
+- `docs/providers/grok-certification.md`
 
-- EN: `VS_BRAIN_FULL_AGREEMENT`
-- VI: `CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN`
+## Pending owner validation
+Run later from canonical extension path:
 
-## Last user-requested change completed
+`/home/phuong/.openclaw/workspace/projects/crosscritic/apps/extension`
 
-- Wrote phased implementation SPEC in `docs/PRODUCT_SPEC.md`:
-  - product direction: idea → verified blueprint/spec/execution packet
-  - feature phases: artifact state, roles, quality, handoff, judge, exports, provider health, roundtable, packaging, monetization
-  - sequential implementation checklist for run-to-completion execution
+Primary test docs:
+- full checklist → `docs/TEST_DEBT_2PROVIDER_HARDENING.md`
+- short form → `docs/OWNER_TEST_FORM_SHORT.md`
 
-## Pending possible refinements
+## Hard gate
+- Do not add any provider beyond `chatgpt` and `gemini` to production loop before contract pass and live evidence.
 
-- Verify UI after reload in Chrome side panel.
-- If dropdown layering regresses, inspect portal menu behavior in Chrome extension side panel.
-- If finalize does not wait long enough for long answers, expose finalize timeout setting.
+## Best next step after owner returns
+1. run short owner form
+2. run full deferred checklist if needed
+3. choose exactly one candidate provider for live evidence collection
+4. upgrade that provider only if all certification gates pass
+
+## Runtime note
+- current executing runtime is rollback-good baseline restored from `*.bak-20260527-1550`
+- regressed refactor snapshot preserved at `projects/crosscritic/memory_snapshots/v0.8.17-runtime-regression-20260527-221837/`
+- re-apply changes later using `docs/SAFE_REAPPLY_CHANGESET.md`
+
+## Post-test scaffolding
+- `docs/PROVIDER_EVIDENCE_TEMPLATE.md`
+- `docs/BASELINE_PASS_DECISION_CHECKLIST.md`
+- `docs/ROLLOUT_NEXT_PROVIDER_PLAN.md`
+- `docs/ADAPTER_CONTRACT_SPEC.md`

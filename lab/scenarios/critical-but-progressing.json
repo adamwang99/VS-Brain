@@ -1,0 +1,34 @@
+{
+  "name": "critical-but-progressing",
+  "provider": "mock",
+  "title": "Mock Provider - Critical But Progressing",
+  "responseDelayMs": 200,
+  "seedMessages": [
+    {
+      "role": "assistant",
+      "content": "Baseline loaded. Ready for critique loop."
+    }
+  ],
+  "turns": [
+    {
+      "onTurn": 0,
+      "response": "Round A. Critical issues: missing emergency-close spec. Distinct new point one. Confidence: 8/10\nshould_continue: false"
+    },
+    {
+      "onTurn": 1,
+      "response": "Round B. Critical issues: secret vault needs AES-256-GCM. Distinct new point two. Confidence: 8/10\nshould_continue: false"
+    },
+    {
+      "onTurn": 2,
+      "response": "Round C. Critical issues: circuit breaker mapping gap. Distinct new point three. Confidence: 8/10\nshould_continue: false"
+    },
+    {
+      "onTurn": 3,
+      "response": "Round D. Critical issues: masking identity at origin. Distinct new point four. Confidence: 8/10\nshould_continue: false"
+    },
+    {
+      "onTurn": 4,
+      "response": "Round E. Critical issues: audit trail coverage. Distinct new point five. Confidence: 9/10\nshould_continue: false"
+    }
+  ]
+}

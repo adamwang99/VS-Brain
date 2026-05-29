@@ -6,9 +6,9 @@ Move VS Brain from internal beta to reliable long-run critique orchestration.
 
 ## Current priority
 
-1. Stabilize pairwise loop under real ChatGPT + Gemini usage first.
-2. Reduce long-run hallucination and context degradation.
-3. Make logs readable, English-only, bounded, and self-pruning.
+1. Keep the certified `ChatGPT + Gemini` pair stable under real usage.
+2. Preserve the fail-closed safety stack already landed: safe-release OFF default, recovery block, finalize envelope + judge gate, and estimator unreliable block.
+3. Reduce long-run hallucination and context degradation.
 4. Add provider health checks before adding paid gating.
 
 ## Near-term upgrades
