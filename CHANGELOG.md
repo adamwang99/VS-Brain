@@ -1,5 +1,11 @@
 # VS Brain Changelog
 
+## v0.8.51-target-streaming-no-false-stop
+
+- A user-reported false stop after 3 rounds when ChatGPT was generating a long response (~8888 chars) but slowly: the source-side waiter timed out at 60s, the next loop pass extracted the same source content again (duplicate hash), `noProgressCount` ticked up to 3 across three rounds, and the loop stopped with `needs_attention_no_new_source_response`. Target was still mid-stream the whole time.
+- Fixed: before returning `duplicate` from the relay step, the relay now checks the **target** tab's `isGenerating` flag from `detectProviderState`. If the target is still streaming, the relay returns reason `target_streaming` instead. The loop driver treats `target_streaming` as a non-progress event that does **not** advance the round counter and does **not** count toward `noProgressCount`; it simply waits longer (max(delayMs, 10s)) before retrying. Real source-not-replying cases still hit the existing `duplicate` path with the 3-strike stop.
+- This restores the v0.8.46+ guarantee that the loop only stops on a meaningful signal (consensus, quality budget, source actually idle), not on the model just being slow.
+
 ## v0.8.50-finalize-wait-stable-stream
 
 - v0.8.49 fixed the critique tone via Intent presets, but the first re-test on the cafe prompt still produced a half-sentence final body (1208 bytes ending with "Qận 1,"). Root cause was deeper than the prompt: `waitForTabNewResponseStandalone` returned the moment the latest answer hash changed at all, so finalize extracted the answer mid-stream while the model was still typing.
