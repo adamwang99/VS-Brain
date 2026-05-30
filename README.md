@@ -6,7 +6,7 @@ VS Brain is a Chrome side-panel extension for running structured AI-to-AI critiq
 
 It turns ad-hoc copy/paste between AI tools into a governed workflow: scan conversations, relay only the latest answer, force structured critique, stop on explicit agreement, finalize a blueprint, and preserve checkpoints when context gets too large.
 
-Current extension version: `v0.8.44-critical-stall-needs-real-stall`.
+Current extension version: `v0.8.48-ledger-quality-validator`.
 
 ## Why it is useful
 
@@ -149,6 +149,39 @@ After finalization, VS Brain now defaults to exporting:
 - final blueprint Markdown
 
 Archive/bundle tools still exist separately for conversation export and internal artifacts.
+
+### 9. Output modes (v0.8.47+)
+
+The Start card has an **Output** selector that decides the shape of the final artifact, not just the dropdown label — it changes what input is required and what schema the secretary turn must return.
+
+- **Blueprint (quick)** — default. Debate an idea and get a unified blueprint Markdown. No payload required. Best for “help me think through X” type prompts.
+- **Decision Ledger (needs payload)** — requires you to paste a real evidence payload (numbers, logs, spec, doc). Every relay turn is anchored to that payload via a `<<<EVIDENCE … >>>` block, and finalize uses a Decision Ledger schema with one row per decision: `decision`, `evidence`, `counter_evidence`, `confidence`, `reverse_if`, `status`. Claims that have no payload support are marked `status: unsupported` and not presented as decisions.
+
+Guards:
+
+- Start is blocked with a clear status line if you select Decision Ledger but leave the payload box empty.
+- The same loop core (relay, stop budgets, forced finalize, downloads) is reused; modes only swap the prompt template and inject payload, no separate control flow.
+- The saved bundle records `outputMode` so you can tell at a glance whether a `.json.gz` is a blueprint or a ledger.
+
+When to pick which:
+
+- Pick **Blueprint** for ideation, design discussions, prompts where the answer itself is the artifact.
+- Pick **Decision Ledger** when you need to defend each decision in front of an evidence-aware reviewer (auditor, code reviewer, ops lead, customer). The ledger forces the model to either cite the payload or admit it is guessing.
+
+### 10. Decision Ledger field validator (v0.8.48+)
+
+After finalize, when `outputMode = ledger`, a deterministic validator parses the ledger and grades it. The schema prompt asks for 5 fields per decision; this step measures how often the model actually delivered them.
+
+- Fields counted: `evidence`, `counter_evidence`, `confidence`, `reverse_if`, `status`.
+- Grade attached to bundle metadata as `ledgerQuality`:
+  - **ok** — ≥80% of decision blocks have all 5 fields.
+  - **partial** — 40–80%.
+  - **poor** — <40%, or no decision blocks at all.
+- Save log includes one explicit line, e.g.:
+  `ledger validator: quality=partial decisions=4 full=2 partial=1 reasons=missing_counter_evidence_in_2_decisions|missing_reverse_if_in_3_decisions`
+- The bundle still exports either way; the validator is a quality signal, not a hard block. Use it to decide whether to trust the ledger as is, or to re-run with a richer payload / stronger model.
+
+This closes the v0.8.47 gap where the schema prompt asked for 5 fields but nothing measured compliance — the contract is no longer trust-only on the model.
 
 ## Operating model
 
