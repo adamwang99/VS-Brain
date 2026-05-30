@@ -155,7 +155,7 @@ async function runDuplicateSourceStall(page) {
 }
 
 async function runCriticalButProgressing(page) {
-  // Bug class from live OCTA run: every round has Critical issues + should_continue:false
+  // Bug class from a real production debate: every round has Critical issues + should_continue:false
   // but content is NEW each round (debate progressing). Must NOT hard-stop on quality_guard_critical_blocker.
   await bootScenario(page, '/lab/scenarios/critical-but-progressing.json', '/lab/scenarios/critical-but-progressing.json');
   await page.evaluate(() => {
@@ -174,7 +174,7 @@ async function runCriticalButProgressing(page) {
 }
 
 async function runNoConvergenceBudget(page) {
-  // Bug class from live OCTA TIMEOUT runs: each round raises a NEW critical with
+  // Bug class from real production TIMEOUT runs: each round raises a NEW critical with
   // should_continue:false (no repeat/stall -> criticalStall stays 0). Old code never
   // hard-stops, loop runs to maxSteps/timeout and never finalizes. New code must
   // force-stop with quality_guard_no_convergence once criticalCount >= budget (8),
@@ -243,7 +243,7 @@ async function runLedgerModeEvidence(page) {
   // (b) provide payload, start, and confirm the EVIDENCE token reaches a target frame
   await page.evaluate((tok) => {
     const ev = document.querySelector('#evidencePayload');
-    if (ev) { ev.value = `15m LONG: PF 0.22, N=22. ${tok}`; ev.dispatchEvent(new Event('input', { bubbles: true })); }
+    if (ev) { ev.value = `segment alpha: metric A 0.22, N=22. ${tok}`; ev.dispatchEvent(new Event('input', { bubbles: true })); }
     document.querySelector('#startLoopBtn')?.click();
   }, TOKEN);
   await waitForLog(page, 'auto-loop step 2/', 40000);
@@ -280,7 +280,7 @@ async function runLedgerValidatorSparse(page) {
   await bootScenario(page, '/lab/scenarios/ledger-validator-sparse.json', '/lab/scenarios/ledger-validator-sparse.json');
   await page.evaluate(() => {
     const m = document.querySelector('#outputMode'); if (m) { m.value = 'ledger'; m.dispatchEvent(new Event('change', { bubbles: true })); }
-    const ev = document.querySelector('#evidencePayload'); if (ev) { ev.value = '15m LONG: PF 0.22, N=22. 1h SHORT: PF 5.33.'; ev.dispatchEvent(new Event('input', { bubbles: true })); }
+    const ev = document.querySelector('#evidencePayload'); if (ev) { ev.value = 'segment alpha: metric A 0.22, N=22. segment beta: metric A 5.33.'; ev.dispatchEvent(new Event('input', { bubbles: true })); }
     const auto = document.querySelector('#autoSendToggle'); if (auto) auto.checked = true;
     document.querySelector('#startLoopBtn')?.click();
   });

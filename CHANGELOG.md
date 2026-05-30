@@ -45,7 +45,7 @@
 
 ## v0.8.45-convergence-budget-finalize
 
-- Fixed live non-convergence hang surfaced by real ChatGPT<->Gemini OCTA runs (autopilot verdict TIMEOUT at step 22/37, critical climbing 19-20 with criticalStall=0):
+- Fixed live non-convergence hang surfaced by real ChatGPT<->Gemini production runs (autopilot verdict TIMEOUT at step 22/37, critical climbing 19-20 with criticalStall=0):
   - Added convergence budget: quality guard now hard-stops with reason `quality_guard_no_convergence` when `criticalCount >= 8` and `should_continue=false`, even if there is no repeat/stall. Still gated behind warmup (`step < 8`) and overridden by unanimous live/cached peer `should_continue=true`, so progressing debates are not cut short.
   - Forced-stop reasons (`quality_guard_no_convergence`, `đạt số bước tối đa`) now route into the stop->finalize chain so a non-converging or max-rounds debate still produces a DRAFT blueprint instead of silently ending with nothing.
   - `draft_forced` finalize on a forced stop no longer blocks on `window.confirm` (unattended autopilot safe); the dual-consensus path is unchanged.

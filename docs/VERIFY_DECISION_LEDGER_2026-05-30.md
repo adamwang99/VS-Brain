@@ -1,7 +1,7 @@
 # VS Brain v0.8.47 — Output-Mode Selector + Decision Ledger Verify (2026-05-30)
 
 ## Vấn đề
-Blueprint văn xuôi cố định không đủ cho power-user (ca OCTA của Tiệp): cần bản
+Blueprint văn xuôi cố định không đủ cho power-user (ca audit chiến lược giao dịch nội bộ): cần bản
 ghi quyết định neo bằng chứng, không phải khung chống chốt ẩu chung chung.
 Gốc: VS Brain debate 1 dòng ý tưởng, output 1 schema cố định, không nuốt payload thật.
 
@@ -22,12 +22,10 @@ Gốc: VS Brain debate 1 dòng ý tưởng, output 1 schema cố định, không
 ## Evidence
 - Regression `npm test`: PASS 9/9 (thêm `ledger-mode-evidence`: chứng minh payload
   inject vào relay turn + finalize dùng ledger schema).
-- Live verify v0.8.47 (browser thật, payload OCTA của Tiệp):
+- Live verify v0.8.47 (browser thật, payload audit nội bộ):
   - `verdict=FORCED_FINALIZE`, file bundle .gz 3673 bytes trên đĩa, URL thật chatgpt.com.
-  - Ledger neo đúng số liệu OCTA: 15m LONG PF 0.22 (block), giữ 1h SHORT + LLM-text alpha,
-    cap fallback.
-  - Tự mark các giá trị triển khai không có trong payload (vd "10% fallback cap",
-    "0.1x multiplier") là `unsupported` — đúng cơ chế chống chốt ẩu.
+  - Ledger neo đúng số liệu trong payload, tự mark giá trị triển khai ngoài payload
+    (ví dụ các ngưỡng deployment không được dữ liệu hỗ trợ) là `unsupported`.
 - Push: `21eecf1..730c71c main -> main` trên adamwang99/VS-Brain.
 
 ## Giới hạn ghi nhận
@@ -36,4 +34,4 @@ Gốc: VS Brain debate 1 dòng ý tưởng, output 1 schema cố định, không
 
 ## Kết luận
 VS Brain giờ là cỗ máy ra quyết định neo-bằng-chứng (không chỉ trọng tài tranh luận).
-Sẵn sàng dùng cho P1+ OCTA: chạy ledger trên payload thật để chốt quyết định có tranh cãi.
+Sẵn sàng dùng cho các quyết định có tranh cãi: chạy ledger trên payload thật để chốt bằng evidence.
