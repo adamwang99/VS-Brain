@@ -453,3 +453,11 @@ textarea::placeholder { color: rgba(238,242,255,.52); opacity: 1; font-family: R
   #status { white-space: normal; }
   .start-actions button, .icon-action, .big, #finalizeBtn { min-height: 46px; }
 }
+
+/* output mode selector (v0.8.47) */
+.mode-row{display:flex;align-items:center;gap:8px;margin:6px 0 2px;flex-wrap:wrap}
+.mode-row .mode-label{display:flex;align-items:center;gap:6px;font-size:12px;opacity:.85}
+.mode-row .mode-label select{min-width:180px}
+.mode-hint{font-size:11px;opacity:.6;flex:1 1 100%}
+#evidencePayload{width:100%;margin:4px 0 2px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px}
+#evidencePayload.hidden{display:none}

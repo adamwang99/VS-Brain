@@ -227,6 +227,52 @@ async function runPoliteNoSignal(page) {
   return 'polite-no-signal PASS';
 }
 
+async function runLedgerModeEvidence(page) {
+  // Mode selector: ledger mode must (a) block start with no payload, (b) inject the
+  // evidence payload into relay turns, (c) finalize with the Decision Ledger schema.
+  await bootScenario(page, '/lab/scenarios/ledger-mode-evidence.json', '/lab/scenarios/ledger-mode-evidence.json');
+  const TOKEN = 'EVID_TOKEN_7F3A91';
+  // (a) ledger mode + empty payload => start blocked
+  await page.evaluate(() => {
+    const m = document.querySelector('#outputMode'); if (m) { m.value = 'ledger'; m.dispatchEvent(new Event('change', { bubbles: true })); }
+    const ev = document.querySelector('#evidencePayload'); if (ev) ev.value = '';
+    const auto = document.querySelector('#autoSendToggle'); if (auto) auto.checked = true;
+    document.querySelector('#startLoopBtn')?.click();
+  });
+  await waitForLog(page, 'start blocked: ledger mode requires evidence payload', 15000);
+  // (b) provide payload, start, and confirm the EVIDENCE token reaches a target frame
+  await page.evaluate((tok) => {
+    const ev = document.querySelector('#evidencePayload');
+    if (ev) { ev.value = `15m LONG: PF 0.22, N=22. ${tok}`; ev.dispatchEvent(new Event('input', { bubbles: true })); }
+    document.querySelector('#startLoopBtn')?.click();
+  }, TOKEN);
+  await waitForLog(page, 'auto-loop step 2/', 40000);
+  await sleep(2500);
+  const injected = await page.evaluate((tok) => {
+    const frames = Array.from(document.querySelectorAll('#labFrames iframe'));
+    return frames.some(f => {
+      try {
+        const users = Array.from(f.contentDocument.querySelectorAll('[data-message-author-role="user"]'));
+        return users.some(u => (u.innerText || u.textContent || '').includes(tok) && (u.innerText || u.textContent || '').includes('<<<EVIDENCE'));
+      } catch { return false; }
+    });
+  }, TOKEN);
+  if (!injected) throw new Error('evidence payload was not injected into relay turns');
+  // (c) finalize uses the Decision Ledger schema (any terminal stop routes to finalize)
+  await waitForLog(page, 'final blueprint bundle saved', 120000);
+  const ledgerFinal = await page.evaluate(() => {
+    const frames = Array.from(document.querySelectorAll('#labFrames iframe'));
+    return frames.some(f => {
+      try {
+        const users = Array.from(f.contentDocument.querySelectorAll('[data-message-author-role="user"]'));
+        return users.some(u => /Decision Ledger|S\u1ed4 QUY\u1ebeT \u0110\u1eccNH|reverse_if/i.test(u.innerText || u.textContent || ''));
+      } catch { return false; }
+    });
+  });
+  if (!ledgerFinal) throw new Error('finalize did not use the Decision Ledger schema prompt');
+  return 'ledger-mode-evidence PASS';
+}
+
 await ensureLabServer();
 const browser = await puppeteer.launch({ headless: false, executablePath: chromePath, args: ['--no-first-run','--no-default-browser-check'] });
 try {
@@ -245,6 +291,7 @@ try {
   results.push(await runCriticalButProgressing(page));
   results.push(await runNoConvergenceBudget(page));
   results.push(await runPoliteNoSignal(page));
+  results.push(await runLedgerModeEvidence(page));
   console.log(results.join('\n'));
 } finally {
   await browser.close();

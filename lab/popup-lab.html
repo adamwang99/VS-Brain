@@ -30,6 +30,16 @@
       <h2 data-i18n="oneClickTitle">Tự động phản biện giữa các AI</h2>
       <p class="hintline" data-i18n="oneClickHint">Mở 2 tab AI, bấm bắt đầu. VS Brain tự chọn nguồn/đích, tự gửi, tự dừng khi đồng thuận.</p>
       <textarea id="extraInstruction" rows="3" placeholder="Yêu cầu bổ sung..." data-placeholder-vi="Yêu cầu bổ sung..." data-placeholder-en="Extra instruction..."></textarea>
+      <div class="mode-row">
+        <label class="mode-label"><span data-i18n="outputModeLabel">Kết quả</span>
+          <select id="outputMode" class="glass-select">
+            <option value="blueprint" data-label-vi="Blueprint (nhanh)" data-label-en="Blueprint (quick)">Blueprint (nhanh)</option>
+            <option value="ledger" data-label-vi="Decision Ledger (cần dữ liệu)" data-label-en="Decision Ledger (needs payload)">Decision Ledger (cần dữ liệu)</option>
+          </select>
+        </label>
+        <span id="modeHint" class="mode-hint" data-i18n="modeHintBlueprint">Phản biện ý tưởng → bản blueprint tổng hợp.</span>
+      </div>
+      <textarea id="evidencePayload" class="hidden" rows="4" placeholder="Dán dữ liệu/bằng chứng thật..." data-placeholder-vi="Dán dữ liệu/bằng chứng thật..." data-placeholder-en="Paste real data/evidence..."></textarea>
       <div class="start-actions compact-actions">
         <button id="oneClickStartBtn" class="primary big" data-i18n="startAuto">Start</button>
         <button id="finalizeBtn" class="primary" data-i18n="finalize">Save</button>

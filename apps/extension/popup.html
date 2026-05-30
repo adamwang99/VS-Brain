@@ -12,7 +12,7 @@
       <div class="brand-lockup">
         <img class="brand-logo hero-logo" src="icons/vs-brain-logo.png" alt="VS Brain logo" />
         <div>
-          <h1>VS Brain <span class="version">v0.8.46-round-budget-finalize</span></h1>
+          <h1>VS Brain <span class="version">v0.8.47-output-mode-decision-ledger</span></h1>
           <p class="subtitle" data-i18n="subtitle">AI debate relay · archive · checkpoint</p>
         </div>
       </div>
@@ -31,6 +31,16 @@
       <h2 data-i18n="oneClickTitle">Tự động phản biện giữa các AI</h2>
       <p class="hintline" data-i18n="oneClickHint">Mở 2 tab AI, bấm bắt đầu. VS Brain tự chọn nguồn/đích, chỉ dán an toàn mặc định; chỉ tự gửi khi Sếp bật Auto-send.</p>
       <textarea id="extraInstruction" rows="2" placeholder="Yêu cầu bổ sung: tập trung UX, bảo mật, feasibility..." data-placeholder-vi="Yêu cầu bổ sung: tập trung UX, bảo mật, feasibility..." data-placeholder-en="Extra instruction: focus on UX, security, feasibility..."></textarea>
+      <div class="mode-row">
+        <label class="mode-label"><span data-i18n="outputModeLabel">Kết quả</span>
+          <select id="outputMode" class="glass-select" title="Chọn dạng kết quả đầu ra">
+            <option value="blueprint" data-label-vi="Blueprint (nhanh)" data-label-en="Blueprint (quick)">Blueprint (nhanh)</option>
+            <option value="ledger" data-label-vi="Decision Ledger (cần dữ liệu)" data-label-en="Decision Ledger (needs payload)">Decision Ledger (cần dữ liệu)</option>
+          </select>
+        </label>
+        <span id="modeHint" class="mode-hint" data-i18n="modeHintBlueprint">Phản biện ý tưởng → bản blueprint tổng hợp.</span>
+      </div>
+      <textarea id="evidencePayload" class="hidden" rows="4" placeholder="Dán dữ liệu/bằng chứng thật (số liệu, log, spec, tài liệu) để 2 AI neo phản biện vào đây. Bắt buộc cho Decision Ledger." data-placeholder-vi="Dán dữ liệu/bằng chứng thật (số liệu, log, spec, tài liệu) để 2 AI neo phản biện vào đây. Bắt buộc cho Decision Ledger." data-placeholder-en="Paste real data/evidence (metrics, logs, spec, docs) so both AIs anchor critique to it. Required for Decision Ledger."></textarea>
       <div class="action-panel glass-subtle">
         <div class="start-actions compact-actions">
           <button id="oneClickStartBtn" class="primary big" data-i18n="startAuto">Start</button>

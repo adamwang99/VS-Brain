@@ -1,5 +1,15 @@
 # VS Brain Changelog
 
+## v0.8.47-output-mode-decision-ledger
+
+- Added an output-mode selector at Start so the result format is a deliberate choice, not a fixed blueprint:
+  - **Blueprint (quick)** — default, debate an idea, unchanged behavior.
+  - **Decision Ledger (needs payload)** — requires a pasted evidence payload; every decision must cite evidence quoted from the payload, and unsupported claims are marked `status: unsupported` instead of being presented as decisions.
+- Ledger mode is gated: Start is blocked with a clear message if the mode is `ledger` and no evidence payload is provided (input drives output, not just the dropdown).
+- The evidence payload is injected into every relay turn (`<<<EVIDENCE ... >>>`) so both AIs anchor critique to real data, and into the finalize prompt via a golden Decision Ledger schema (executive verdict, decisions with evidence/counter-evidence/confidence/reverse_if/status, unsupported claims, open contradictions, next data to collect).
+- Finalize bundle metadata now records `outputMode`. Loop core (relay, stop budgets, forced finalize) is reused unchanged; modes differ only in prompt template + payload, not control flow.
+- Regression: added `ledger-mode-evidence` scenario proving payload injection + Decision Ledger finalize path.
+
 ## v0.8.46-round-budget-finalize
 
 - Fixed second live non-convergence mode surfaced by real ChatGPT<->Gemini smoke (v0.8.45 run timed out at step 19-20 with critical=0): two models kept exchanging NEW content politely with no termination signal (no critical / no repeat / no contradiction / no low-confidence / no stop phrase), so no stop condition ever fired and the loop ran to timeout with no blueprint.
