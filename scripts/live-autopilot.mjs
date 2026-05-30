@@ -46,6 +46,7 @@ const KEEP_OPEN = !!arg('keep-open', false);
 const LOGIN_ONLY = !!arg('login-only', false);
 const LOGIN_WAIT_MS = Number(arg('login-wait', 600)) * 1000;
 const OUTPUT_MODE = String(arg('mode', 'blueprint'));
+const CRITIQUE_INTENT = String(arg('intent', 'auto'));
 const PAYLOAD_FILE = arg('payload-file', '');
 let EVIDENCE_PAYLOAD = '';
 if (PAYLOAD_FILE && typeof PAYLOAD_FILE === 'string') {
@@ -209,13 +210,15 @@ try {
     const el = document.querySelector('#loopMaxSteps'); if (el) { el.value = String(n); el.dispatchEvent(new Event('change', { bubbles: true })); }
     const sl = document.querySelector('#stepsSlider'); if (sl) { sl.value = String(n); sl.dispatchEvent(new Event('input', { bubbles: true })); }
   }, ROUNDS);
-  // output mode + evidence payload (v0.8.47)
-  await safeEval(popup, (mode, payload) => {
+  // output mode + evidence payload (v0.8.47) + critique intent (v0.8.49)
+  await safeEval(popup, (mode, payload, intent) => {
     const m = document.querySelector('#outputMode');
     if (m) { m.value = mode; m.dispatchEvent(new Event('change', { bubbles: true })); }
     const ev = document.querySelector('#evidencePayload');
     if (ev && payload) { ev.value = payload; ev.dispatchEvent(new Event('input', { bubbles: true })); }
-  }, OUTPUT_MODE, EVIDENCE_PAYLOAD);
+    const it = document.querySelector('#critiqueIntent');
+    if (it && intent) { it.value = intent; it.dispatchEvent(new Event('change', { bubbles: true })); }
+  }, OUTPUT_MODE, EVIDENCE_PAYLOAD, CRITIQUE_INTENT);
   result.beforeStart = await safeEval(popup, () => ({
     sourceVal: document.querySelector('#sourceTab')?.value || '',
     targetVal: document.querySelector('#targetTab')?.value || '',

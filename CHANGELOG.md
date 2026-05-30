@@ -1,5 +1,11 @@
 # VS Brain Changelog
 
+## v0.8.50-finalize-wait-stable-stream
+
+- v0.8.49 fixed the critique tone via Intent presets, but the first re-test on the cafe prompt still produced a half-sentence final body (1208 bytes ending with "Qận 1,"). Root cause was deeper than the prompt: `waitForTabNewResponseStandalone` returned the moment the latest answer hash changed at all, so finalize extracted the answer mid-stream while the model was still typing.
+- Fixed the wait gate: now requires the same hash to be observed at least 3 polls in a row AND `isGenerating=false` from the page detector before returning. Adds a 60s safety fallback if the answer keeps changing trivially. Same defensive timeout, same caller contract; only the readiness criterion changed.
+- Result: finalize no longer truncates the final report when the model is still streaming the long blueprint required by the v0.8.49 mandate (≥600 words). Loop relay is unaffected because that path uses its own waiter and stop logic.
+
 ## v0.8.49-intent-presets-finalize-rewrite
 
 - Live test on 2 non-technical prompts (cafe business plan, photosynthesis explainer) exposed two real defects in Blueprint mode: (1) the default critique prompt forced a code/security/architecture panel onto every topic, derailing non-technical debates (the photosynthesis run drifted into a meta-discussion about UI text artifacts), and (2) `buildFinalMarkdown` trusted the model's last in-debate response as the final blueprint body, so when forced-finalize fired the saved bundle held a single half-sentence ("đồng thuận tuyệt đối (Verdict: PASS,") instead of a real report.
