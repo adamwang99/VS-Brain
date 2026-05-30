@@ -16,7 +16,8 @@
     "test:vsbrain:live-full-export": "xvfb-run -a node tests/e2e/live-full-export-downloads.mjs",
     "test:vsbrain:auto-handoff": "xvfb-run -a node tests/e2e/auto-handoff-lab-verify.mjs",
     "test:vsbrain:autofix": "node tests/e2e/vsbrain-autofix-runner.mjs",
-    "build": "echo 'TODO: build'"
+    "build": "echo 'TODO: build'",
+    "build:demo": "node scripts/build-demo.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.54.2",
