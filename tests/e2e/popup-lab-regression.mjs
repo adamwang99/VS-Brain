@@ -273,6 +273,29 @@ async function runLedgerModeEvidence(page) {
   return 'ledger-mode-evidence PASS';
 }
 
+async function runLedgerValidatorSparse(page) {
+  // Mock returns a Decision Ledger missing counter_evidence/confidence/reverse_if on every block.
+  // Validator must run (mode=ledger) and the save log must include 'ledger validator: quality=...'
+  // with non-ok quality + missing-field reasons.
+  await bootScenario(page, '/lab/scenarios/ledger-validator-sparse.json', '/lab/scenarios/ledger-validator-sparse.json');
+  await page.evaluate(() => {
+    const m = document.querySelector('#outputMode'); if (m) { m.value = 'ledger'; m.dispatchEvent(new Event('change', { bubbles: true })); }
+    const ev = document.querySelector('#evidencePayload'); if (ev) { ev.value = '15m LONG: PF 0.22, N=22. 1h SHORT: PF 5.33.'; ev.dispatchEvent(new Event('input', { bubbles: true })); }
+    const auto = document.querySelector('#autoSendToggle'); if (auto) auto.checked = true;
+    document.querySelector('#startLoopBtn')?.click();
+  });
+  await waitForLog(page, 'auto-loop started');
+  await waitForLog(page, 'final blueprint bundle saved', 120000);
+  await waitForLog(page, 'ledger validator: quality=', 30000);
+  const log = await page.$eval('#log', el => el.textContent || '');
+  const m = log.match(/ledger validator: quality=(ok|partial|poor) decisions=(\d+) full=(\d+) partial=(\d+) reasons=([^\n]+)/);
+  if (!m) throw new Error('validator line missing or malformed');
+  if (m[1] === 'ok') throw new Error('validator wrongly graded sparse ledger as ok: ' + m[0]);
+  if (Number(m[3]) > 0) throw new Error('sparse ledger should have 0 full decisions, got ' + m[3]);
+  if (!/missing_(counter_evidence|confidence|reverse_if)/.test(m[5])) throw new Error('reasons did not flag missing fields: ' + m[5]);
+  return 'ledger-validator-sparse PASS';
+}
+
 await ensureLabServer();
 const browser = await puppeteer.launch({ headless: false, executablePath: chromePath, args: ['--no-first-run','--no-default-browser-check'] });
 try {
@@ -292,6 +315,7 @@ try {
   results.push(await runNoConvergenceBudget(page));
   results.push(await runPoliteNoSignal(page));
   results.push(await runLedgerModeEvidence(page));
+  results.push(await runLedgerValidatorSparse(page));
   console.log(results.join('\n'));
 } finally {
   await browser.close();

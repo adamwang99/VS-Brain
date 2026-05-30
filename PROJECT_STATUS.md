@@ -1,6 +1,6 @@
 # VS Brain Project Status
 
-Current version: `v0.8.47-output-mode-decision-ledger`
+Current version: `v0.8.48-ledger-quality-validator`
 Latest local state: `working tree includes 2-provider hardening, fail-closed finalize gate, safe-release default OFF, auto-handoff estimator hardening, runtime surface classification, Gemini home auto-bootstrap, fail-fast permission/source gates, and live-loop UX hardening; not committed yet`
 
 ## Product purpose

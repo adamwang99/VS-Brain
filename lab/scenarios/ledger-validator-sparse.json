@@ -1,0 +1,28 @@
+{
+  "name": "ledger-validator-sparse",
+  "provider": "mock",
+  "title": "Mock Provider - Ledger Sparse",
+  "responseDelayMs": 120,
+  "seedMessages": [
+    {
+      "role": "assistant",
+      "content": "Baseline loaded. Ready."
+    }
+  ],
+  "turns": [
+    {
+      "whenPromptIncludes": "DECISION LEDGER",
+      "response": "# Decision Ledger\n\n## 1. Executive verdict\nSparse ledger.\n\n## 2. Decisions\n| field | value |\n| decision | block 15m LONG |\n| evidence | PF 0.22 |\n| status | supported |\n\n| field | value |\n| decision | keep 1h SHORT |\n| evidence | PF 5.33 |\n| status | supported |\n\n## 3. Unsupported / needs-more-data claims\nnone\n\n## 4. Open contradictions still unresolved\nnone\n\n## 5. Recommended next data to collect\nnone"
+    },
+    { "onTurn": 0, "response": "Round 1. Reviewing payload. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 1, "response": "Round 2. Reviewing payload. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 2, "response": "Round 3. Reviewing payload. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 3, "response": "Round 4. Reviewing payload. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 4, "response": "Round 5. Reviewing payload. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 5, "response": "Round 6. Reviewing payload. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 6, "response": "Round 7. Reviewing payload. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 7, "response": "Round 8. Reviewing payload. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 8, "response": "Round 9. Reviewing payload. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 9, "response": "Round 10. Reviewing payload. Confidence: 7/10\nshould_continue: false" }
+  ]
+}

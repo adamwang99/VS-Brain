@@ -1,5 +1,16 @@
 # VS Brain Changelog
 
+## v0.8.48-ledger-quality-validator
+
+- Added a Decision Ledger field validator that runs after finalize when `outputMode=ledger`. It parses the ledger output, counts decision blocks, and tracks how many include each required field (`evidence`, `counter_evidence`, `confidence`, `reverse_if`, `status`).
+- Quality grade attached to the saved bundle metadata as `ledgerQuality`:
+  - `ok` — ≥80% of decisions have all required fields.
+  - `partial` — 40–80%.
+  - `poor` — <40% or no decision blocks at all.
+- A clear warning line is logged on save (`ledger validator: quality=... decisions=N full=N partial=N reasons=...`) so the user immediately sees if the model produced a sparse ledger.
+- Closes the gap noted in v0.8.47 live verify (model filled `evidence`+`status` fully but `counter_evidence`/`confidence` thinly): contract is no longer trust-only on the model, the app measures it.
+- Regression: `ledger-validator-sparse` scenario forces a sparse ledger response and asserts the validator detects `partial`/`poor` and reports missing fields.
+
 ## v0.8.47-output-mode-decision-ledger
 
 - Added an output-mode selector at Start so the result format is a deliberate choice, not a fixed blueprint:
