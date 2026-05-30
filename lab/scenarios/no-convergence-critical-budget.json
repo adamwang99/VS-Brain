@@ -1,0 +1,26 @@
+{
+  "name": "no-convergence-critical-budget",
+  "provider": "mock",
+  "title": "Mock Provider - No Convergence Critical Budget",
+  "responseDelayMs": 150,
+  "seedMessages": [
+    {
+      "role": "assistant",
+      "content": "Baseline loaded. Ready for critique loop."
+    }
+  ],
+  "turns": [
+    { "onTurn": 0, "response": "Round 1. Critical issues: gap alpha. New point 1. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 1, "response": "Round 2. Critical issues: gap bravo. New point 2. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 2, "response": "Round 3. Critical issues: gap charlie. New point 3. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 3, "response": "Round 4. Critical issues: gap delta. New point 4. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 4, "response": "Round 5. Critical issues: gap echo. New point 5. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 5, "response": "Round 6. Critical issues: gap foxtrot. New point 6. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 6, "response": "Round 7. Critical issues: gap golf. New point 7. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 7, "response": "Round 8. Critical issues: gap hotel. New point 8. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 8, "response": "Round 9. Critical issues: gap india. New point 9. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 9, "response": "Round 10. Critical issues: gap juliet. New point 10. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 10, "response": "Round 11. Critical issues: gap kilo. New point 11. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 11, "response": "Round 12. Critical issues: gap lima. New point 12. Confidence: 7/10\nshould_continue: false" }
+  ]
+}

@@ -1,5 +1,20 @@
 # VS Brain Changelog
 
+## v0.8.46-round-budget-finalize
+
+- Fixed second live non-convergence mode surfaced by real ChatGPT<->Gemini smoke (v0.8.45 run timed out at step 19-20 with critical=0): two models kept exchanging NEW content politely with no termination signal (no critical / no repeat / no contradiction / no low-confidence / no stop phrase), so no stop condition ever fired and the loop ran to timeout with no blueprint.
+  - Added a content-independent round budget: quality guard now hard-stops with reason `quality_guard_round_budget` once `step >= 12` and `should_continue=false`, regardless of critical/repeat signals. Still gated behind warmup (`step < 8`) and overridden by unanimous peer `should_continue=true`, so a debate that explicitly wants to continue is not cut short.
+  - `quality_guard_round_budget` routes into the stop->finalize chain (draft_forced, no blocking confirm) so a polite-but-endless debate still produces a DRAFT blueprint instead of timing out empty.
+- Regression: added scenario `polite-no-signal` (critical=0, new content each round, no stop phrase) proving the loop force-finalizes at the round budget instead of running to timeout.
+
+## v0.8.45-convergence-budget-finalize
+
+- Fixed live non-convergence hang surfaced by real ChatGPT<->Gemini OCTA runs (autopilot verdict TIMEOUT at step 22/37, critical climbing 19-20 with criticalStall=0):
+  - Added convergence budget: quality guard now hard-stops with reason `quality_guard_no_convergence` when `criticalCount >= 8` and `should_continue=false`, even if there is no repeat/stall. Still gated behind warmup (`step < 8`) and overridden by unanimous live/cached peer `should_continue=true`, so progressing debates are not cut short.
+  - Forced-stop reasons (`quality_guard_no_convergence`, `đạt số bước tối đa`) now route into the stop->finalize chain so a non-converging or max-rounds debate still produces a DRAFT blueprint instead of silently ending with nothing.
+  - `draft_forced` finalize on a forced stop no longer blocks on `window.confirm` (unattended autopilot safe); the dual-consensus path is unchanged.
+- Regression: added scenario `no-convergence-critical-budget` proving the loop force-finalizes instead of running to timeout.
+
 ## v0.8.44-critical-stall-needs-real-stall
 
 - Hardened one-click/live runtime against stale popup/session state:

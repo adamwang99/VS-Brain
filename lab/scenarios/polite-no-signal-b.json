@@ -1,0 +1,32 @@
+{
+  "name": "polite-no-signal-b",
+  "provider": "mock",
+  "title": "Mock Provider - Polite No Signal B",
+  "responseDelayMs": 120,
+  "seedMessages": [
+    {
+      "role": "assistant",
+      "content": "Counterpart baseline loaded. Ready to respond."
+    }
+  ],
+  "turns": [
+    { "onTurn": 0, "response": "Reply 1. Counter-angle sierra extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 1, "response": "Reply 2. Counter-angle tango extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 2, "response": "Reply 3. Counter-angle uniform extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 3, "response": "Reply 4. Counter-angle victor extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 4, "response": "Reply 5. Counter-angle whiskey extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 5, "response": "Reply 6. Counter-angle xray extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 6, "response": "Reply 7. Counter-angle yankee extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 7, "response": "Reply 8. Counter-angle zulu extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 8, "response": "Reply 9. Counter-angle nadir extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 9, "response": "Reply 10. Counter-angle apex extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 10, "response": "Reply 11. Counter-angle vertex extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 11, "response": "Reply 12. Counter-angle ridge extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 12, "response": "Reply 13. Counter-angle delta-prime extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 13, "response": "Reply 14. Counter-angle crest extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 14, "response": "Reply 15. Counter-angle summit extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 15, "response": "Reply 16. Counter-angle basin extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 16, "response": "Reply 17. Counter-angle plateau extends the discussion. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 17, "response": "Reply 18. Counter-angle valley extends the discussion. Confidence: 7/10\nshould_continue: false" }
+  ]
+}

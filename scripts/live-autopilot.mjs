@@ -181,6 +181,18 @@ try {
 
   // 5. open panel, configure, start
   const popup = await browser.newPage();
+  // Force downloads to land in a deterministic folder instead of hanging on the
+  // save-as prompt (controlled profile has prompt_for_download:true). Without this,
+  // chrome.downloads.download stalls and the bundle never reaches disk before close.
+  const dlDir = path.join(repoRoot, 'artifacts', 'live-downloads', stamp);
+  fs.mkdirSync(dlDir, { recursive: true });
+  result.downloadDir = dlDir;
+  try {
+    const cdp = await popup.target().createCDPSession();
+    await cdp.send('Browser.setDownloadBehavior', { behavior: 'allow', downloadPath: dlDir, eventsEnabled: true }).catch(async () => {
+      await cdp.send('Page.setDownloadBehavior', { behavior: 'allow', downloadPath: dlDir }).catch(() => {});
+    });
+  } catch (e) { result.cdpDownloadErr = String(e?.message || e); }
   await popup.goto(`chrome-extension://${extensionId}/popup.html`, { waitUntil: 'domcontentloaded' }).catch(() => {});
   await sleep(2000);
   result.panelVersion = await safeEval(popup, () => document.querySelector('.version')?.textContent || null);
@@ -213,7 +225,38 @@ try {
     await sleep(5000);
   }
   result.stopped = stopped;
+
+  // 6b. after a stop, the runtime may run a stop->finalize chain (consensus OR forced).
+  // Wait (bounded) for the blueprint bundle so we don't kill finalize by closing too early.
+  let finalized = /final blueprint bundle saved/.test(lastLog);
+  if (stopped && !finalized) {
+    const finTs = Date.now();
+    while (Date.now() - finTs < 90000) {
+      lastLog = await safeEval(popup, () => document.querySelector('#log')?.textContent || '') || '';
+      if (/final blueprint bundle saved/.test(lastLog)) { finalized = true; break; }
+      if (/finalize after stop failed|finalize canceled/.test(lastLog)) break;
+      await sleep(3000);
+    }
+  }
+  result.finalized = finalized;
   result.elapsedMs = Date.now() - startTs;
+
+  // 6c. the 'bundle saved' log fires when chrome.downloads.download returns an id,
+  // but Chrome flushes the .gz to disk asynchronously. Wait for the file to actually
+  // appear in the deterministic download dir so we don't close the browser mid-write.
+  if (finalized) {
+    const dlTs = Date.now();
+    let bundleOnDisk = false;
+    while (Date.now() - dlTs < 20000) {
+      try {
+        const files = fs.readdirSync(dlDir);
+        if (files.some(f => /\.gz$/.test(f)) && !files.some(f => /\.crdownload$/.test(f))) { bundleOnDisk = true; break; }
+      } catch {}
+      await sleep(1000);
+    }
+    result.bundleOnDisk = bundleOnDisk;
+    await sleep(2000);
+  }
 
   // 7. read result
   const stopM = [...lastLog.matchAll(/auto-loop stopped:\s*(.+)/g)].map(m => m[1].trim());
@@ -225,12 +268,14 @@ try {
   result.logTail = lastLog.split('\n').slice(0, 25).join('\n');
 
   let verdict = 'INCONCLUSIVE', code = 3;
+  const blueprintSaved = /final blueprint bundle saved/.test(lastLog) || result.finalized || result.bundleOnDisk;
   if (!stopped) { verdict = 'TIMEOUT'; code = 3; }
-  else if (/cả 2 tab đã chốt|một tab đã chốt|CHỐT_ĐỒNG_THUẬN|đồng thuận/i.test(lastStop || '') || /final blueprint bundle saved/.test(lastLog)) { verdict = 'CONSENSUS'; code = 0; }
-  else if (/quality_guard|hard.?stop/i.test(lastStop || '')) { verdict = 'BUG_QUALITY_GUARD'; code = 2; }
+  else if (/cả 2 tab đã chốt|một tab đã chốt|CHỐT_ĐỒNG_THUẬN|đồng thuận/i.test(lastStop || '') || blueprintSaved && /consensus|chốt|đồng thuận/i.test(lastStop || '')) { verdict = 'CONSENSUS'; code = 0; }
+  // Designed terminal behavior (v0.8.46+): any quality_guard_* / max-steps stop that still produces a blueprint is a VALID forced finalize, not a bug.
+  else if (/quality_guard_|đạt số bước tối đa/i.test(lastStop || '')) { verdict = blueprintSaved ? 'FORCED_FINALIZE' : 'BUG_NO_FINALIZE'; code = blueprintSaved ? 0 : 2; }
+  else if (/quality_guard|hard.?stop/i.test(lastStop || '')) { verdict = blueprintSaved ? 'FORCED_FINALIZE' : 'BUG_QUALITY_GUARD'; code = blueprintSaved ? 0 : 2; }
   else if (/auto_handoff_failed/i.test(lastStop || '')) { verdict = 'BUG_HANDOFF'; code = 2; }
   else if (/state_invalid/i.test(lastStop || '')) { verdict = 'BUG_STATE'; code = 2; }
-  else if (/đạt số bước tối đa|max/i.test(lastStop || '')) { verdict = 'MAXED_OUT'; code = 3; }
   else { verdict = 'OTHER_STOP'; code = 3; }
   result.verdict = verdict;
 

@@ -1,0 +1,32 @@
+{
+  "name": "polite-no-signal",
+  "provider": "mock",
+  "title": "Mock Provider - Polite No Signal",
+  "responseDelayMs": 120,
+  "seedMessages": [
+    {
+      "role": "assistant",
+      "content": "Baseline loaded. Ready for critique loop."
+    }
+  ],
+  "turns": [
+    { "onTurn": 0, "response": "Round 1. Distinct elaboration alpha on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 1, "response": "Round 2. Distinct elaboration bravo on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 2, "response": "Round 3. Distinct elaboration charlie on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 3, "response": "Round 4. Distinct elaboration delta on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 4, "response": "Round 5. Distinct elaboration echo on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 5, "response": "Round 6. Distinct elaboration foxtrot on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 6, "response": "Round 7. Distinct elaboration golf on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 7, "response": "Round 8. Distinct elaboration hotel on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 8, "response": "Round 9. Distinct elaboration india on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 9, "response": "Round 10. Distinct elaboration juliet on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 10, "response": "Round 11. Distinct elaboration kilo on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 11, "response": "Round 12. Distinct elaboration lima on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 12, "response": "Round 13. Distinct elaboration mike on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 13, "response": "Round 14. Distinct elaboration november on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 14, "response": "Round 15. Distinct elaboration oscar on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 15, "response": "Round 16. Distinct elaboration papa on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 16, "response": "Round 17. Distinct elaboration quebec on the plan. Confidence: 7/10\nshould_continue: false" },
+    { "onTurn": 17, "response": "Round 18. Distinct elaboration romeo on the plan. Confidence: 7/10\nshould_continue: false" }
+  ]
+}

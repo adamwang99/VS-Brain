@@ -173,6 +173,60 @@ async function runCriticalButProgressing(page) {
   return 'critical-but-progressing PASS';
 }
 
+async function runNoConvergenceBudget(page) {
+  // Bug class from live OCTA TIMEOUT runs: each round raises a NEW critical with
+  // should_continue:false (no repeat/stall -> criticalStall stays 0). Old code never
+  // hard-stops, loop runs to maxSteps/timeout and never finalizes. New code must
+  // force-stop with quality_guard_no_convergence once criticalCount >= budget (8),
+  // then route into the stop->finalize chain (draft_forced) without a blocking confirm.
+  await bootScenario(page, '/lab/scenarios/no-convergence-critical-budget.json', '/lab/scenarios/no-convergence-critical-budget.json');
+  await page.evaluate(() => {
+    const auto = document.querySelector('#autoSendToggle');
+    if (auto) auto.checked = true;
+    document.querySelector('#startLoopBtn')?.click();
+  });
+  await waitForLog(page, 'auto-loop started');
+  // must NOT cut short during warmup (step < 8) and progressing rounds
+  await waitForLog(page, 'auto-loop step 6/', 60000);
+  if ((await page.$eval('#log', el => el.textContent || '')).includes('quality_guard_no_convergence'))
+    throw new Error('no_convergence fired during warmup (too early)');
+  // eventually the convergence budget must force a stop
+  await waitForLog(page, 'quality_guard_no_convergence', 90000);
+  const state = await dumpState(page, 'no-convergence-budget-final');
+  if (!state.log.includes('quality hard-stop enforced')) throw new Error('budget stop did not enforce hard-stop');
+  // forced stop must route into finalize (draft_forced) without window.confirm
+  await waitForLog(page, 'draft_forced finalize (forced stop', 30000);
+  // closing the live-exposed gap: draft started != blueprint produced. Assert bundle actually saved.
+  await waitForLog(page, 'final blueprint bundle saved', 60000);
+  return 'no-convergence-budget PASS';
+}
+
+async function runPoliteNoSignal(page) {
+  // Second live non-convergence mode (v0.8.45 still timed out): models keep exchanging
+  // NEW content politely with NO termination signal at all (critical=0, no repeat,
+  // no contradiction, no low-confidence, no stop phrase). Critical budget never fires.
+  // The content-independent round budget (step>=16) must force a stop+finalize.
+  await bootScenario(page, '/lab/scenarios/polite-no-signal.json', '/lab/scenarios/polite-no-signal-b.json');
+  await page.evaluate(() => {
+    const auto = document.querySelector('#autoSendToggle');
+    if (auto) auto.checked = true;
+    document.querySelector('#startLoopBtn')?.click();
+  });
+  await waitForLog(page, 'auto-loop started');
+  // must NOT cut short during warmup / early progressing rounds
+  await waitForLog(page, 'auto-loop step 6/', 60000);
+  if ((await page.$eval('#log', el => el.textContent || '')).includes('quality_guard_round_budget'))
+    throw new Error('round_budget fired during warmup (too early)');
+  // the round budget must eventually force a stop
+  await waitForLog(page, 'quality_guard_round_budget', 120000);
+  const state = await dumpState(page, 'polite-no-signal-final');
+  if (state.log.includes('quality_guard_no_convergence')) throw new Error('wrong reason: critical budget fired when critical=0');
+  if (!state.log.includes('quality hard-stop enforced')) throw new Error('round budget stop did not enforce hard-stop');
+  await waitForLog(page, 'draft_forced finalize (forced stop', 30000);
+  await waitForLog(page, 'final blueprint bundle saved', 60000);
+  return 'polite-no-signal PASS';
+}
+
 await ensureLabServer();
 const browser = await puppeteer.launch({ headless: false, executablePath: chromePath, args: ['--no-first-run','--no-default-browser-check'] });
 try {
@@ -189,6 +243,8 @@ try {
   results.push(await runContinueContradictionVeto(page));
   results.push(await runDuplicateSourceStall(page));
   results.push(await runCriticalButProgressing(page));
+  results.push(await runNoConvergenceBudget(page));
+  results.push(await runPoliteNoSignal(page));
   console.log(results.join('\n'));
 } finally {
   await browser.close();
