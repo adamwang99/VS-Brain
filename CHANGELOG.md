@@ -1,5 +1,14 @@
 # VS Brain Changelog
 
+## v0.8.49-intent-presets-finalize-rewrite
+
+- Live test on 2 non-technical prompts (cafe business plan, photosynthesis explainer) exposed two real defects in Blueprint mode: (1) the default critique prompt forced a code/security/architecture panel onto every topic, derailing non-technical debates (the photosynthesis run drifted into a meta-discussion about UI text artifacts), and (2) `buildFinalMarkdown` trusted the model's last in-debate response as the final blueprint body, so when forced-finalize fired the saved bundle held a single half-sentence ("đồng thuận tuyệt đối (Verdict: PASS,") instead of a real report.
+- Added an Intent selector at Start with 4 presets: Auto / Business / Learning / Tech-Code. Each preset swaps both the critique prompt (panel and review checklist match the intent) and the finalize schema (Business Decision Brief / Learning Brief / generic Final Brief / existing 8-section blueprint for code).
+- Finalize prompt now MANDATES the secretary turn to write a complete report (≥600 words) from scratch instead of just acknowledging agreement or echoing the last response. Every section must be filled with real content; truly empty sections are written as 'none' rather than left blank.
+- Default Intent is Auto: domain-agnostic critique that stays grounded in the topic, plus a generic Final Brief schema. Code intent preserves the original v0.8.x panel critique and 8-section blueprint, so existing technical workflows are unchanged.
+- Same loop core (relay, stop budgets, forced finalize, ledger validator) is reused; only the prompt template + finalize schema swap.
+- Regression: existing 10 scenarios still PASS. Live re-verification on the cafe and photosynthesis prompts produces a real, structured Final Brief bundle instead of the empty stub seen in v0.8.48.
+
 ## v0.8.48-ledger-quality-validator
 
 - Added a Decision Ledger field validator that runs after finalize when `outputMode=ledger`. It parses the ledger output, counts decision blocks, and tracks how many include each required field (`evidence`, `counter_evidence`, `confidence`, `reverse_if`, `status`).

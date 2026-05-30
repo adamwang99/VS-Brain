@@ -12,7 +12,7 @@
       <div class="brand-lockup">
         <img class="brand-logo hero-logo" src="icons/vs-brain-logo.png" alt="VS Brain logo" />
         <div>
-          <h1>VS Brain <span class="version">v0.8.48-ledger-quality-validator</span></h1>
+          <h1>VS Brain <span class="version">v0.8.49-intent-presets-finalize-rewrite</span></h1>
           <p class="subtitle" data-i18n="subtitle">AI debate relay · archive · checkpoint</p>
         </div>
       </div>
@@ -32,7 +32,16 @@
       <p class="hintline" data-i18n="oneClickHint">Mở 2 tab AI, bấm bắt đầu. VS Brain tự chọn nguồn/đích, chỉ dán an toàn mặc định; chỉ tự gửi khi Sếp bật Auto-send.</p>
       <textarea id="extraInstruction" rows="2" placeholder="Yêu cầu bổ sung: tập trung UX, bảo mật, feasibility..." data-placeholder-vi="Yêu cầu bổ sung: tập trung UX, bảo mật, feasibility..." data-placeholder-en="Extra instruction: focus on UX, security, feasibility..."></textarea>
       <div class="mode-row">
-        <label class="mode-label"><span data-i18n="outputModeLabel">Kết quả</span>
+        <label class="mode-label"><span data-i18n="intentLabel">Mục đích</span>
+          <select id="critiqueIntent" class="glass-select" title="Tự điều chỉnh góc phản biện + định dạng báo cáo cuối theo mục đích">
+            <option value="auto" data-label-vi="Tự động" data-label-en="Auto">Tự động</option>
+            <option value="business" data-label-vi="Kinh doanh" data-label-en="Business">Kinh doanh</option>
+            <option value="learning" data-label-vi="Học tập" data-label-en="Learning">Học tập</option>
+            <option value="code" data-label-vi="Kỹ thuật / Code" data-label-en="Tech / Code">Kỹ thuật / Code</option>
+          </select>
+        </label>
+      </div>
+      <div class="mode-row">
           <select id="outputMode" class="glass-select" title="Chọn dạng kết quả đầu ra">
             <option value="blueprint" data-label-vi="Blueprint (nhanh)" data-label-en="Blueprint (quick)">Blueprint (nhanh)</option>
             <option value="ledger" data-label-vi="Decision Ledger (cần dữ liệu)" data-label-en="Decision Ledger (needs payload)">Decision Ledger (cần dữ liệu)</option>

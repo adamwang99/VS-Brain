@@ -31,7 +31,16 @@
       <p class="hintline" data-i18n="oneClickHint">Mở 2 tab AI, bấm bắt đầu. VS Brain tự chọn nguồn/đích, tự gửi, tự dừng khi đồng thuận.</p>
       <textarea id="extraInstruction" rows="3" placeholder="Yêu cầu bổ sung..." data-placeholder-vi="Yêu cầu bổ sung..." data-placeholder-en="Extra instruction..."></textarea>
       <div class="mode-row">
-        <label class="mode-label"><span data-i18n="outputModeLabel">Kết quả</span>
+        <label class="mode-label"><span data-i18n="intentLabel">Mục đích</span>
+          <select id="critiqueIntent" class="glass-select">
+            <option value="auto" data-label-vi="Tự động" data-label-en="Auto">Tự động</option>
+            <option value="business" data-label-vi="Kinh doanh" data-label-en="Business">Kinh doanh</option>
+            <option value="learning" data-label-vi="Học tập" data-label-en="Learning">Học tập</option>
+            <option value="code" data-label-vi="Kỹ thuật / Code" data-label-en="Tech / Code">Kỹ thuật / Code</option>
+          </select>
+        </label>
+      </div>
+      <div class="mode-row">
           <select id="outputMode" class="glass-select">
             <option value="blueprint" data-label-vi="Blueprint (nhanh)" data-label-en="Blueprint (quick)">Blueprint (nhanh)</option>
             <option value="ledger" data-label-vi="Decision Ledger (cần dữ liệu)" data-label-en="Decision Ledger (needs payload)">Decision Ledger (cần dữ liệu)</option>
