@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>VS Brain Live Shell</title>
+  <link rel="stylesheet" href="../apps/extension/popup.css" />
+  <style>
+    body{display:grid;grid-template-columns:minmax(420px,560px) 1fr;gap:12px;align-items:start}
+    .lab-frames{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px}
+    .lab-frames iframe{width:100%;height:48vh;border:1px solid #333;border-radius:10px;background:#fff}
+  </style>
+</head>
+<body>
+  <script src="./chrome-shim.js"></script>
+  <main>
+    <header class="hero glass"><div class="brand-lockup"><img class="brand-logo hero-logo" src="../apps/extension/icons/vs-brain-logo.png" alt="VS Brain logo" /><div><h1>VS Brain <span class="version">LIVE SHELL</span></h1><p class="subtitle" data-i18n="subtitle">AI debate relay · archive · checkpoint</p></div></div><div class="head-actions"><button id="helpBtn" class="help-round">?</button><select id="langMode" class="glass-select"><option value="en">🇺🇸</option><option value="vi" selected>🇻🇳</option></select></div></header>
+    <section class="glass start-card"><div id="status">Sẵn sàng</div><h2 data-i18n="oneClickTitle">Tự động phản biện giữa các AI</h2><p class="hintline">Live shell dùng cùng runtime `popup.js` nhưng không phụ thuộc `chrome-extension://`.</p><textarea id="extraInstruction" rows="3"></textarea><div class="start-actions compact-actions"><button id="oneClickStartBtn" class="primary big">Start</button><button id="finalizeBtn" class="primary">Save</button><button id="stopLoopBtn" class="icon-action">Stop</button><button id="handoffBtn" class="icon-action">Handoff</button></div><div class="loop-counter"><span id="loopCounter">0/100</span><span>vòng</span><span id="elapsedTimer" class="timer">00:00</span></div><div class="round-control"><div class="preset-row"><button type="button" class="round-preset" data-round="25">25</button><button type="button" class="round-preset" data-round="50">50</button><button type="button" class="round-preset" data-round="100">100</button></div><div class="round-stepper"><button type="button" id="roundDecBtn">-5</button><input id="stepsSlider" type="range" min="1" max="100" step="5" value="100" class="slider" /><button type="button" id="roundIncBtn">+5</button><span id="sliderValue" class="slider-val">100</span></div></div><div class="mini-meta"><span>Default: Auto source/target · Latest · Auto-send · 100 steps</span></div></section>
+    <details class="glass manual-panel" open><summary>Manual / tuỳ chỉnh</summary><section class="relay"><div class="section-head"><h2>Phản biện</h2><button id="refreshTabsBtn" class="chip">Quét tab</button></div><div class="grid2"><label><span>Nguồn</span><select id="sourceTab" class="glass-select"></select></label><label><span>Đích</span><select id="targetTab" class="glass-select"></select></label></div><div class="toolbar"><button id="autoPickBtn" disabled>Tự chọn</button><button id="swapTabsBtn" disabled>↔ Đổi</button><select id="relayMode" class="glass-select"><option value="latest">Mới nhất</option><option value="selection">Đoạn chọn</option></select></div><button id="relayBtn" class="primary" disabled>Dán phản biện →</button><div class="grid2"><label><span>Steps</span><input id="loopMaxSteps" type="number" value="100" min="1" max="100" /></label><label><span>Delay</span><input id="loopDelaySec" type="number" value="3" min="1" max="120" /></label></div><div class="toolbar wrap"><label><input id="autoSendToggle" type="checkbox" checked /> Auto-send</label><button id="startLoopBtn" disabled>Auto A↔B</button><button id="resetRelayBtn">Reset relay</button></div><details class="advanced" open><summary>Tuỳ chọn nâng cao</summary><div class="grid2"><label><span>Cụm chốt dừng</span><input id="stopPhrase" value="CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN" /></label><label><span>Delay thao tác (ms)</span><input id="actionDelayMs" type="number" value="1200" min="50" max="10000" /></label></div><label><span>Prompt phản biện</span><textarea id="promptTemplate" rows="8"></textarea></label><div class="toolbar wrap"><button id="resetPromptBtn">Reset prompt mặc định</button></div></details></section></details>
+    <details class="glass archive-panel"><summary>Lưu trữ</summary><section class="archive"><div class="section-head"><h2>Lưu trữ</h2></div><div class="mini-meta"><span id="provider">-</span><span id="count">0 tin</span></div><strong id="title" class="titleline">-</strong><div class="toolbar wrap archive-actions-simple"><button id="scanBtn" class="chip">Quét</button><button id="exportAllBundleBtn" class="primary" disabled>Tải full bundle</button></div><details class="advanced archive-advanced"><summary>Tuỳ chọn lưu trữ nâng cao</summary><div class="toolbar wrap"><button id="exportJsonlBtn" disabled>JSONL mới</button><button id="exportMdBtn" disabled>MD mới</button><button id="exportAllJsonlBtn" disabled>JSONL full</button><button id="exportAllMdBtn" disabled>MD full</button><button id="checkpointBtn" disabled>Đánh mốc</button><button id="clearCheckpointBtn" disabled>Xoá mốc</button></div></details></section></details>
+    <div id="helpModal" class="modal hidden"><div class="modal-card glass"><div class="section-head"><h2>Hướng dẫn VS Brain</h2><button id="closeHelpBtn" class="chip">Đóng</button></div><div class="modal-logo-wrap"><img class="brand-logo modal-logo" src="../apps/extension/icons/vs-brain-logo.png" alt="VS Brain logo" /></div><div id="helpContent" class="help-content"></div></div></div>
+    <details class="glass logbox" open><summary>Log / debug</summary><button id="exportLogBtn" class="chip">Xuất log</button><pre id="log"></pre></details>
+  </main>
+  <div class="lab-frames" id="labFrames"></div>
+  <script>
+    async function openLive(url, title) {
+      const iframe = document.createElement('iframe');
+      iframe.src = url;
+      document.getElementById('labFrames').appendChild(iframe);
+      await new Promise(r => iframe.addEventListener('load', r, { once: true }));
+      window.__vsbrainLab.registerWindow(iframe.contentWindow, { title, url });
+      return iframe;
+    }
+    window.addEventListener('DOMContentLoaded', async () => {
+      await openLive('https://chatgpt.com/', 'ChatGPT Live');
+      await openLive('https://gemini.google.com/app', 'Gemini Live');
+    });
+  </script>
+  <script src="../apps/extension/popup.js"></script>
+</body>
+</html>

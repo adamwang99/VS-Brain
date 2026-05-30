@@ -15,3 +15,16 @@ live-seed-*.json
 memory_snapshots/
 test-results/
 artifacts/
+tmp/
+ui-snapshots/
+# dated scratch working-notes (not source-of-truth; canonical = docs/ + CHANGELOG + PROJECT_STATUS)
+CHECKPOINT_2026-*.md
+BLUEPRINT_*2026-*.md
+COMPLETION_PLAN_2026-*.md
+SMOKE_TEST_2026-*.md
+PROMOTION_GATE_REPORT_2026-*.md
+BASELINE_CANDIDATE_RELEASE_NOTE_2026-*.md
+MAIN_APP_TEST_STATUS_2026-*.md
+DEMO_EXPORT_FORMULA_*2026-*.md
+ACTION_JOURNAL_AND_DEDUP_*.md
+IMPLEMENTATION_CHECKLIST_RUN_TO_COMPLETION_2026-*.md

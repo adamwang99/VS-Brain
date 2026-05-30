@@ -1,0 +1,18 @@
+{
+  "name": "stale-stop-reason",
+  "provider": "mock",
+  "title": "Mock Provider - Stale Stop Reason",
+  "responseDelayMs": 150,
+  "seedMessages": [
+    {
+      "role": "assistant",
+      "content": "Verdict: PASS\nCritical issues: none\nMissing pieces: none\nMinor notes: none\nSuggested fixes: none\nConfidence: 9/10\nshould_continue: false\nCHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN"
+    }
+  ],
+  "turns": [
+    {
+      "onTurn": 0,
+      "response": "## Final unified answer\nThis blueprint should save even if a previous run stopped with quality_guard_critical_blocker.\n\nConfidence: 9/10\nshould_continue: false\nCHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN"
+    }
+  ]
+}

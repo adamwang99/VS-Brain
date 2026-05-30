@@ -1,0 +1,18 @@
+{
+  "name": "finalize-blueprint",
+  "provider": "mock",
+  "title": "Mock Provider - Finalize Blueprint",
+  "responseDelayMs": 150,
+  "seedMessages": [
+    {
+      "role": "assistant",
+      "content": "Verdict: PASS\nCritical issues: none\nMissing pieces: none\nMinor notes: none\nSuggested fixes: none\nConfidence: 9/10\nshould_continue: false\nCHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN"
+    }
+  ],
+  "turns": [
+    {
+      "onTurn": 0,
+      "response": "## 1. Kết luận cuối cùng\nBlueprint cuối đã sẵn sàng.\n\n## 2. Thiết kế\n- Dừng relay khi dual-consensus.\n- Save không phụ thuộc loopState.\n- Auto download bundle khi blueprint mới xuất hiện.\n\n## 3. Checklist\n- Verify dual-consensus\n- Verify save\n- Verify download\n\nConfidence: 9/10\nshould_continue: false\nCHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN"
+    }
+  ]
+}
