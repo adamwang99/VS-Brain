@@ -1,0 +1,50 @@
+VS Brain — Proprietary License
+Copyright (c) 2026 Adam Wang. All rights reserved.
+
+This repository (the "Software") and all assets in it (including code,
+documentation, icons, and the banner image) are the property of Adam Wang.
+
+1. PERMITTED USE
+   You may:
+   a) View this repository.
+   b) Clone it for personal study, evaluation, or non-commercial individual
+      use on your own machines.
+   c) Submit issues, pull requests, and bug reports to the upstream
+      repository at https://github.com/adamwang99/VS-Brain.
+
+2. PROHIBITED USE WITHOUT PRIOR WRITTEN PERMISSION
+   You may NOT, without prior written permission from Adam Wang:
+   a) Use the Software, in whole or in part, for any commercial purpose,
+      including but not limited to selling, renting, sublicensing, hosting
+      as a service, or bundling into a paid product.
+   b) Distribute, redistribute, or republish the Software (modified or
+      unmodified), including under a different name or branding.
+   c) Publish a fork, derivative work, or competing extension based on the
+      Software to any extension marketplace (Chrome Web Store, Microsoft
+      Edge Add-ons, Firefox Add-ons, or equivalent).
+   d) Remove, alter, or obscure any copyright, trademark, or attribution
+      notices.
+   e) Use the "VS Brain" name, the project banner, or related branding in a
+      way that suggests endorsement or affiliation.
+
+3. NO WARRANTY
+   The Software is provided "AS IS", without warranty of any kind, express
+   or implied, including but not limited to the warranties of
+   merchantability, fitness for a particular purpose, and noninfringement.
+   In no event shall Adam Wang be liable for any claim, damages, or other
+   liability, whether in an action of contract, tort, or otherwise, arising
+   from, out of, or in connection with the Software or the use or other
+   dealings in the Software.
+
+4. CONTACT FOR COMMERCIAL LICENSING
+   For commercial licensing, redistribution rights, OEM/whitelabel
+   arrangements, or any other use not permitted under section 1, please
+   open an issue at https://github.com/adamwang99/VS-Brain/issues with the
+   tag "licensing", or contact the maintainer directly through the email
+   listed on the project's Chrome Web Store page.
+
+5. ENFORCEMENT
+   Any use outside the scope of section 1 without written permission is a
+   violation of this license and of applicable copyright law. Adam Wang
+   reserves all rights and remedies, including DMCA takedown requests
+   against infringing copies on third-party platforms.

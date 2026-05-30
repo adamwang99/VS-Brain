@@ -261,3 +261,9 @@ After code changes, click **Reload** on the extension card.
 ## Version history
 
 See `CHANGELOG.md` and `docs/ROADMAP.md`.
+
+## License
+
+VS Brain is proprietary software owned by Adam Wang. All rights reserved.
+
+Personal, non-commercial use is permitted. Commercial use, redistribution, forking to a marketplace, or any derivative product requires prior written permission from the maintainer. See [`LICENSE`](./LICENSE) for the full terms, including how to request commercial licensing.
