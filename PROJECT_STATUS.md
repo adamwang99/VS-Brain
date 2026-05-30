@@ -1,6 +1,6 @@
 # VS Brain Project Status
 
-Current version: `v0.8.52-recent-paste-grace-window`
+Current version: `v0.8.53-msg-count-detection`
 Latest local state: `working tree includes 2-provider hardening, fail-closed finalize gate, safe-release default OFF, auto-handoff estimator hardening, runtime surface classification, Gemini home auto-bootstrap, fail-fast permission/source gates, and live-loop UX hardening; not committed yet`
 
 ## Product purpose

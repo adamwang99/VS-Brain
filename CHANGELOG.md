@@ -1,5 +1,14 @@
 # VS Brain Changelog
 
+## v0.8.53-msg-count-detection
+
+- v0.8.52 still false-stopped on the user's long-prompt session: ChatGPT did not start streaming for 6.5 minutes and the source-content hash never changed, so the timing window expired and the 3-strike duplicate stop fired anyway. The grace window only delayed the false stop; it did not detect actual progress.
+- Replaced the hash-only progress signal with an **assistant-message count signal** that does not depend on streaming heuristics:
+  - New helper `countAssistantMessagesInPage` counts assistant turns in the target tab using stable selectors (`[data-message-author-role="assistant"]`, `model-response`, `[data-testid^="conversation-turn-"]`).
+  - On each relay, before paste, the snapshot count is recorded as `targetMsgCountBefore` and returned to the loop driver.
+  - `waitForTabNewResponse` now polls the count first. The relay only proceeds once `count >= targetMsgCountBefore + 1` (a new assistant turn has actually appeared), and then waits for the content hash to be observed twice in a row (stable). This removes the wait-for-hash-change race that fired "new content" too early on streaming.
+- Net effect: when the model is genuinely slow to start, the loop keeps waiting (until the configured wait window). The 3-strike `needs_attention_no_new_source_response` stop only fires after the wait actually times out a full strike, not on transient sameness while the model is thinking.
+
 ## v0.8.52-recent-paste-grace-window
 
 - v0.8.51 added a `target_streaming` early-return based on `tState.isGenerating` from the page detector. The user reproduced the same false stop on v0.8.51 and the log shows why: the detector returned `generating=no` even while ChatGPT was clearly streaming an 8888-char response. The DOM markers used to infer `isGenerating` are not reliable across all ChatGPT/Gemini surface variants, so trusting that flag alone is not a defensible gate.
