@@ -1,5 +1,15 @@
 # VS Brain Changelog
 
+## v0.8.54-simplify-relay
+
+- The user reproduced two more bad runs on v0.8.53 and pointed out (correctly) that the relay had become slow and over-protective: 4 layers of "is the model actually replying?" gates accumulated across v0.8.51–v0.8.53 (DOM `isGenerating`, 5-minute timing grace, source duplicate hash, message count). They sometimes contradicted each other and added several `executeScript` round-trips per loop step.
+- Refactor goal: keep the one signal that proved correct (assistant-message count) and remove the rest.
+  - Removed the source-duplicate-hash gate in `executeRelay`. The previous loop never paste/skip mismatch (skipping the paste while the round counter advanced) is gone; every loop step that reaches `executeRelay` either pastes successfully or throws.
+  - Removed the `target_streaming` early-return branch and the timing grace window from v0.8.51–v0.8.52. They were workarounds for the wrong gate.
+  - Removed the recovery interlock that forced `autoSend=OFF` when an old session checkpoint was found at panel load. Pressing Start now means "start fresh" — the recovery code simply discards the stale checkpoint and logs that it did. No more "Recovered / review required" state blocking auto-loop.
+- The single remaining signal: `countAssistantMessagesInPage`. Once a new assistant turn appears in the target's DOM, the loop waits for the content hash to be stable across two polls and proceeds. This was already the only signal that fired correctly in the user's logs.
+- Result: fewer cross-tab `executeScript` calls per round, faster startup, and no false stops while the model is genuinely slow. The 3-strike `needs_attention_no_new_source_response` stop only fires when the wait window itself times out three times in a row — it is no longer triggered by transient sameness.
+
 ## v0.8.53-msg-count-detection
 
 - v0.8.52 still false-stopped on the user's long-prompt session: ChatGPT did not start streaming for 6.5 minutes and the source-content hash never changed, so the timing window expired and the 3-strike duplicate stop fired anyway. The grace window only delayed the false stop; it did not detect actual progress.
