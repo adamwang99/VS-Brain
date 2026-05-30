@@ -1,5 +1,14 @@
 # VS Brain Changelog
 
+## v0.8.52-recent-paste-grace-window
+
+- v0.8.51 added a `target_streaming` early-return based on `tState.isGenerating` from the page detector. The user reproduced the same false stop on v0.8.51 and the log shows why: the detector returned `generating=no` even while ChatGPT was clearly streaming an 8888-char response. The DOM markers used to infer `isGenerating` are not reliable across all ChatGPT/Gemini surface variants, so trusting that flag alone is not a defensible gate.
+- Replaced the gate with a **timing-based grace window** that does not depend on DOM heuristics:
+  - When a relay paste succeeds, store `loopState.lastPasteAt = Date.now()`.
+  - On the next loop pass, if the source content hash is still the same (would normally be `duplicate`), check `Date.now() - lastPasteAt`. If the paste happened less than 5 minutes ago, the target may simply still be replying — return `target_streaming` and wait without counting no-progress.
+  - If 5 minutes or more have elapsed and the source still has not changed, fall through to the existing `duplicate` branch and the 3-strike `needs_attention_no_new_source_response` stop applies as before.
+- Net effect: long, slow generations (8000+ char responses, deep models) no longer trigger a false stop, but a genuinely idle source still gets surfaced after a real wait.
+
 ## v0.8.51-target-streaming-no-false-stop
 
 - A user-reported false stop after 3 rounds when ChatGPT was generating a long response (~8888 chars) but slowly: the source-side waiter timed out at 60s, the next loop pass extracted the same source content again (duplicate hash), `noProgressCount` ticked up to 3 across three rounds, and the loop stopped with `needs_attention_no_new_source_response`. Target was still mid-stream the whole time.
