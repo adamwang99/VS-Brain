@@ -13,7 +13,13 @@
     "windows"
   ],
   "host_permissions": [
-    "https://*/*",
+    "https://chatgpt.com/*",
+    "https://chat.openai.com/*",
+    "https://gemini.google.com/*",
+    "https://claude.ai/*",
+    "https://chat.deepseek.com/*",
+    "https://www.perplexity.ai/*",
+    "https://grok.com/*",
     "http://127.0.0.1/*"
   ],
   "action": {
