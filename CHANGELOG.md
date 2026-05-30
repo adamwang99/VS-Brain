@@ -1,5 +1,15 @@
 # VS Brain Changelog
 
+## v0.8.55-ux-send-pill-and-still-waiting
+
+- User screenshot from a v0.8.54 session showed the Send pill rendering as `Send OFF` even when Auto-send was on. Inspected the markup and found two real UX bugs:
+  - The `Send OFF` pill in `popup.html` was a hard-coded literal, never bound to the `autoSendToggle` checkbox state.
+  - The `autoSendToggle` checkbox was declared with the `disabled` attribute, so users could not toggle it at all from the panel.
+- Fixes:
+  - Removed `disabled` from `autoSendToggle`. Default state is still `checked` (Send ON).
+  - Renamed the literal pill to `<span id="sendStatePill">` and wired it to a small `_syncSendStatePill()` helper that runs on init and on every checkbox change. Pill now reads `Send ON` / `Send OFF` matching reality.
+- Added a 30s heartbeat log line during long waits: `still waiting tab N response... Xs elapsed (model is just slow, not stuck)`. The user reported a session sitting at step 4 for ~5 min and assumed the loop was hung; the cadence was real (long ChatGPT response). The heartbeat lets the user see progress without scrolling step counters.
+
 ## v0.8.54-simplify-relay
 
 - The user reproduced two more bad runs on v0.8.53 and pointed out (correctly) that the relay had become slow and over-protective: 4 layers of "is the model actually replying?" gates accumulated across v0.8.51–v0.8.53 (DOM `isGenerating`, 5-minute timing grace, source duplicate hash, message count). They sometimes contradicted each other and added several `executeScript` round-trips per loop step.

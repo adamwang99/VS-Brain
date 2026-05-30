@@ -12,7 +12,7 @@
       <div class="brand-lockup">
         <img class="brand-logo hero-logo" src="icons/vs-brain-logo.png" alt="VS Brain logo" />
         <div>
-          <h1>VS Brain <span class="version">v0.8.54-simplify-relay</span></h1>
+          <h1>VS Brain <span class="version">v0.8.55-ux-send-pill-and-still-waiting</span></h1>
           <p class="subtitle" data-i18n="subtitle">AI debate relay · archive · checkpoint</p>
         </div>
       </div>
@@ -25,7 +25,7 @@
         <div class="runtime-pills">
           <span class="runtime-pill">Auto</span>
           <span class="runtime-pill">Latest</span>
-          <span class="runtime-pill">Send OFF</span>
+          <span class="runtime-pill" id="sendStatePill">Send ON</span>
         </div>
       </div>
       <h2 data-i18n="oneClickTitle">Tự động phản biện giữa các AI</h2>
@@ -87,7 +87,7 @@
         <div class="loop-row">
           <label><span data-i18n="steps">Steps</span> <input id="loopMaxSteps" type="number" min="1" max="1000" value="100" /></label>
           <label><span data-i18n="delay">Delay</span> <input id="loopDelaySec" type="number" min="3" max="120" value="12" /></label>
-          <label class="toggle"><input id="autoSendToggle" type="checkbox" checked disabled /> <span data-i18n="autoSend">Auto-send</span></label>
+          <label class="toggle"><input id="autoSendToggle" type="checkbox" checked /> <span data-i18n="autoSend">Auto-send</span></label>
         </div>
         <div class="toolbar">
           <button id="startLoopBtn" disabled data-i18n="autoLoop">Auto A↔B</button>
