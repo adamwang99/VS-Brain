@@ -90,7 +90,7 @@ VS Brain is initiated, directed, and owned by Adam Wang. Source: https://github.
   - `03-final-brief-and-bundle-downloaded.png` — Final Brief in ChatGPT with the `vsbrain-termination` envelope, plus the Chrome Recent downloads bar showing `final-blueprint-chatgpt-...-bundle.json.gz · 6.6 KB · Done`.
   - Source images: user-supplied browser captures 2026-05-31 against v0.8.58. Original 1280x844 → top-cropped to 1280x800 (drops only the Chrome status footer).
   - The earlier `01-loop-100-of-100-finalize.png` / `02-termination-envelope-and-final-brief.png` set was captured against v0.8.55 (Save-loop state) and has been removed from the asset set; do not reintroduce it.
-- [ ] Promo tile 440x280 (small) — optional but recommended.
+- [x] Promo tile 440x280: `docs/store-assets/promo-tile-440x280.png` (downsampled from a 1280x815 GPT render). Source kept at `docs/store-assets/promo-tile-raw-1280x815.jpg`. Tagline "Push every idea to its limit" with the full 6-provider line. No vendor logos drawn — provider names appear as text only.
 - [x] Demo zip re-packed from v0.8.60: `exports/demo/vs-brain-0.8.60-demo.zip` (3,192,476 bytes). **This is the file to upload**, not any older `vs-brain-0.8.5x-demo.zip`.
 
 When all 5 boxes are checked, the build can be uploaded via the Chrome Web Store developer dashboard. Initial review typically takes 1–3 business days.

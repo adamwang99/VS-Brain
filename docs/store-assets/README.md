@@ -1,5 +1,12 @@
 # Chrome Web Store Assets — VS Brain
 
+## Promo tile (small, 440x280)
+
+- `promo-tile-440x280.png` — final Chrome Web Store small promo tile, downsampled from a 1280x815 GPT-generated render.
+- `promo-tile-raw-1280x815.jpg` — original 3x source render kept for re-edits / future variants.
+- Tagline: "Push every idea to its limit". Brand stamp `VS BRAIN`. Provider list as plain typography (`ChatGPT × Gemini × Claude / DeepSeek × Perplexity × Grok`). Footer `One blueprint out · Chrome side panel · Free`.
+- No third-party brand marks were drawn into the image (provider names appear as text only). This is a Chrome Web Store policy requirement — do not replace this with any version that includes vendor logos.
+
 ## Folder layout
 
 - `screenshots-raw/` — original 1280x844 happy-path captures from a real ChatGPT + Gemini session running v0.8.58 with the content-script page-helpers fix in place.
