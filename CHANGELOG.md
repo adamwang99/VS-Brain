@@ -1,5 +1,20 @@
 # VS Brain Changelog
 
+## v0.8.59-intent-and-output-mode-hints
+
+- User feedback after the v0.8.58 happy-path screenshot: the side panel had a `Mục đích` (Intent) dropdown and a `Kết quả` (Output) dropdown, but the visible hint text was only one short line and only described Blueprint, never Decision Ledger or the four intents. Users were guessing.
+- Add bilingual descriptive hints under each dropdown so users can pick the right combination without reading the help modal:
+  - Output mode hints (`#modeHint`): `Blueprint` now reads "Dùng khi muốn 2 AI tranh luận 1 ý tưởng/kế hoạch và tổng hợp ra blueprint hành động. Không cần dữ liệu thật." / "Use when you want two AIs to debate an idea/plan and produce a unified action blueprint. No real data required.". `Decision Ledger` now reads "Dùng khi đã có dữ liệu/số liệu/log/spec — dán vào ô bằng chứng để 2 AI ra Decision Ledger neo theo evidence, không bịa." / "Use when you already have data/metrics/logs/spec — paste it into the evidence box so both AIs anchor every claim to it. No fabrication."
+  - Intent hints (`#intentHint`, NEW): one tailored line per intent.
+    - `Auto`: "Tự đoán mục đích theo nội dung. Không chắc thì chọn bằng tay bên dưới." / "Auto-detect intent from your content. If unsure, pick one of the specific intents below."
+    - `Business`: "Phản biện theo góc business: market, mô hình doanh thu, đơn vị kinh tế, rủi ro, kế hoạch 90 ngày, KPI." / "Critique through a business lens: market, revenue model, unit economics, risk, 90-day rollout, KPIs."
+    - `Learning`: "Phản biện theo góc giáo viên: dạy đủ, ví dụ thật, hiểu lầm thường gặp, câu hỏi tự kiểm — phù hợp giải thích cho học sinh/người mới." / "Critique through a teacher lens: full coverage, real examples, common misconceptions, self-check questions — best for explaining to students or beginners."
+    - `Code`: "Phản biện kỹ thuật: kiến trúc, edge case, bảo mật, performance, vận hành — phù hợp dev/SRE/PM tech." / "Technical critique: architecture, edge cases, security, performance, operability — best for devs, SREs, technical PMs."
+  - `applyOutputModeUi` chains into a new `applyIntentUi` so both hints redraw on lang/output/intent change.
+  - `#critiqueIntent` change handler is now wired (was previously inert).
+  - CSS: `.mode-hint` line-height 1.4 and a small `margin-top` so two-line hints render cleanly.
+- No runtime/route logic changed; this is documentation surfaced inside the panel. Regression suite reaches the same point as the v0.8.58 baseline (parity through `polite-no-signal-final`); the trailing puppeteer `Attempted to use detached Frame` flake is environmental.
+
 ## v0.8.58-content-script-page-helpers
 
 - Root cause from a real ChatGPT console dump: `chrome.scripting.executeScript({func: detectProviderState})` was throwing `ReferenceError: extractLatestResponseInPage is not defined` thousands of times per session inside live AI tabs. `chrome.scripting.executeScript` only injects the named function's own source, so any helper it depends on must already exist in the target page. The helpers were defined inside `popup.js` (extension-only realm), so every preflight, every stop-phrase check, every smoke probe, and every recovery scan silently failed in the page realm. The user-visible symptoms were exactly what the log shows: `provider=unknown` preflights, slow fallbacks, `latestChars=0` timeouts, recovery short-circuit not firing, Save loop never terminating.
