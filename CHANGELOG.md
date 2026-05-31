@@ -1,5 +1,13 @@
 # VS Brain Changelog
 
+## v0.8.57-finalize-single-flight-guard
+
+- User submitted a debug log captured on v0.8.54 showing the v0.8.50/0.8.55 finalize bug already covered by v0.8.56, plus a new symptom: three Save clicks within 53 seconds (`9:45:17`, `9:45:20`, `9:46:10`), each one running through `finalize start → chosen tab → fill prompt → click send → finalize prompt sent` while no `finalize wait result` or `finalize extracted` line ever fired.
+- Confirms a second concurrency bug on top of the v0.8.55 single-path bug: there was no in-flight guard on the Save button. Each click launched a fresh finalize sequence in parallel, all targeting the same tab, even while a previous finalize was still waiting for ChatGPT's response. With v0.8.56 already short-circuiting on a present envelope, this would still misfire if the user clicked once before the envelope appeared and a second time after.
+- Fix: button-level click guard. The Save button's click handler stamps `dataset.vsbrainClickBusy="1"` while a finalize is in flight and clears it on completion. A second user click while busy logs `finalize click ignored: previous Save click still in flight` and surfaces a Vietnamese / English status `Đang chốt bản cuối, vui lòng đợi` / `Finalizing already in progress`. Auto-triggered finalizations from `executeRelay` and `stopLoop` go through `finalizeAndSave()` directly (not the click handler) so the guard does not interfere with them; both code paths only fire after the loop has actually stopped, so they cannot race each other.
+- Recovery short-circuit from v0.8.56 still wins on subsequent legitimate Save clicks: if the envelope is already on the tab, write the bundle and return without re-prompting.
+- Regression: v0.8.55 baseline already exhibits a flaky Puppeteer `TargetCloseError` / `detached Frame` failure on the trailing scenario (`polite-no-signal`); v0.8.57 reproduces the same flake. Logic-level scenarios (dual-consensus through critical-but-progressing) still PASS.
+
 ## v0.8.56-finalize-recover-existing-envelope
 
 - User reported that after a 100/100 round budget force-finalize, the blueprint had already been delivered into ChatGPT (with valid `vsbrain-termination` envelope showing `status: ready_to_finalize`, `should_continue: false`, `critical_remaining: false`), but pressing Save kept re-injecting the secretary prompt and never wrote the `.json.gz` to disk.
