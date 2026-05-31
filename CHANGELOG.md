@@ -1,5 +1,14 @@
 # VS Brain Changelog
 
+## v0.8.56-finalize-recover-existing-envelope
+
+- User reported that after a 100/100 round budget force-finalize, the blueprint had already been delivered into ChatGPT (with valid `vsbrain-termination` envelope showing `status: ready_to_finalize`, `should_continue: false`, `critical_remaining: false`), but pressing Save kept re-injecting the secretary prompt and never wrote the `.json.gz` to disk.
+- Root cause: `finalizeAndSave` was a single linear path that always (1) generated a fresh nonce, (2) re-filled the secretary prompt, (3) re-sent, (4) waited for a new response after the *new* baseline hash. After the first force-finalize the envelope was already there, so step (4) timed out (the latest hash equalled the new baseline). Each subsequent Save click started the same loop over again.
+- Fix: at the top of `finalizeAndSave`, scan the candidate tabs once for an already-present termination envelope. If a tab carries an envelope that parses, has `should_continue=false`, and `critical_remaining=false`, treat that tab's response as the final blueprint and write the bundle directly. Mode is recorded as `confirmed_recovered` (when the envelope's nonce still matches the stored finalize nonce) or `recovered_envelope` (when the nonce was already consumed in the first attempt). Only when no envelope is present does the original re-prompt path run.
+- Recovery path skips the live judge gate (it would re-prompt the same tab); the bundle is annotated `judgeDecision.code=JUDGE_SKIPPED_RECOVERY`, `judgeVerdict=review_required`. Operator can re-run the judge externally on the saved markdown if needed.
+- No regressions to the normal force-finalize path: the recovery short-circuit only fires when an envelope is detectable on the tab. Fresh sessions still go through prompt-fill -> send -> wait -> extract -> envelope-check -> consume nonce -> judge gate.
+- Round budget cadence (12 rounds) and forced-finalize routing from v0.8.46 are unchanged.
+
 ## v0.8.55-ux-send-pill-and-still-waiting
 
 - User screenshot from a v0.8.54 session showed the Send pill rendering as `Send OFF` even when Auto-send was on. Inspected the markup and found two real UX bugs:
