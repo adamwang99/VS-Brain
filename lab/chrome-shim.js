@@ -103,6 +103,24 @@ window.chrome = {
   scripting: {
     async executeScript({ target, func, args = [] }) {
       const t = getTab(target.tabId);
+      // Fast path: if popup.js wrapped via __vsbrainHelperInvoker, resolve the named helper
+      // directly in the iframe so we avoid expensive eval+serialize round-trips.
+      if (func?.name === '__vsbrainHelperInvoker' && Array.isArray(args) && args.length >= 1) {
+        const helperName = args[0];
+        const helperArgs = args[1] || [];
+        const winFn = typeof t.win[helperName] === 'function' ? t.win[helperName] : null;
+        const bundleFn = (t.win.__vsbrainPageHelpers && typeof t.win.__vsbrainPageHelpers[helperName] === 'function') ? t.win.__vsbrainPageHelpers[helperName] : null;
+        const fn = winFn || bundleFn;
+        if (fn) {
+          try {
+            const result = await fn.apply(t.win, helperArgs);
+            return [{ result }];
+          } catch (e) {
+            return [{ result: { __vsbrainHelperError: e?.message || String(e), name: helperName } }];
+          }
+        }
+        return [{ result: { __vsbrainHelperMissing: true, name: helperName, hasBundle: !!t.win.__vsbrainPageHelpers, hasWinFn: false } }];
+      }
       const named = func?.name && typeof t.win[func.name] === 'function' ? t.win[func.name] : null;
       if (named) {
         const result = await named.apply(t.win, args);

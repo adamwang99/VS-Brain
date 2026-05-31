@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VS Brain",
-  "version": "0.8.57",
+  "version": "0.8.58",
   "description": "AI-to-AI critique relay, agreement loop, and final blueprint export.",
   "permissions": [
     "activeTab",
@@ -21,6 +21,23 @@
     "https://www.perplexity.ai/*",
     "https://grok.com/*",
     "http://127.0.0.1/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://chatgpt.com/*",
+        "https://chat.openai.com/*",
+        "https://gemini.google.com/*",
+        "https://claude.ai/*",
+        "https://chat.deepseek.com/*",
+        "https://www.perplexity.ai/*",
+        "https://grok.com/*",
+        "http://127.0.0.1/*"
+      ],
+      "js": ["page-helpers.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
   ],
   "action": {
     "default_title": "VS Brain",
