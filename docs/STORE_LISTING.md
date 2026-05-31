@@ -1,6 +1,6 @@
 # Chrome Web Store Listing — VS Brain (Free Tier)
 
-**Version:** v0.8.50 (canonical) / v0.8.50-demo (store package).
+**Version:** v0.8.56 (canonical) / v0.8.56-demo (store package — must be re-packed before submit).
 **Repo:** https://github.com/adamwang99/VS-Brain
 **Privacy policy:** https://adamwang99.github.io/VS-Brain/privacy.html
 **Support email:** TODO (Sếp cấp trước khi submit).
@@ -84,8 +84,12 @@ VS Brain is initiated, directed, and owned by Adam Wang. Source: https://github.
 - [x] Permission justifications above.
 - [ ] **Sếp confirm**: enable GitHub Pages on `main` branch with `/docs` folder as source.
 - [ ] **Sếp confirm**: support email used in the developer dashboard.
-- [ ] Screenshots 1280x800 (or 640x400): Start card with Intent + Output selectors visible, debate running with loop counter, final blueprint saved log line, side panel layout. Either Sếp captures or Phương captures from a live session.
+- [x] Screenshots 1280x800 captured (raw at `docs/store-assets/screenshots-raw/`, store-spec at `docs/store-assets/screenshots-1280x800/`):
+  - `01-loop-100-of-100-finalize.png` — side panel + ChatGPT showing 100/100 rds debate completed, forced-finalize about to fire.
+  - `02-termination-envelope-and-final-brief.png` — final brief produced + `vsbrain-termination` envelope visible (`status: ready_to_finalize`, `should_continue: false`, `critical_remaining: false`).
+  - Source images: user-supplied browser captures 2026-05-31. Original 1280x882 → top-cropped to 1280x800 (lost the ChatGPT footer bar only).
+  - **Re-shoot needed before submit:** these were taken on v0.8.55 right before the v0.8.56 finalize-recover-existing-envelope fix. The visual state is fine, but the demo zip uploaded to the store must be built from v0.8.56 (or later), not the older v0.8.50-demo zip listed below. Otherwise a reviewer who follows the flow shown in screenshot 2 would hit the Save-loop bug.
 - [ ] Promo tile 440x280 (small) — optional but recommended.
-- [ ] Pack `exports/demo/vs-brain-0.8.50-demo.zip` (already produced by `npm run build:demo`) → ready for upload.
+- [ ] **Re-pack demo zip from v0.8.56** with `npm run build:demo` (replaces `exports/demo/vs-brain-0.8.55-demo.zip`) — **required before upload**.
 
 When all 5 boxes are checked, the build can be uploaded via the Chrome Web Store developer dashboard. Initial review typically takes 1–3 business days.
