@@ -264,9 +264,9 @@ pre {
   background: transparent;
   box-shadow: none;
   border: 1px solid transparent;
-  overflow: hidden;
-  text-overflow: ellipsis;
   white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
 }
 .glass-select-item:hover,
 .glass-select-item.active {
