@@ -2,8 +2,8 @@
 
 **Version:** v0.8.60 (canonical) / v0.8.60-demo (store package — must be re-packed before submit).
 **Repo:** https://github.com/adamwang99/VS-Brain
-**Privacy policy:** https://adamwang99.github.io/VS-Brain/privacy.html
-**Support email:** TODO (Sếp cấp trước khi submit).
+**Support email:** adamwang19001001@gmail.com.
+**Privacy policy:** https://adamwang99.github.io/VS-Brain/privacy.html (live, HTTP 200 verified).
 **Category:** Productivity.
 
 ---
@@ -82,8 +82,8 @@ VS Brain is initiated, directed, and owned by Adam Wang. Source: https://github.
 - [x] Single-purpose statement above.
 - [x] Short + long description above.
 - [x] Permission justifications above.
-- [ ] **Sếp confirm**: enable GitHub Pages on `main` branch with `/docs` folder as source.
-- [ ] **Sếp confirm**: support email used in the developer dashboard.
+- [x] **Sếp confirm**: GitHub Pages on `main` `/docs` enabled — privacy policy live at https://adamwang99.github.io/VS-Brain/privacy.html (HTTP 200, verified 2026-05-31).
+- [x] **Sếp confirm**: support email = adamwang19001001@gmail.com (paste into developer dashboard → Account → Contact email).
 - [x] Screenshots 1280x800 captured (raw at `docs/store-assets/screenshots-raw/`, store-spec at `docs/store-assets/screenshots-1280x800/`):
   - `01-running-structured-debate.png` — v0.8.58 side panel running a live debate, Gemini showing a structured critique (`Verdict: PASS`, `Confidence: 10`, `should_continue: false`).
   - `02-fail-closed-confirm-draft.png` — native Chrome confirm dialog refusing to finalize a one-sided agreement without explicit user OK.
@@ -91,6 +91,6 @@ VS Brain is initiated, directed, and owned by Adam Wang. Source: https://github.
   - Source images: user-supplied browser captures 2026-05-31 against v0.8.58. Original 1280x844 → top-cropped to 1280x800 (drops only the Chrome status footer).
   - The earlier `01-loop-100-of-100-finalize.png` / `02-termination-envelope-and-final-brief.png` set was captured against v0.8.55 (Save-loop state) and has been removed from the asset set; do not reintroduce it.
 - [ ] Promo tile 440x280 (small) — optional but recommended.
-- [ ] **Re-pack demo zip from v0.8.60** with `npm run build:demo` (replaces any older `exports/demo/vs-brain-0.8.5x-demo.zip`) — **required before upload**.
+- [x] Demo zip re-packed from v0.8.60: `exports/demo/vs-brain-0.8.60-demo.zip` (3,192,476 bytes). **This is the file to upload**, not any older `vs-brain-0.8.5x-demo.zip`.
 
 When all 5 boxes are checked, the build can be uploaded via the Chrome Web Store developer dashboard. Initial review typically takes 1–3 business days.
