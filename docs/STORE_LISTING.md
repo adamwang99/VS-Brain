@@ -1,6 +1,6 @@
 # Chrome Web Store Listing — VS Brain (Free Tier)
 
-**Version:** v0.8.60 (canonical) / v0.8.60-demo (store package — must be re-packed before submit).
+**Version:** v0.8.61 (canonical) / v0.8.61-demo (store package).
 **Repo:** https://github.com/adamwang99/VS-Brain
 **Support email:** adamwang19001001@gmail.com.
 **Privacy policy:** https://adamwang99.github.io/VS-Brain/privacy.html (live, HTTP 200 verified).
@@ -91,6 +91,6 @@ VS Brain is initiated, directed, and owned by Adam Wang. Source: https://github.
   - Source images: user-supplied browser captures 2026-05-31 against v0.8.58. Original 1280x844 → top-cropped to 1280x800 (drops only the Chrome status footer).
   - The earlier `01-loop-100-of-100-finalize.png` / `02-termination-envelope-and-final-brief.png` set was captured against v0.8.55 (Save-loop state) and has been removed from the asset set; do not reintroduce it.
 - [x] Promo tile 440x280: `docs/store-assets/promo-tile-440x280.png` (downsampled from a 1280x815 GPT render). Source kept at `docs/store-assets/promo-tile-raw-1280x815.jpg`. Tagline "Push every idea to its limit" with the full 6-provider line. No vendor logos drawn — provider names appear as text only.
-- [x] Demo zip re-packed from v0.8.60: `exports/demo/vs-brain-0.8.60-demo.zip` (3,192,476 bytes). **This is the file to upload**, not any older `vs-brain-0.8.5x-demo.zip`.
+- [x] Demo zip re-packed from v0.8.61: `exports/demo/vs-brain-0.8.61-demo.zip` (3,344,706 bytes). **This is the file to upload**, not any older `vs-brain-0.8.5x-demo.zip`.
 
 When all 5 boxes are checked, the build can be uploaded via the Chrome Web Store developer dashboard. Initial review typically takes 1–3 business days.

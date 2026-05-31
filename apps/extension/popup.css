@@ -69,6 +69,8 @@ main { padding: 10px;
 .hero-logo { width:46px; height:46px; flex:0 0 auto; }
 .modal-logo-wrap { display:grid; place-items:center; margin: 2px 0 10px; }
 .modal-logo { width:92px; height:92px; border-radius:26px; }
+.modal-banner-wrap { margin: 4px 0 12px; }
+.modal-banner { width: 100%; height: auto; display: block; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.32); }
 @keyframes logo-float {
   0%, 100% { transform: translateY(0) scale(1); }
   50% { transform: translateY(-2px) scale(1.025); }
