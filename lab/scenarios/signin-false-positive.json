@@ -1,0 +1,38 @@
+{
+  "name": "signin-false-positive",
+  "provider": "mock",
+  "title": "Mock Provider - Signin False Positive",
+  "responseDelayMs": 150,
+  "seedMessages": [
+    {
+      "role": "assistant",
+      "content": "Baseline loaded. Ready for critique loop."
+    }
+  ],
+  "turns": [
+    {
+      "onTurn": 0,
+      "response": "Round 1. Chủ đề: Dữ liệu và phân quyền. Người dùng phải đăng nhập trước khi xem dữ liệu nhạy cảm, và việc đăng ký miễn phí không được cấp quyền admin. Critical issues: gap alpha về RBAC. New point 1. Confidence: 7/10\nshould_continue: true"
+    },
+    {
+      "onTurn": 1,
+      "response": "Round 2. Phân quyền theo vai trò: luồng đăng nhập phải tách khỏi luồng đăng ký miễn phí, token phân quyền cấp sau xác thực. Critical issues: gap bravo về session. New point 2. Confidence: 7/10\nshould_continue: true"
+    },
+    {
+      "onTurn": 2,
+      "response": "Round 3. Khi đăng nhập hết hạn phải thu hồi quyền ngay; đăng ký miễn phí chỉ nhận scope đọc. Critical issues: gap charlie về revoke. New point 3. Confidence: 8/10\nshould_continue: true"
+    },
+    {
+      "onTurn": 3,
+      "response": "Verdict: PASS\nĐồng thuận: mô hình đăng nhập + phân quyền theo vai trò, đăng ký miễn phí chỉ đọc.\nCritical issues: none\nMissing pieces: none\nConfidence: 9/10\nshould_continue: false\nCHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN"
+    },
+    {
+      "onTurn": 4,
+      "response": "## 1. Kết luận cuối cùng\nBlueprint phân quyền: đăng nhập xác thực trước, cấp quyền theo vai trò sau.\n\n## 2. Hành động\n- Tách luồng đăng ký miễn phí (scope đọc) khỏi luồng admin.\n- Thu hồi quyền ngay khi phiên hết hạn.\n\nConfidence: 9/10\nshould_continue: false\nCHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN"
+    },
+    {
+      "onTurn": 5,
+      "response": "## 1. Kết luận cuối cùng\nBlueprint phân quyền (bản cuối).\n\n## 2. Hành động\n- Chốt RBAC, không relay thêm.\n\nConfidence: 9/10\nshould_continue: false\nCHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN"
+    }
+  ]
+}

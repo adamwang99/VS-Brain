@@ -1,5 +1,54 @@
 # VS Brain Changelog
 
+## v0.8.67-judge-advisory-no-faildownload
+
+Real owner live run (v0.8.66, ChatGPT+Gemini, debate "Dữ liệu và phân quyền"): the loop ran correctly to step 16, both tabs converged (`cả 2 tab đã chốt`, `finalize dual-consensus confirmed`, 6620-char blueprint extracted) — but the app then pasted a "VS Brain Judge Gate" prompt into the provider tab (the "câu lệnh ngớ ngẩn" the owner saw), Gemini answered `verdict: veto` in a plain code block (not the required ` ```vsbrain-judge ` fence), `parseVerdict` returned `ERR_JUDGE_ENVELOPE_MISSING`, finalize went `fail-closed`, and NO file downloaded despite a valid consensus.
+
+This is the same recurrence class flagged earlier: too many brittle gates feed finalize, and the LLM-judge re-prompts the provider through the DOM and parses a fragile envelope. Root fixes:
+
+- **Judge gate is now advisory, not blocking.** Finalize no longer pastes a judge prompt into the provider tab, no longer waits for a judge response, and no longer fail-closes on a missing/malformed judge envelope. The deterministic gate (termination envelope `should_continue=false` + `critical_remaining=false`, finalize nonce lifecycle, and genuine dual-tab `cả 2 tab đã chốt`) remains the real safety contract; the judge verdict is recorded as advisory metadata (`JUDGE_ADVISORY_NO_VETO` / `JUDGE_ADVISORY_DRAFT`) in the bundle. A real dual-consensus now downloads the bundle every time.
+- **Closed the test-vs-live hole that hid this.** The lab harness `lab/popup-lab.html` only loaded `chrome-shim.js` + `popup.js`, so `window.__vsbrainJudgeGate` (and recovery/lease/ipc runtimes) were never present — the judge branch was skipped entirely and every prior lab PASS through finalize was a false pass. The lab now loads `action-journal.js`, `ipc-runtime.js`, `lease-runtime.js`, `runtime-recovery.js`, and `judge-gate.js`, so the lab exercises the same finalize path that runs live.
+
+Verify: full lab suite 11/11 PASS with the judge runtime now loaded; live log shows `finalize judge advisory: ... KHONG fail-closed` immediately followed by `final blueprint bundle saved` + `bundle download started`. `verify:all` PASS_ALL. Owner must reload the unpacked extension (new marker `fix-20260601d`). Mock-lab PASS is still necessary-but-not-sufficient; the real gate remains live ChatGPT+Gemini smoke.
+
+### Deterministic-only finalize cleanup (same v0.8.67 train)
+
+Owner then approved the deeper cleanup: reduce finalize to one deterministic gate instead of a chain of brittle blockers. The main finalize path is now governed by exactly one export decision:
+
+- **Confirmed mode** requires genuine dual-tab consensus (`stop_tabs >= 2`).
+- **Draft-forced mode** is allowed only after an explicit forced-stop / explicit operator Save path already selected `draft_forced`.
+
+Everything else is downgraded from blocker -> advisory metadata:
+- synthesis send/accept/wait/extract failures now fall back to the already-converged content that existed before the Save click (`finalizePath=fallback_existing_content`) instead of losing the file,
+- missing/malformed termination envelope is advisory downgrade, not fail-closed,
+- finalize nonce consume is advisory downgrade, not fail-closed,
+- judge remains advisory only.
+
+New test hook path (`window.__vsbrainTestHooks`) exists only for the lab harness so regression can force a finalize wait timeout and prove the file still downloads from converged content. Regression expanded to 12/12 PASS with new scenario `finalize-deterministic-fallback PASS`, showing:
+- `finalize deterministic fallback: timeout ... KHÔNG mất file`
+- followed by `final blueprint bundle saved ... gate=OK_DUAL_CONSENSUS path=fallback_existing_content`.
+
+## v0.8.66-converge-stall-autosave-fix
+
+Real owner bug report (2 screenshots + debug log, marker `fix-20260601`): the auto-loop stalled at round 9 and the app auto-downloaded a final bundle even though the two tabs had NOT actually converged. Root-caused three independent defects in `apps/extension/popup.js` and fixed each:
+
+1. **Stall at round 9 — false-positive ChatGPT sign-in gate.** `detectProviderState` flagged the ChatGPT tab as `surface=signin` purely because the debate topic ("Dữ liệu và phân quyền") contained the words `đăng nhập`/`đăng ký` in the body text, while the tab actually held a real 4399-char answer with `should_continue:true`. `executeRelay` then threw `CHATGPT_SIGNIN_REQUIRED` and killed the loop. Fix: only classify `surface=signin` when the tab has **no** usable latest answer (`&&!d`), matching the existing guard already used for the Gemini `home` surface.
+2. **Premature download before dual-converge.** `stopLoop`'s auto-finalize trigger fired for `quality_guard_*`, `đạt số bước tối đa`, and `một tab đã chốt`, so a guard/limit stop (not a real agreement) still auto-saved and downloaded the `.json.gz` bundle. Fix: auto-finalize/auto-download now only fires on the genuine `cả 2 tab đã chốt` consensus path; guard/limit stops just halt and leave the Save button for the operator.
+3. **Converged tab killed by repeat-hash guard.** A tab that had already written the stop phrase (`should_continue:false`, e.g. `CHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN`) was counted as `repeated_hash` and could soft-stop the loop before the peer tab converged. Fix: `updateQualityGuard` now detects terminal agreement (last line == stop phrase AND not `should_continue`), resets the stall counters, and returns `tab_terminal_agreement_wait_peer` so the loop waits for the peer instead of soft-stopping.
+
+Verify: `node --check popup.js` OK; `node scripts/verify-full-export-wiring.mjs` PASS_ALL. Build markers bumped in `manifest.json` (0.8.66), `popup.html` badge, and `VS_BRAIN_RUNTIME_VERSION`. Owner must reload the unpacked extension to pick up the new build (debug log showed the old `fix-20260601` marker still running).
+
+### Root-cause hardening (stop the recurrence class, not just this instance)
+
+The owner asked why the same symptom keeps coming back across v0.8.44–0.8.66. Four structural causes were addressed so a stop/converge/finalize bug cannot silently regress again:
+
+- **Realm-split drift.** `detectProviderState` (and the signin guard) lived in BOTH `popup.js` (extension realm) and `page-helpers.js` (the copy actually injected into live tabs via `__resolveHelper`). The first signin fix only touched `popup.js`, so live tabs would have kept the bug. The guard is now applied in both files, and `verify-version-consistency.mjs` asserts both copies carry it.
+- **Budget/maxSteps drift.** Convergence + round budgets were hardcoded (`8/12`) while the running build raised them to `20/40` for 100-round debates, so the force-stop safety gate could never fire and the lab test for it was dead. Budgets are now derived from `loopState.maxSteps` (`critBudget=~0.6×`, `roundBudget=~0.85×`, clamped below maxSteps), so a 100-round debate still force-stops before the cap and the lab can pin the thresholds via `maxSteps`.
+- **Auto-download contract.** Hardened the v0.8.66 fix into a single rule: auto-finalize/auto-download fires ONLY on a genuine `cả 2 tab đã chốt` dual-consensus. Every forced stop (critical budget, round budget, max-steps) now halts and arms the Save button; the operator's Save click produces a `draft_forced` bundle. Regression scenarios updated to assert "no auto-download on forced stop".
+- **Build drift.** The hand-copied `exports/full/` artifact (which could lag source) is replaced by `scripts/build-full.mjs`, a verbatim generator that fails if the copy is not byte-identical to `apps/extension/`. New npm gates: `build:full`, `verify:version`, `verify:full`, `verify:all`.
+
+New regression scenario `signin-false-positive` reproduces the exact owner bug (a real answer whose body contains đăng nhập / đăng ký miễn phí with should_continue:true) and asserts the loop never false-stops on signin and reaches a real dual-consensus save. Full lab suite is 11/11 PASS; `verify:all` PASS_ALL. Mock-lab PASS remains necessary-but-not-sufficient — the real release gate is the live ChatGPT+Gemini smoke (`test:vsbrain:live-extension`, `test:vsbrain:live-full-export`), since every prior recurrence surfaced on live DOM, not mocks.
+
 ## v0.8.59-intent-and-output-mode-hints
 
 - User feedback after the v0.8.58 happy-path screenshot: the side panel had a `Mục đích` (Intent) dropdown and a `Kết quả` (Output) dropdown, but the visible hint text was only one short line and only described Blueprint, never Decision Ledger or the four intents. Users were guessing.

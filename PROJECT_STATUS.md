@@ -1,7 +1,32 @@
 # VS Brain Project Status
 
-Current version: `v0.8.59-intent-and-output-mode-hints`
-Latest local state: `working tree includes 2-provider hardening, fail-closed finalize gate, safe-release default OFF, auto-handoff estimator hardening, runtime surface classification, Gemini home auto-bootstrap, fail-fast permission/source gates, and live-loop UX hardening; not committed yet`
+Current version: `v0.8.67-judge-advisory-no-faildownload`
+Latest local state: `working tree includes 2-provider hardening, safe-release default OFF, auto-handoff estimator hardening, runtime surface classification, Gemini home auto-bootstrap, fail-fast permission/source gates, live-loop UX hardening, plus the v0.8.67 root-cause cleanup bundle: signin false-positive guard in BOTH realms, maxSteps-anchored convergence/round budgets, auto-download only on real dual-consensus, judge gate advisory only (no fail-closed/no DOM re-prompt), auto-generated full export, version-consistency gate, and deterministic-only finalize with fallback-to-converged-content if synthesis path flakes; not committed yet`
+
+## Build & verify gates
+
+Source-of-truth is `apps/extension/`. The full export under `exports/full/` is generated, never hand-edited (`exports/**` is gitignored). Before claiming a build done, run:
+
+- `npm run verify:version` — manifest / popup.html badge / `VS_BRAIN_RUNTIME_VERSION` must agree, and the signin guard must exist in both `popup.js` and `page-helpers.js` (the realm split that caused fixes to land in one file but run from the other).
+- `npm run build:full` — regenerate the verbatim full export from source (fails if the copy is not byte-identical).
+- `npm run verify:full` — export wiring (session-folder download paths) intact.
+- `npm run verify:all` — version + wiring in one shot.
+- `npm run test:vsbrain:regression` — 12-scenario lab suite on mock providers (must be all PASS).
+- Live smoke (real ChatGPT + Gemini, NOT covered by the mock lab; this is where every prior recurrence surfaced): `npm run test:vsbrain:live-extension` and `npm run test:vsbrain:live-full-export`. Treat these as the real release gate; mock-only PASS is necessary but not sufficient.
+
+## Finalize contract (current)
+
+Finalize now has one deterministic export gate only:
+- `confirmed` => requires true dual-tab consensus (`cả 2 tab đã chốt`, `stop_tabs >= 2`)
+- `draft_forced` => only after explicit forced-stop / explicit operator Save path
+
+Non-deterministic/model-provided signals are advisory only and must never make the user lose a file:
+- judge verdict
+- missing/malformed termination envelope
+- finalize nonce consume mismatch
+- finalize synthesis/wait flake after converged content already exists
+
+If synthesis path flakes after convergence, Save falls back to the already-converged content and still downloads the bundle (`finalizePath=fallback_existing_content`).
 
 ## Product purpose
 

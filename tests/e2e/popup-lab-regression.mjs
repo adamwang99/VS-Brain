@@ -97,6 +97,60 @@ async function runDualConsensus(page) {
   return `dual-consensus/save PASS (${_finalizeOutcome})`;
 }
 
+async function runSigninFalsePositive(page) {
+  // Regression for the v0.8.66 real-owner bug: the debate topic ("Dữ liệu và phân quyền")
+  // contains the words đăng nhập / đăng ký miễn phí inside a REAL assistant answer with
+  // should_continue:true. Old detectProviderState classified the tab as surface=signin from
+  // body text alone, executeRelay threw CHATGPT_SIGNIN_REQUIRED, and the loop died mid-debate.
+  // Fixed by gating signin on the absence of a usable latest answer (&&!d). The loop must keep
+  // running past the keyword rounds and reach a real dual-consensus finalize, never a
+  // CHATGPT_SIGNIN_REQUIRED / needs_attention stop.
+  await bootScenario(page, '/lab/scenarios/signin-false-positive.json', '/lab/scenarios/signin-false-positive.json');
+  await page.evaluate(() => {
+    const auto = document.querySelector('#autoSendToggle');
+    if (auto) auto.checked = true;
+    document.querySelector('#startLoopBtn')?.click();
+  });
+  await waitForLog(page, 'auto-loop started');
+  // must survive the keyword-laden rounds without a false signin stop
+  await waitForLog(page, 'auto-loop step 3/', 60000);
+  const mid = await page.$eval('#log', el => el.textContent || '');
+  if (/SIGNIN_REQUIRED|surface=signin|needs_attention:/i.test(mid))
+    throw new Error('signin false-positive regressed: ' + mid.split('\n').slice(0, 4).join(' | '));
+  // and reach a genuine dual-tab consensus finalize
+  await waitForLog(page, 'cả 2 tab đã chốt', 90000);
+  await waitForLog(page, 'final blueprint bundle saved', 90000);
+  const state = await dumpState(page, 'signin-false-positive-final');
+  if (/SIGNIN_REQUIRED|surface=signin/i.test(state.log)) throw new Error('signin false-positive present in final log');
+  return 'signin-false-positive PASS';
+}
+
+async function runFinalizeDeterministicFallback(page) {
+  // New deterministic-only finalize contract: even if the synthesis/wait path fails AFTER we
+  // already have valid converged content, Save must still produce a bundle from the existing
+  // converged answer instead of fail-closing / losing the file.
+  await bootScenario(page, '/lab/scenarios/dual-consensus.json', '/lab/scenarios/dual-consensus.json');
+  await page.evaluate(() => {
+    const auto = document.querySelector('#autoSendToggle');
+    if (auto) auto.checked = true;
+    document.querySelector('#startLoopBtn')?.click();
+  });
+  await waitForLog(page, 'cả 2 tab đã chốt', 90000);
+  // Force the finalize wait path to fail (simulate live DOM flake / provider no-op after send).
+  await page.evaluate(() => {
+    window.__vsbrainTestHooks = {
+      finalizeWaitResult: { changed:false, stop:false, reason:'forced_test_timeout', contentHash:null }
+    };
+  });
+  await page.evaluate(() => document.querySelector('#finalizeBtn')?.click());
+  await waitForLog(page, 'finalize deterministic fallback:', 30000);
+  await waitForLog(page, 'finalize fallback chars=', 30000);
+  await waitForLog(page, 'final blueprint bundle saved', 60000);
+  const state = await dumpState(page, 'finalize-deterministic-fallback-final');
+  if (!/path=fallback_existing_content/.test(state.log)) throw new Error('bundle did not record fallback path');
+  return 'finalize-deterministic-fallback PASS';
+}
+
 async function runContinueVsStop(page) {
   await bootScenario(page, '/lab/scenarios/continue-vs-stop.json', '/lab/scenarios/dual-consensus.json');
   await page.evaluate(() => {
@@ -145,7 +199,7 @@ async function runContinueContradictionVeto(page) {
   await waitForLog(page, 'auto-loop step 2/', 30000);
   await sleep(3000);
   const log = await page.$eval('#log', el => el.textContent || '');
-  if (log.includes('quality hard-stop enforced')) throw new Error('should_continue=true still triggered hard-stop');
+  if (log.includes('quality stop enforced')) throw new Error('should_continue=true still triggered hard-stop');
   if (!log.includes('veto=on')) throw new Error('missing veto=on evidence in quality log');
   return 'continue-contradiction-veto PASS';
 }
@@ -165,7 +219,7 @@ async function runDuplicateSourceStall(page) {
   await sleep(3000);
   const state = await dumpState(page, 'duplicate-source-stall-final');
   // Verify: no hard-stop from quality guard while should_continue=true
-  if (state.log.includes('quality hard-stop enforced')) throw new Error('quality hard-stop fired when should_continue=true');
+  if (state.log.includes('quality stop enforced')) throw new Error('quality hard-stop fired when should_continue=true');
   // Verify: veto=on present meaning should_continue=true was respected
   if (!state.log.includes('veto=on')) throw new Error('veto=on not found — should_continue=true not respected');
   return 'duplicate-source-stall PASS';
@@ -186,7 +240,7 @@ async function runCriticalButProgressing(page) {
   await sleep(2000);
   const state = await dumpState(page, 'critical-but-progressing-final');
   if (state.log.includes('quality_guard_critical_blocker')) throw new Error('hard-stopped on critical blocker while content kept progressing');
-  if (state.log.includes('quality hard-stop enforced')) throw new Error('quality hard-stop fired while debate was progressing');
+  if (state.log.includes('quality stop enforced')) throw new Error('quality hard-stop fired while debate was progressing');
   return 'critical-but-progressing PASS';
 }
 
@@ -200,6 +254,7 @@ async function runNoConvergenceBudget(page) {
   await page.evaluate(() => {
     const auto = document.querySelector('#autoSendToggle');
     if (auto) auto.checked = true;
+    const ms = document.querySelector('#loopMaxSteps'); if (ms) { ms.value = '14'; ms.dispatchEvent(new Event('input', { bubbles: true })); }
     document.querySelector('#startLoopBtn')?.click();
   });
   await waitForLog(page, 'auto-loop started');
@@ -210,8 +265,12 @@ async function runNoConvergenceBudget(page) {
   // eventually the convergence budget must force a stop
   await waitForLog(page, 'quality_guard_no_convergence', 90000);
   const state = await dumpState(page, 'no-convergence-budget-final');
-  if (!state.log.includes('quality hard-stop enforced')) throw new Error('budget stop did not enforce hard-stop');
-  // forced stop must route into finalize (draft_forced) without window.confirm
+  if (!state.log.includes('quality stop enforced')) throw new Error('budget stop did not enforce hard-stop');
+  // NEW CONTRACT (v0.8.66): a forced (non-consensus) stop must NOT auto-download a bundle.
+  // The owner bug was exactly this premature auto-save. Loop halts and arms Save instead.
+  if (state.log.includes('final blueprint bundle saved')) throw new Error('forced stop auto-downloaded a bundle (must wait for operator Save)');
+  // operator presses Save -> forced draft finalize without a blocking confirm, then bundle saved
+  await page.evaluate(() => document.querySelector('#finalizeBtn')?.click());
   await waitForLog(page, 'draft_forced finalize (forced stop', 30000);
   // closing the live-exposed gap: draft started != blueprint produced. Assert bundle actually saved.
   await waitForLog(page, 'final blueprint bundle saved', 60000);
@@ -227,6 +286,7 @@ async function runPoliteNoSignal(page) {
   await page.evaluate(() => {
     const auto = document.querySelector('#autoSendToggle');
     if (auto) auto.checked = true;
+    const ms = document.querySelector('#loopMaxSteps'); if (ms) { ms.value = '14'; ms.dispatchEvent(new Event('input', { bubbles: true })); }
     document.querySelector('#startLoopBtn')?.click();
   });
   await waitForLog(page, 'auto-loop started');
@@ -238,7 +298,10 @@ async function runPoliteNoSignal(page) {
   await waitForLog(page, 'quality_guard_round_budget', 120000);
   const state = await dumpState(page, 'polite-no-signal-final');
   if (state.log.includes('quality_guard_no_convergence')) throw new Error('wrong reason: critical budget fired when critical=0');
-  if (!state.log.includes('quality hard-stop enforced')) throw new Error('round budget stop did not enforce hard-stop');
+  if (!state.log.includes('quality stop enforced')) throw new Error('round budget stop did not enforce hard-stop');
+  // NEW CONTRACT (v0.8.66): forced round-budget stop must NOT auto-download; it arms Save.
+  if (state.log.includes('final blueprint bundle saved')) throw new Error('forced round-budget stop auto-downloaded a bundle (must wait for operator Save)');
+  await page.evaluate(() => document.querySelector('#finalizeBtn')?.click());
   await waitForLog(page, 'draft_forced finalize (forced stop', 30000);
   await waitForLog(page, 'final blueprint bundle saved', 60000);
   return 'polite-no-signal PASS';
@@ -261,6 +324,7 @@ async function runLedgerModeEvidence(page) {
   await page.evaluate((tok) => {
     const ev = document.querySelector('#evidencePayload');
     if (ev) { ev.value = `segment alpha: metric A 0.22, N=22. ${tok}`; ev.dispatchEvent(new Event('input', { bubbles: true })); }
+    const ms = document.querySelector('#loopMaxSteps'); if (ms) { ms.value = '14'; ms.dispatchEvent(new Event('input', { bubbles: true })); }
     document.querySelector('#startLoopBtn')?.click();
   }, TOKEN);
   await waitForLog(page, 'auto-loop step 2/', 40000);
@@ -275,7 +339,10 @@ async function runLedgerModeEvidence(page) {
     });
   }, TOKEN);
   if (!injected) throw new Error('evidence payload was not injected into relay turns');
-  // (c) finalize uses the Decision Ledger schema (any terminal stop routes to finalize)
+  // (c) under the v0.8.66 contract a forced budget stop arms Save; operator click produces
+  // the Decision Ledger bundle. (no stop phrase / no critical -> round budget forces the stop)
+  await waitForLog(page, 'quality stop enforced', 120000);
+  await page.evaluate(() => document.querySelector('#finalizeBtn')?.click());
   await waitForLog(page, 'final blueprint bundle saved', 120000);
   const ledgerFinal = await page.evaluate(() => {
     const frames = Array.from(document.querySelectorAll('#labFrames iframe'));
@@ -299,9 +366,13 @@ async function runLedgerValidatorSparse(page) {
     const m = document.querySelector('#outputMode'); if (m) { m.value = 'ledger'; m.dispatchEvent(new Event('change', { bubbles: true })); }
     const ev = document.querySelector('#evidencePayload'); if (ev) { ev.value = 'segment alpha: metric A 0.22, N=22. segment beta: metric A 5.33.'; ev.dispatchEvent(new Event('input', { bubbles: true })); }
     const auto = document.querySelector('#autoSendToggle'); if (auto) auto.checked = true;
+    const ms = document.querySelector('#loopMaxSteps'); if (ms) { ms.value = '14'; ms.dispatchEvent(new Event('input', { bubbles: true })); }
     document.querySelector('#startLoopBtn')?.click();
   });
   await waitForLog(page, 'auto-loop started');
+  // v0.8.66 contract: no stop phrase -> round budget forces a stop that arms Save; operator click saves.
+  await waitForLog(page, 'quality stop enforced', 120000);
+  await page.evaluate(() => document.querySelector('#finalizeBtn')?.click());
   await waitForLog(page, 'final blueprint bundle saved', 120000);
   await waitForLog(page, 'ledger validator: quality=', 30000);
   const log = await page.$eval('#log', el => el.textContent || '');
@@ -324,6 +395,8 @@ try {
   });
   const results = [];
   results.push(await runDualConsensus(page));
+  results.push(await runFinalizeDeterministicFallback(page));
+  results.push(await runSigninFalsePositive(page));
   results.push(await runContinueVsStop(page));
   results.push(await runStaleStopReason(page));
   results.push(await runContinueContradictionVeto(page));

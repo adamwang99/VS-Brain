@@ -17,7 +17,11 @@
     "test:vsbrain:auto-handoff": "xvfb-run -a node tests/e2e/auto-handoff-lab-verify.mjs",
     "test:vsbrain:autofix": "node tests/e2e/vsbrain-autofix-runner.mjs",
     "build": "echo 'TODO: build'",
-    "build:demo": "node scripts/build-demo.mjs"
+    "build:demo": "node scripts/build-demo.mjs",
+    "build:full": "node scripts/build-full.mjs",
+    "verify:version": "node scripts/verify-version-consistency.mjs",
+    "verify:full": "node scripts/verify-full-export-wiring.mjs",
+    "verify:all": "node scripts/verify-version-consistency.mjs && node scripts/verify-full-export-wiring.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.54.2",
