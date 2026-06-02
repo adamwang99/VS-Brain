@@ -168,7 +168,7 @@ button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
   font-size: 11px;
 }
 .advanced { margin-top: 8px; }
-.advanced summary, .logbox summary { cursor: pointer; color: #f5f8ff; font-weight: 650; }
+.advanced summary, .logbox summary, .settings-panel summary { cursor: pointer; color: #f5f8ff; font-weight: 650; }
 .mini-meta { display: flex; gap: 8px; color: var(--muted); font-size: 11px; margin-bottom: 6px; }
 .archive-note { margin-top: 8px; font-size: 11px; color: rgba(238,242,255,.78); line-height: 1.45; }
 .archive-note.subtle { color: rgba(238,242,255,.60); }

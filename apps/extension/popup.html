@@ -102,6 +102,13 @@
           <label><span data-i18n="promptTemplateLabel">Prompt phản biện</span><textarea id="promptTemplate" rows="8" placeholder="Prompt mặc định sẽ hiện mờ ở đây. Nhập nội dung để override..." data-placeholder-vi="Prompt mặc định sẽ hiện mờ ở đây. Nhập nội dung để override..." data-placeholder-en="Default prompt appears here as a faint guide. Type to override..."></textarea></label>
           <div class="toolbar"><button id="resetPromptBtn" class="chip" type="button" data-i18n="resetPrompt">Reset prompt mặc định</button></div>
         </details>
+
+        <details class="settings-panel">
+          <summary data-i18n="settings">Cài đặt</summary>
+          <label><span data-i18n="handoffThresholdLabel">Ngưỡng handoff (%)</span><input id="handoffThreshold" type="number" min="10" max="100" value="70" /></label>
+          <label><span data-i18n="maxStepsDefaultLabel">Steps mặc định</span><input id="maxStepsDefault" type="number" min="1" max="1000" value="100" /></label>
+          <div class="toolbar"><button id="resetSettingsBtn" class="chip" type="button" data-i18n="resetSettings">Reset cài đặt</button></div>
+        </details>
       </section>
     </details>
 
@@ -138,6 +145,7 @@
   <script src="core.js"></script>
   <script src="i18n.js"></script>
   <script src="storage.js"></script>
+  <script src="settings.js"></script>
   <script src="providers.js"></script>
   <script src="tabs.js"></script>
   <script src="relay.js"></script>
