@@ -20,6 +20,7 @@
     "https://chat.deepseek.com/*",
     "https://www.perplexity.ai/*",
     "https://grok.com/*",
+    "https://x.com/*",
     "http://127.0.0.1/*"
   ],
   "content_scripts": [
