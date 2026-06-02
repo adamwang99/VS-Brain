@@ -463,3 +463,14 @@ textarea::placeholder { color: rgba(238,242,255,.52); opacity: 1; font-family: R
 .mode-hint{font-size:11px;opacity:.7;flex:1 1 100%;line-height:1.4;margin-top:2px}
 #evidencePayload{width:100%;margin:4px 0 2px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px}
 #evidencePayload.hidden{display:none}
+
+/* provider selection strip */
+.provider-strip{display:flex;align-items:center;gap:4px;margin:6px 0 2px;flex-wrap:wrap;padding:4px 0}
+.provider-strip-label{font-size:11px;opacity:.65;margin-right:4px;min-width:22px}
+.provider-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:12px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);transition:all .15s;user-select:none}
+.provider-chip:hover{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.1)}
+.provider-chip.active{border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.14)}
+.provider-chip.inactive{opacity:.45}
+.provider-chip.inactive:hover{opacity:.7}
+.provider-chip img{width:14px;height:14px;border-radius:2px;object-fit:contain}
+.provider-chip .certified-dot{width:4px;height:4px;border-radius:50%;background:#4ade80;display:inline-block;margin-left:2px}

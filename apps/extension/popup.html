@@ -51,6 +51,9 @@
         </label>
         <span id="modeHint" class="mode-hint" data-i18n="modeHintBlueprint">Dùng khi muốn hai AI tranh luận 1 ý tưởng/kế hoạch và tổng hợp ra blueprint hành động. Không cần dữ liệu thật.</span>
       </div>
+      <div class="provider-strip" id="providerStrip">
+        <span class="provider-strip-label">AI:</span>
+      </div>
       <textarea id="evidencePayload" class="hidden" rows="4" placeholder="Dán dữ liệu/bằng chứng thật (số liệu, log, spec, tài liệu) để 2 AI neo phản biện vào đây. Bắt buộc cho Decision Ledger." data-placeholder-vi="Dán dữ liệu/bằng chứng thật (số liệu, log, spec, tài liệu) để 2 AI neo phản biện vào đây. Bắt buộc cho Decision Ledger." data-placeholder-en="Paste real data/evidence (metrics, logs, spec, docs) so both AIs anchor critique to it. Required for Decision Ledger."></textarea>
       <div class="action-panel glass-subtle">
         <div class="start-actions compact-actions">
@@ -144,6 +147,7 @@
   <script src="judge-gate.js"></script>
   <script src="core.js"></script>
   <script src="i18n.js"></script>
+  <script src="provider-registry.js"></script>
   <script src="storage.js"></script>
   <script src="settings.js"></script>
   <script src="providers.js"></script>
