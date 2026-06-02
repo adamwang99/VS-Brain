@@ -474,3 +474,26 @@ textarea::placeholder { color: rgba(238,242,255,.52); opacity: 1; font-family: R
 .provider-chip.inactive:hover{opacity:.7}
 .provider-chip img{width:14px;height:14px;border-radius:2px;object-fit:contain}
 .provider-chip .certified-dot{width:4px;height:4px;border-radius:50%;background:#4ade80;display:inline-block;margin-left:2px}
+
+/* ── Tier badge ────────────────────────── */
+.tier-badge{display:inline-block;font-size:9px;font-weight:600;padding:1px 6px;border-radius:8px;margin-left:6px;vertical-align:middle;letter-spacing:.3px}
+.tier-free{background:rgba(255,255,255,.1);color:rgba(255,255,255,.65)}
+.tier-pro{background:linear-gradient(135deg,#6366f1,#a855f7);color:#fff}
+
+/* ── Round counter ─────────────────────── */
+.round-counter{font-size:10px;opacity:.6;margin-left:auto;padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.05);white-space:nowrap}
+.round-counter.exceeded{color:#f87171;opacity:1;background:rgba(248,113,113,.1)}
+
+/* ── Upgrade CTA banner ────────────────── */
+.upgrade-cta{border:1px solid rgba(250,204,21,.25);background:linear-gradient(135deg,rgba(250,204,21,.06),rgba(168,85,247,.08))}
+.cta-content{text-align:center;padding:8px 12px}
+.cta-content h3{font-size:14px;margin:4px 0}
+.cta-content p{font-size:11px;opacity:.75;margin:4px 0 8px}
+.cta-pricing{display:flex;justify-content:center;gap:16px;margin:6px 0}
+.cta-price{font-size:13px}
+.cta-price s{opacity:.5;font-size:11px;margin-right:4px}
+.cta-price strong{color:#a78bfa;font-size:16px}
+.cta-price small{font-size:10px;opacity:.6}
+.upgrade-cta .primary{margin:6px 4px;padding:4px 16px;font-size:12px}
+.upgrade-cta .secondary{margin:6px 4px;padding:4px 12px;font-size:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:6px;cursor:pointer;color:inherit}
+.upgrade-cta .secondary:hover{background:rgba(255,255,255,.12)}

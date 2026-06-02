@@ -12,7 +12,7 @@
       <div class="brand-lockup">
         <img class="brand-logo hero-logo" src="icons/vs-brain-logo.png" alt="VS Brain logo" />
         <div>
-          <h1>VS Brain <span class="version">v0.8.68-modular-gate-matrix</span></h1>
+          <h1>VS Brain <span class="version">v0.8.68-modular-gate-matrix</span><span id="tierBadge" class="tier-badge tier-free" data-i18n="tierFree">Free</span></h1>
           <p class="subtitle" data-i18n="subtitle">AI debate relay · archive · checkpoint</p>
         </div>
       </div>
@@ -27,6 +27,7 @@
           <span class="runtime-pill">Latest</span>
           <span class="runtime-pill" id="sendStatePill">Send ON</span>
         </div>
+        <span id="roundCounter" class="round-counter" title="Vòng còn lại / tổng"></span>
       </div>
       <h2 data-i18n="oneClickTitle">Tự động phản biện giữa các AI</h2>
       <p class="hintline" data-i18n="oneClickHint">Mở 2 tab AI, bấm bắt đầu. VS Brain tự chọn nguồn/đích, chỉ dán an toàn mặc định; chỉ tự gửi khi Sếp bật Auto-send.</p>
@@ -67,6 +68,19 @@
         <div class="loop-counter volume-card"><div class="loop-topline"><span id="loopCounter" title="Double-click để sửa số vòng">0/100</span><span data-i18n="loopCounterLabel">vòng</span><span id="elapsedTimer" class="timer">00:00</span></div><div class="round-stepper simple volume-inline"><input id="stepsSlider" type="range" min="1" max="1000" step="10" value="100" class="slider" /><span id="sliderValue" class="slider-val">100</span></div></div>
       </div>
       <div class="mini-meta compact-meta"><span data-i18n="autoModeNote">Mặc định: Auto ON · Latest · auto-save vào Downloads/vs-brain/<session></span></div>
+    </section>
+
+    <section id="upgradeCTA" class="glass upgrade-cta hidden">
+      <div class="cta-content">
+        <h3 data-i18n="ctaTitle">Hết vòng Free</h3>
+        <p data-i18n="ctaBody">Bạn đã dùng hết 50 vòng phản biện miễn phí phiên này. Nâng cấp Pro để tiếp tục không giới hạn.</p>
+        <div class="cta-pricing">
+          <span class="cta-price"><s>$11</s> <strong>$5</strong><small>/tháng</small></span>
+          <span class="cta-price"><s>$69</s> <strong>$29</strong><small>/năm</small></span>
+        </div>
+        <button id="upgradeBtn" class="primary" data-i18n="ctaUpgrade">Nâng cấp Pro</button>
+        <button id="draftSaveBtn" class="secondary" data-i18n="ctaDraft">Lưu Draft</button>
+      </div>
     </section>
 
     <details class="glass manual-panel">
@@ -150,6 +164,8 @@
   <script src="provider-registry.js"></script>
   <script src="storage.js"></script>
   <script src="settings.js"></script>
+  <script src="tier.js"></script>
+  <script src="quota.js"></script>
   <script src="providers.js"></script>
   <script src="tabs.js"></script>
   <script src="relay.js"></script>
