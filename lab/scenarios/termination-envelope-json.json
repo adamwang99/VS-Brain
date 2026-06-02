@@ -1,0 +1,18 @@
+{
+  "name": "termination-envelope-json",
+  "provider": "mock",
+  "title": "Mock Provider - JSON Termination Envelope",
+  "responseDelayMs": 200,
+  "seedMessages": [
+    {
+      "role": "assistant",
+      "content": "Baseline loaded. Ready for termination envelope test."
+    }
+  ],
+  "turns": [
+    {
+      "onTurn": 0,
+      "response": "Verdict: PASS\nCritical issues: none\nMissing pieces: none\nMinor notes: none\nSuggested fixes: none\nConfidence: 9/10\nshould_continue: false\nCHỐT_ĐỒNG_THUẬN_HOÀN_TOÀN\n\n```vsbrain-termination\n{\"status\":\"ready_to_finalize\",\"session_nonce\":\"lab_envelope_test\",\"should_continue\":false,\"critical_remaining\":false}\n```"
+    }
+  ]
+}

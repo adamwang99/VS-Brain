@@ -1,5 +1,14 @@
 import { readFileSync } from 'node:fs';
-const s = readFileSync(new URL('../apps/extension/popup.js', import.meta.url), 'utf8');
+// Post-modularization: export wiring moved from popup.js to ui.js and archive.js.
+// Load all module files and merge for checks.
+const dir = new URL('../apps/extension/', import.meta.url);
+const modules = ['core.js','i18n.js','storage.js','providers.js','tabs.js','relay.js','finalize.js','archive.js','ui.js','ui-advanced.js'];
+let s = '';
+for (const m of modules) {
+  try { s += readFileSync(new URL(m, dir), 'utf8') + '\n'; } catch {}
+}
+if (!s) { console.error('FAIL no module source found'); process.exit(1); }
+
 const checks = [
   ['bundle button wired', s.includes('$("exportAllBundleBtn")?.addEventListener("click"')],
   ['bundle button disabled on empty scan', s.includes('$("exportAllBundleBtn")&&($("exportAllBundleBtn").disabled=!0)')],

@@ -34,8 +34,9 @@ fs.mkdirSync(outRoot, { recursive: true });
 rmrf(outDir);
 copyDir(srcDir, outDir);
 
-// integrity: full popup.js/manifest/html must equal source byte-for-byte
-for (const rel of ['popup.js', 'page-helpers.js', 'manifest.json', 'popup.html']) {
+// integrity: critical source files must equal source byte-for-byte
+const INTEGRITY_FILES = ['manifest.json', 'popup.html', 'page-helpers.js', 'core.js', 'i18n.js', 'storage.js', 'providers.js', 'tabs.js', 'relay.js', 'finalize.js', 'archive.js', 'ui.js', 'ui-advanced.js', 'action-journal.js', 'ipc-runtime.js', 'lease-runtime.js', 'runtime-recovery.js', 'judge-gate.js', 'provider-registry.js', 'background.js'];
+for (const rel of INTEGRITY_FILES) {
   const a = fs.readFileSync(path.join(srcDir, rel));
   const b = fs.readFileSync(path.join(outDir, rel));
   if (!a.equals(b)) throw new Error(`[full] integrity mismatch on ${rel} — copy is not verbatim`);

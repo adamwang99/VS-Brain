@@ -357,6 +357,30 @@ async function runLedgerModeEvidence(page) {
   return 'ledger-mode-evidence PASS';
 }
 
+async function runTerminationEnvelopeJson(page) {
+  // Step 2 upgrade: verify JSON termination envelope is (a) generated in prompt template,
+  // (b) parsed correctly by JSON-first parser, and (c) finalize short-circuit activates.
+  // The mock nonce (lab_envelope_test) won't match the system-generated loop nonce,
+  // so the consume step will produce nonce mismatch — but the envelope parsing and
+  // short-circuit logic must still work, ending in recovered_envelope mode.
+  await bootScenario(page, '/lab/scenarios/termination-envelope-json.json', '/lab/scenarios/termination-envelope-json.json');
+  await page.evaluate(() => {
+    const auto = document.querySelector('#autoSendToggle');
+    if (auto) auto.checked = true;
+    document.querySelector('#startLoopBtn')?.click();
+  });
+  await waitForLog(page, 'auto-loop session nonce:', 15000);
+  await waitForLog(page, 'cả 2 tab đã chốt', 60000);
+  // clicking finalize should short-circuit with the JSON termination envelope
+  await page.evaluate(() => document.querySelector('#finalizeBtn')?.click());
+  await waitForLog(page, 'finalize short-circuit: existing termination envelope detected', 30000);
+  await waitForLog(page, 'final blueprint bundle saved', 60000);
+  const state = await dumpState(page, 'termination-envelope-json-final');
+  if (!state.log.includes('finalize short-circuit')) throw new Error('JSON envelope short-circuit did not activate');
+  if (!state.log.includes('recovered_envelope')) throw new Error('expected recovered_envelope mode');
+  return 'termination-envelope-json PASS';
+}
+
 async function runLedgerValidatorSparse(page) {
   // Mock returns a Decision Ledger missing counter_evidence/confidence/reverse_if on every block.
   // Validator must run (mode=ledger) and the save log must include 'ledger validator: quality=...'
@@ -405,6 +429,7 @@ try {
   results.push(await runNoConvergenceBudget(page));
   results.push(await runPoliteNoSignal(page));
   results.push(await runLedgerModeEvidence(page));
+  results.push(await runTerminationEnvelopeJson(page));
   results.push(await runLedgerValidatorSparse(page));
   console.log(results.join('\n'));
 } finally {

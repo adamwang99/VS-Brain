@@ -40,9 +40,9 @@ function run(cmd) {
 // 1. version đang ở source
 let srcVersion = null;
 try {
-  const popup = fs.readFileSync(path.join(repoRoot, 'apps/extension/popup.js'), 'utf8');
-  const m = popup.match(/VS_BRAIN_VERSION="?(v[0-9][^",]*)/) || popup.match(/_VERSION="?(v[0-9][^",]*)/);
-  srcVersion = m ? m[1] : null;
+  const popup = fs.readFileSync(path.join(repoRoot, 'apps/extension/core.js'), 'utf8');
+  const m = popup.match(/VS_BRAIN_RUNTIME_VERSION="v?([^"]+)"/);
+  srcVersion = m ? `v${m[1]}` : null;
 } catch { /* ignore */ }
 
 let manifestVersion = null;
