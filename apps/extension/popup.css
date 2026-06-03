@@ -544,6 +544,11 @@ textarea::placeholder { color: rgba(238,242,255,.52); opacity: 1; font-family: R
   padding: 6px;
   position: relative;
 }
+.provider-grid-item img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
 .provider-grid-item:hover {
   border-color: rgba(255,255,255,.35);
   background: rgba(255,255,255,.12);
