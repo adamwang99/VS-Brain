@@ -521,3 +521,68 @@ textarea::placeholder { color: rgba(238,242,255,.52); opacity: 1; font-family: R
 .estimator-pill.ok{background:rgba(52,211,153,.15);color:#34d399}
 .estimator-pill.unreliable{background:rgba(251,191,36,.15);color:#fbbf24}
 .estimator-pill.missing{background:rgba(255,255,255,.06);color:rgba(255,255,255,.5)}
+
+/* Provider grid (ported from Demo) */
+.provider-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+  padding: 8px 0 6px;
+}
+.provider-grid-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 2px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  cursor: pointer;
+  transition: all .18s ease;
+  padding: 6px;
+  position: relative;
+}
+.provider-grid-item:hover {
+  border-color: rgba(255,255,255,.35);
+  background: rgba(255,255,255,.12);
+}
+.provider-grid-item.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 10px rgba(159,140,255,.40), inset 0 0 8px rgba(159,140,255,.12);
+  background: rgba(159,140,255,.14);
+}
+.provider-grid-item.selected.target {
+  border-color: var(--accent2);
+  box-shadow: 0 0 10px rgba(103,221,255,.40), inset 0 0 8px rgba(103,221,255,.12);
+  background: rgba(103,221,255,.14);
+}
+.provider-grid-item img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.provider-grid-item .badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.provider-grid-item.selected.target .badge {
+  background: var(--accent2);
+}
+.provider-grid-item.connected {
+  border-style: double;
+  opacity: 1;
+}

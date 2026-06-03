@@ -2,13 +2,15 @@
 (function(global) {
   var VS = global.VS_BRAIN || {};
 
+    var LOGO_CDN = function(slug) { return 'https://cdn.jsdelivr.net/gh/glincker/thesvg@main/public/icons/' + slug + '/default.svg'; };
+
   VS.PROVIDERS = [
-    { id: 'chatgpt',    name: 'ChatGPT',    icon: 'icons/brain-16.png',     urlPatterns: ['chatgpt.com','chat.openai.com'], color: '#10a37f', certified: true },
-    { id: 'gemini',     name: 'Gemini',     icon: 'icons/brain-16.png',     urlPatterns: ['gemini.google.com'],            color: '#8e9eff', certified: true },
-    { id: 'claude',     name: 'Claude',     icon: 'icons/claude-16.png',    urlPatterns: ['claude.ai'],                    color: '#d97757', certified: false },
-    { id: 'deepseek',   name: 'DeepSeek',   icon: 'icons/deepseek-16.png',  urlPatterns: ['chat.deepseek.com'],             color: '#4d6bfe', certified: false },
-    { id: 'grok',       name: 'Grok',       icon: 'icons/grok-16.png',      urlPatterns: ['grok.com','x.com/i/grok'],      color: '#f0f0f0', certified: false },
-    { id: 'perplexity', name: 'Perplexity', icon: 'icons/perplexity-16.png',urlPatterns: ['perplexity.ai'],                 color: '#20b8cd', certified: false }
+    { id: 'chatgpt',    name: 'ChatGPT',    slug: 'openai-chatgpt', icon: LOGO_CDN('openai-chatgpt'),  localIcon: 'icons/brain-16.png',  urlPatterns: ['chatgpt.com','chat.openai.com'], color: '#10a37f', certified: true  },
+    { id: 'gemini',     name: 'Gemini',     slug: 'google-gemini',  icon: LOGO_CDN('google-gemini'),   localIcon: 'icons/brain-16.png',  urlPatterns: ['gemini.google.com'],            color: '#8e9eff', certified: true  },
+    { id: 'claude',     name: 'Claude',     slug: 'claude',         icon: LOGO_CDN('claude'),          localIcon: 'icons/claude-16.png', urlPatterns: ['claude.ai'],                    color: '#d97757', certified: false },
+    { id: 'deepseek',   name: 'DeepSeek',   slug: 'deepseek',       icon: LOGO_CDN('deepseek'),        localIcon: 'icons/deepseek-16.png', urlPatterns: ['chat.deepseek.com'],           color: '#4d6bfe', certified: false },
+    { id: 'grok',       name: 'Grok',       slug: 'grok',           icon: LOGO_CDN('grok'),            localIcon: 'icons/grok-16.png',   urlPatterns: ['grok.com','x.com/i/grok'],     color: '#f0f0f0', certified: false },
+    { id: 'perplexity', name: 'Perplexity', slug: 'perplexity',     icon: LOGO_CDN('perplexity'),      localIcon: 'icons/perplexity-16.png', urlPatterns: ['perplexity.ai'],             color: '#20b8cd', certified: false }
   ];
 
   // Get currently active provider IDs from sync storage
@@ -58,6 +60,9 @@
       return active.indexOf(providerFromUrl(t.url)) >= 0;
     });
   };
+
+  VS.LOGO_CDN = LOGO_CDN;
+  VS.PROVIDER_DEFS = VS.PROVIDERS.map(function(p) { return { key: p.id, slug: p.slug, label: p.name }; });
 
   global.VS_BRAIN = VS;
   // Expose as global for backward compat

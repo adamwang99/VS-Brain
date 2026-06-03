@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VS Brain",
-  "version": "0.8.68",
+  "version": "0.8.70",
   "description": "AI-to-AI critique relay, agreement loop, and final blueprint export.",
   "permissions": [
     "activeTab",
@@ -35,7 +35,9 @@
         "https://grok.com/*",
         "http://127.0.0.1/*"
       ],
-      "js": ["page-helpers.js"],
+      "js": [
+        "page-helpers.js"
+      ],
       "run_at": "document_idle",
       "all_frames": false
     }
