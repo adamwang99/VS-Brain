@@ -80,6 +80,11 @@
         </div>
         <button id="upgradeBtn" class="primary" data-i18n="ctaUpgrade">Nâng cấp Pro</button>
         <button id="draftSaveBtn" class="secondary" data-i18n="ctaDraft">Lưu Draft</button>
+        <div class="license-entry inline-form">
+          <input id="licenseKeyInput" type="text" placeholder="VSBRAIN-XXXX-XXXX-XXXX" spellcheck="false" />
+          <button id="unlockLicenseBtn" class="primary small" data-i18n="ctaUnlock">Mở khóa Pro</button>
+          <span id="licenseStatus" class="license-status"></span>
+        </div>
       </div>
     </section>
 
@@ -165,6 +170,7 @@
   <script src="storage.js"></script>
   <script src="settings.js"></script>
   <script src="tier.js"></script>
+  <script src="payment.js"></script>
   <script src="quota.js"></script>
   <script src="providers.js"></script>
   <script src="tabs.js"></script>
