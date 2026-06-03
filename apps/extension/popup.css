@@ -563,11 +563,6 @@ textarea::placeholder { color: rgba(238,242,255,.52); opacity: 1; font-family: R
   box-shadow: 0 0 10px rgba(103,221,255,.40), inset 0 0 8px rgba(103,221,255,.12);
   background: rgba(103,221,255,.14);
 }
-.provider-grid-item img {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-}
 .provider-grid-item .badge {
   position: absolute;
   top: -4px;
