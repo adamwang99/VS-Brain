@@ -474,3 +474,10 @@ textarea::placeholder { color: rgba(238,242,255,.52); opacity: 1; font-family: R
 .pg-chip.certified::after{content:"✓";font-size:10px;color:#68d391;margin-left:2px;}
 .pg-chip img{width:14px;height:14px;object-fit:contain;}
 .pg-hint{font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:4px;}
+/* Provider grid — offline + tab status dot */
+.pg-chip{position:relative;}
+.pg-chip.pg-offline{opacity:0.5;}
+.pg-chip.pg-offline:hover{opacity:0.8;}
+.pg-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;}
+.pg-dot-on{background:#68d391;box-shadow:0 0 4px #68d391;}
+.pg-dot-off{background:rgba(255,255,255,0.25);}
