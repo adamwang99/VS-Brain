@@ -38,6 +38,7 @@ function createProviderGrid() {
   const order = _pgProviderOrder();
   const openSet = _pgOpenProviders();
   const lang = (typeof getLang==="function"?getLang():"vi");
+  const _plang = lang;
 
   // Init selection once: default providers
   if (_pgSelectedProviders === null) {
@@ -123,7 +124,6 @@ function createProviderGrid() {
   // Pro upgrade notice
   const pn=document.createElement('div');
   pn.className='pro-notice';
-  const _plang=(typeof getLang==="function"?getLang():"vi");
   pn.innerHTML="en"===_plang?'<a href="#" id="proUpgradeLink">VS Brain Pro</a> — unlimited rounds, all 6 providers, Priority Judge mode. <a href="#" id="proUpgradeLink2">Learn more</a>':'<a href="#" id="proUpgradeLink">VS Brain Pro</a> — không giới hạn rounds, 6 provider, chế độ Judge. <a href="#" id="proUpgradeLink2">Xem thêm</a>';
   // wire upgrade click (placeholder — replace with real billing URL later)
   const wire=i=>{const el=document.getElementById(i);if(el)el.onclick=e=>{e.preventDefault();log("en"===_plang?"Pro upgrade clicked (not yet configured)":"Đã bấm Pro upgrade (chưa cấu hình)");setStatus("en"===_plang?"Pro upgrade — coming soon":"Pro upgrade — sắp ra mắt","running")}};
