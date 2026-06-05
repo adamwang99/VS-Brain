@@ -127,14 +127,17 @@ function _missingProviders(){
   return missing;
 }
 
-// Tabs that exist but whose content script is not ready (opened before the extension
-// was installed/reloaded). Scans ALL open AI tabs (not only grid-selected ones) because
-// the relay engine can auto-pick any open AI tab as source/target.
-async function _notReadyTabs(){
+// Tabs whose content script is not ready (opened before the extension loaded).
+// By default only checks SELECTED providers (the ones that will actually run);
+// pass allTabs=true to scan every open AI tab.
+async function _notReadyTabs(allTabs){
+  const sel = (typeof getSelectedProviders==="function")?getSelectedProviders():[];
+  const selSet = new Set(sel);
   const seen=new Set();
   const notReady = [];
   for(const tab of (aiTabs||[])){
     if(!tab || tab.provider==="unknown") continue;
+    if(!allTabs && !selSet.has(tab.provider)) continue; // only selected providers
     if(seen.has(tab.id)) continue; seen.add(tab.id);
     let ok=false;
     try{
