@@ -50,12 +50,29 @@ function createProviderGrid() {
   grid.innerHTML = '';
   const sel = _pgSelectedProviders.size;
   const max = _pgMax();
-  const hint = document.createElement('div');
+  const hintRow = document.createElement('div');
+  hintRow.className = 'pg-hint-row';
+  const hint = document.createElement('span');
   hint.className = 'pg-hint' + (sel < _pgMin() ? ' pg-hint-warn' : '');
   hint.textContent = sel < _pgMin()
     ? ("en"===lang ? `Select at least ${_pgMin()} (max ${max})` : `Chọn tối thiểu ${_pgMin()} (tối đa ${max})`)
     : ("en"===lang ? `${sel}/${max} selected · max ${max} (VS${max})` : `Đã chọn ${sel}/${max} · tối đa ${max} (VS${max})`);
-  grid.appendChild(hint);
+  hintRow.appendChild(hint);
+  // small reload button: rescan open tabs + refresh online dots
+  const rl = document.createElement('button');
+  rl.type = 'button';
+  rl.className = 'pg-reload-btn';
+  rl.title = "en"===lang ? 'Rescan tabs / refresh online status' : 'Quét lại tab / cập nhật trạng thái online';
+  rl.textContent = '↻';
+  rl.addEventListener('click', async (e)=>{
+    e.stopPropagation();
+    rl.classList.add('spinning');
+    try{ await refreshTabs(); }catch(_){}
+    createProviderGrid();
+    if(typeof refreshStartButton==="function") refreshStartButton();
+  });
+  hintRow.appendChild(rl);
+  grid.appendChild(hintRow);
 
   for (const prov of order) {
     const isOpen = openSet.has(prov);
