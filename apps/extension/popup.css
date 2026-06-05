@@ -81,6 +81,13 @@ main { padding: 10px;
 }
 
 #langMode { width:64px; padding:7px 8px; border-radius:999px; }
+/* Compact language selector — closed button sized like the ? button, flag-only */
+.lang-select + .glass-select-wrap .glass-select-btn,
+.glass-select-wrap.lang-wrap .glass-select-btn { }
+#langMode._glass, .head-actions .glass-select-wrap{width:auto !important;}
+.head-actions .glass-select-wrap .glass-select-btn{min-width:40px;width:auto;height:32px;padding:0 8px;border-radius:16px;font-size:16px;display:flex;align-items:center;justify-content:center;}
+.head-actions .glass-select-wrap .glass-select-btn::after{display:none;}
+.lang-menu.glass-select-menu, .glass-select-menu{min-width:140px;}
 h1 { margin: 0; font-size: 18px; letter-spacing: -.03em; text-shadow: 0 1px 18px rgba(255,255,255,.18); }
 .version { font-size: 11px; color: var(--muted); font-weight: 650; }
 .subtitle { margin: 2px 0 0; font-size: 11px; color: var(--muted); }

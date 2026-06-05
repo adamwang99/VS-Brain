@@ -489,3 +489,25 @@ function _vsOnTabRemoved(){
     await refreshStartButton();
   }, 300);
 }
+
+// ── Compact language selector: closed button shows ONLY the flag emoji,
+// dropdown menu still shows "flag + language name". ──
+function _compactLangButton(){
+  const sel = document.getElementById('langMode');
+  if(!sel || !sel._glassButton) return;
+  const opt = sel.selectedOptions && sel.selectedOptions[0];
+  const full = (opt && opt.textContent) ? opt.textContent.trim() : '';
+  // first token = flag emoji (e.g. "🇺🇸 English" -> "🇺🇸")
+  const flag = full.split(/\s+/)[0] || full;
+  sel._glassButton.textContent = flag;
+  sel._glassButton.title = full;
+}
+// Keep the compact flag in sync on change + after any relabel.
+(function _wireCompactLang(){
+  const sel = document.getElementById('langMode');
+  if(!sel) return;
+  sel.addEventListener('change', ()=> setTimeout(_compactLangButton, 0));
+  // initial + a couple of delayed passes (glass-select builds async)
+  setTimeout(_compactLangButton, 50);
+  setTimeout(_compactLangButton, 400);
+})();
