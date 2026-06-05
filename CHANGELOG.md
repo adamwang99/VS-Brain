@@ -1,5 +1,29 @@
 # VS Brain Changelog
 
+## v0.8.89-new-branding (multi-provider N-way train, 2026-06-05)
+
+Major upgrade train from v0.8.67 baseline to full multi-provider N-way debate, new branding, and a guided provider-setup flow.
+
+### Multi-provider N-way (VS3)
+- **Registry-based provider grid**: all 6 providers (ChatGPT, Gemini, Claude, DeepSeek, Perplexity, Grok) shown as logo chips, independent of which tabs are open. Default selection: ChatGPT + Gemini. Min 2, max 3 participants (VS3 roundtable).
+- **N-way relay**: `loopState.participants[]` + `step % N` rotation. Pairwise A↔B preserved for 2 providers; 3-way roundtable rotates source→target across all participants.
+- **VS3 multi-source context**: when 3 providers debate, each next model receives the latest answer from every other participant ("ChatGPT said: … / Gemini said: …") so it critiques with full context, not just one source. Source is not duplicated into the debate block.
+- **6-provider detection sync**: `providers.js` + `page-helpers.js` `AI_HOSTS` and all in-page detectors (`extractLatestResponseInPage`, `pageScanner`, `detectProviderState`) now resolve claude/deepseek/perplexity/grok via `providerFromUrl` instead of returning `unknown`. Added `platform.deepseek.com` host permission.
+
+### Guided provider setup
+- **Provider setup modal**: if a selected provider has no tab — or a tab was opened before the extension loaded (content script not injected) — the modal lists what is missing/not-ready and guides login + open-chat.
+- **Open missing tabs / Reload tabs / Rescan / Continue** with in-modal status feedback. Reload tries injecting `page-helpers.js` first, then falls back to `chrome.tabs.reload`. `notReady` detection scans ALL open AI tabs (the relay can auto-pick any of them), not just grid-selected ones.
+- **Continue gate**: blocks start until all selected providers are ready.
+
+### Meta-loop intervention
+- 3-level evidence-based intervention to stop unproductive meta-debates: L1 (≥4 silent rounds) demand citations, L2 (≥6) force summarize/redirect, L3 (≥8) force a DRAFT with `should_continue=false`. `_hasEvidence()` detects quotes/URLs/numbers; the counter resets when new evidence appears.
+
+### Branding + UI
+- New 1024-class VS Brain logo applied to extension icons (16/32/48/128), side-panel hero, help modal, and GitHub banner/README.
+- Brand SVG provider logos from thesvg.org.
+- Selected provider chip uses the primary gradient (~80% brightness) with a static blue glow border.
+- First-screen compact mode and no horizontal/vertical scroll on the start card.
+
 ## v0.8.67-judge-advisory-no-faildownload
 
 Real owner live run (v0.8.66, ChatGPT+Gemini, debate "Dữ liệu và phân quyền"): the loop ran correctly to step 16, both tabs converged (`cả 2 tab đã chốt`, `finalize dual-consensus confirmed`, 6620-char blueprint extracted) — but the app then pasted a "VS Brain Judge Gate" prompt into the provider tab (the "câu lệnh ngớ ngẩn" the owner saw), Gemini answered `verdict: veto` in a plain code block (not the required ` ```vsbrain-judge ` fence), `parseVerdict` returned `ERR_JUDGE_ENVELOPE_MISSING`, finalize went `fail-closed`, and NO file downloaded despite a valid consensus.
