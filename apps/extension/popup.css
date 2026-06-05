@@ -562,3 +562,8 @@ select, input, textarea { max-width: 100%; box-sizing: border-box; }
 .pg-reload-btn:hover{background:rgba(103,221,255,.2);border-color:#63b3ed;color:#fff;}
 .pg-reload-btn.spinning{animation:pg-spin .6s linear;}
 @keyframes pg-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+/* Pro upgrade notice */
+.pro-notice{grid-column:1/-1;margin:2px 0 0;padding:4px 0;text-align:center;font-size:10px;color:rgba(255,255,255,.45);border-top:1px solid rgba(255,255,255,.06);}
+.pro-notice a{color:#9f8cff;text-decoration:none;font-weight:500;cursor:pointer;}
+.pro-notice a:hover{color:#67ddff;text-decoration:underline;}

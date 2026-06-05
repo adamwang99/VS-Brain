@@ -55,14 +55,14 @@ function createProviderGrid() {
   const hint = document.createElement('span');
   hint.className = 'pg-hint' + (sel < _pgMin() ? ' pg-hint-warn' : '');
   hint.textContent = sel < _pgMin()
-    ? ("en"===lang ? `Select at least ${_pgMin()} (max ${max})` : `Chọn tối thiểu ${_pgMin()} (tối đa ${max})`)
-    : ("en"===lang ? `${sel}/${max} selected · max ${max} (VS${max})` : `Đã chọn ${sel}/${max} · tối đa ${max} (VS${max})`);
+    ? ("en"===_plang ? `Select at least ${_pgMin()} (max ${max})` : `Chọn tối thiểu ${_pgMin()} (tối đa ${max})`)
+    : ("en"===_plang ? `${sel}/${max} selected · max ${max} (VS${max})` : `Đã chọn ${sel}/${max} · tối đa ${max} (VS${max})`);
   hintRow.appendChild(hint);
   // small reload button: rescan open tabs + refresh online dots
   const rl = document.createElement('button');
   rl.type = 'button';
   rl.className = 'pg-reload-btn';
-  rl.title = "en"===lang ? 'Rescan tabs / refresh online status' : 'Quét lại tab / cập nhật trạng thái online';
+  rl.title = "en"===_plang ? 'Rescan tabs / refresh online status' : 'Quét lại tab / cập nhật trạng thái online';
   rl.textContent = '↻';
   rl.addEventListener('click', async (e)=>{
     e.stopPropagation();
@@ -99,8 +99,8 @@ function createProviderGrid() {
     // tab status dot
     const dot = document.createElement('span');
     dot.className = 'pg-dot ' + (isOpen ? 'pg-dot-on' : 'pg-dot-off');
-    dot.title = isOpen ? ("en"===lang?'Tab open':'Tab đang mở')
-                       : ("en"===lang?'No tab — will open on Start':'Chưa mở tab — sẽ tự mở khi Start');
+    dot.title = isOpen ? ("en"===_plang?'Tab open':'Tab đang mở')
+                       : ("en"===_plang?'No tab — will open on Start':'Chưa mở tab — sẽ tự mở khi Start');
     chip.appendChild(dot);
 
     chip.addEventListener('click', () => {
@@ -120,6 +120,15 @@ function createProviderGrid() {
     });
     grid.appendChild(chip);
   }
+  // Pro upgrade notice
+  const pn=document.createElement('div');
+  pn.className='pro-notice';
+  const _plang=(typeof getLang==="function"?getLang():"vi");
+  pn.innerHTML="en"===_plang?'<a href="#" id="proUpgradeLink">VS Brain Pro</a> — unlimited rounds, all 6 providers, Priority Judge mode. <a href="#" id="proUpgradeLink2">Learn more</a>':'<a href="#" id="proUpgradeLink">VS Brain Pro</a> — không giới hạn rounds, 6 provider, chế độ Judge. <a href="#" id="proUpgradeLink2">Xem thêm</a>';
+  // wire upgrade click (placeholder — replace with real billing URL later)
+  const wire=i=>{const el=document.getElementById(i);if(el)el.onclick=e=>{e.preventDefault();log("en"===_plang?"Pro upgrade clicked (not yet configured)":"Đã bấm Pro upgrade (chưa cấu hình)");setStatus("en"===_plang?"Pro upgrade — coming soon":"Pro upgrade — sắp ra mắt","running")}};
+  setTimeout(()=>{wire("proUpgradeLink");wire("proUpgradeLink2");},50);
+  grid.appendChild(pn);
 }
 
 // Return selected provider ids (for resolving to tabs at Start time).
@@ -249,7 +258,7 @@ function _showProviderSetupModal(){
       // immediate in-modal feedback so the user sees the click registered
       const sayEl=_psmEl('psmStatus');
       const say=(msg)=>{ if(sayEl) sayEl.textContent=msg; };
-      say("en"===lang?'Working…':'Đang xử lý…');
+      say("en"===_plang?'Working…':'Đang xử lý…');
 
       if(id==='psmCloseBtn'){ _finish(null); return; }
 
@@ -259,7 +268,7 @@ function _showProviderSetupModal(){
         const notReady=await _notReadyTabs().catch(()=>[]);
         if(missing.length || notReady.length){
           const n=missing.length+notReady.length;
-          setStatus("en"===lang?`Cannot continue: ${n} provider(s) not ready`:`Chưa thể tiếp tục: còn ${n} provider chưa sẵn sàng`,'blocked');
+          setStatus("en"===_plang?`Cannot continue: ${n} provider(s) not ready`:`Chưa thể tiếp tục: còn ${n} provider chưa sẵn sàng`,'blocked');
           await _refreshModalState();
           return;
         }
@@ -269,7 +278,7 @@ function _showProviderSetupModal(){
       if(id==='psmOpenTabsBtn'){
         const missing=_missingProviders();
         const openUrl=(typeof PROVIDER_OPEN_URL!=="undefined")?PROVIDER_OPEN_URL:{};
-        if(!missing.length){ const m="en"===lang?'No missing tabs — use Reload if a tab is orange':'Không có tab thiếu — dùng Tải lại nếu tab màu cam'; say(m); setStatus(m,'running'); return; }
+        if(!missing.length){ const m="en"===_plang?'No missing tabs — use Reload if a tab is orange':'Không có tab thiếu — dùng Tải lại nếu tab màu cam'; say(m); setStatus(m,'running'); return; }
         let winId=null;
         try{
           const wins=await chrome.windows.getAll({windowTypes:['normal']});
@@ -290,8 +299,8 @@ function _showProviderSetupModal(){
           }
         }
         const m = opened>0
-          ? ("en"===lang?`Opened ${opened} tab(s) — log in + open a chat, then Rescan`:`Đã mở ${opened} tab — đăng nhập + mở ô chat, rồi Quét lại`)
-          : ("en"===lang?'Could not open tabs — open them manually':'Không mở được tab — hãy mở thủ công');
+          ? ("en"===_plang?`Opened ${opened} tab(s) — log in + open a chat, then Rescan`:`Đã mở ${opened} tab — đăng nhập + mở ô chat, rồi Quét lại`)
+          : ("en"===_plang?'Could not open tabs — open them manually':'Không mở được tab — hãy mở thủ công');
         say(m); setStatus(m,'running');
         setTimeout(async ()=>{ await refreshTabs().catch(()=>{}); await _refreshModalState(); if(typeof createProviderGrid==="function") createProviderGrid(); }, 1500);
         return;
@@ -299,8 +308,8 @@ function _showProviderSetupModal(){
 
       if(id==='psmReloadBtn'){
         const notReady=await _notReadyTabs().catch(()=>[]);
-        if(!notReady.length){ const m="en"===lang?'No tabs need reload':'Không có tab cần tải lại'; say(m); setStatus(m,'running'); return; }
-        say("en"===lang?`Reloading ${notReady.length} tab(s)…`:`Đang tải lại ${notReady.length} tab…`);
+        if(!notReady.length){ const m="en"===_plang?'No tabs need reload':'Không có tab cần tải lại'; say(m); setStatus(m,'running'); return; }
+        say("en"===_plang?`Reloading ${notReady.length} tab(s)…`:`Đang tải lại ${notReady.length} tab…`);
         for(const o of notReady){
           const inj=await _tryInjectHelpers(o.tabId);
           let ok=false;
@@ -313,7 +322,7 @@ function _showProviderSetupModal(){
             catch(err){ log(`provider-setup: reload failed tab=${o.tabId}: ${err.message}`); }
           } else { log(`provider-setup: injected helpers tab=${o.tabId} (${o.prov})`); }
         }
-        const m="en"===lang?`Reloading tabs… wait then Rescan`:`Đang tải lại tab… đợi chút rồi Quét lại`; say(m); setStatus(m,'running');
+        const m="en"===_plang?`Reloading tabs… wait then Rescan`:`Đang tải lại tab… đợi chút rồi Quét lại`; say(m); setStatus(m,'running');
         setTimeout(async ()=>{ await refreshTabs().catch(()=>{}); await _refreshModalState(); if(typeof createProviderGrid==="function") createProviderGrid(); }, 2500);
         return;
       }
@@ -323,8 +332,8 @@ function _showProviderSetupModal(){
         const {missing, notReady}=await _refreshModalState();
         if(typeof createProviderGrid==="function") createProviderGrid();
         const bad=missing.length+notReady.length;
-        const m=bad?("en"===lang?`Not ready: ${bad}`:`Chưa sẵn sàng: ${bad}`)
-                   :("en"===lang?'All providers ready — press Continue':'Tất cả provider đã sẵn sàng — bấm Tiếp tục');
+        const m=bad?("en"===_plang?`Not ready: ${bad}`:`Chưa sẵn sàng: ${bad}`)
+                   :("en"===_plang?'All providers ready — press Continue':'Tất cả provider đã sẵn sàng — bấm Tiếp tục');
         say(m); setStatus(m,'running');
         return;
       }
@@ -425,7 +434,7 @@ async function handleAdaptiveStart(){
   _vsReadyState = state;
 
   if(state==='need_select'){
-    setStatus("en"===lang?'Pick at least 2 AI providers':'Hãy chọn tối thiểu 2 AI','blocked');
+    setStatus("en"===_plang?'Pick at least 2 AI providers':'Hãy chọn tối thiểu 2 AI','blocked');
     await refreshStartButton();
     return 'prep';
   }
@@ -443,7 +452,7 @@ async function handleAdaptiveStart(){
       try{ const o={url:openUrl[prov],active:true}; if(winId)o.windowId=winId; const t=await chrome.tabs.create(o); opened++; log(`adaptive-start: opened ${prov} tab=${t.id}`); }
       catch(e){ try{ window.open(openUrl[prov],'_blank'); opened++; }catch(e2){} }
     }
-    setStatus("en"===lang?`Opened ${opened} tab(s) — log in + open a chat, then press Start again`:`Đã mở ${opened} tab — đăng nhập + mở ô chat, rồi bấm Start lại`,'running');
+    setStatus("en"===_plang?`Opened ${opened} tab(s) — log in + open a chat, then press Start again`:`Đã mở ${opened} tab — đăng nhập + mở ô chat, rồi bấm Start lại`,'running');
     setTimeout(refreshStartButton, 1800);
     return 'prep';
   }
@@ -456,7 +465,7 @@ async function handleAdaptiveStart(){
       if(!ok){ try{ await chrome.tabs.reload(Number(o.tabId)); log(`adaptive-start: reloaded tab=${o.tabId} (${o.prov})`); }catch(e){} }
       else log(`adaptive-start: injected helpers tab=${o.tabId} (${o.prov})`);
     }
-    setStatus("en"===lang?'Reloading AI tab(s)… press Start again in a moment':'Đang tải lại tab AI… đợi chút rồi bấm Start lại','running');
+    setStatus("en"===_plang?'Reloading AI tab(s)… press Start again in a moment':'Đang tải lại tab AI… đợi chút rồi bấm Start lại','running');
     setTimeout(refreshStartButton, 2500);
     return 'prep';
   }
