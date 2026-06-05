@@ -126,20 +126,21 @@ function _missingProviders(){
   return missing;
 }
 
-// Tabs that exist for selected providers but whose content script is not ready
-// (tab was opened before the extension was installed/reloaded → no page-helpers injected).
+// Tabs that exist but whose content script is not ready (opened before the extension
+// was installed/reloaded). Scans ALL open AI tabs (not only grid-selected ones) because
+// the relay engine can auto-pick any open AI tab as source/target.
 async function _notReadyTabs(){
-  const sel = getSelectedProviders();
+  const seen=new Set();
   const notReady = [];
-  for(const prov of sel){
-    const tab = (aiTabs||[]).find(t=>t.provider===prov);
-    if(!tab) continue;
+  for(const tab of (aiTabs||[])){
+    if(!tab || tab.provider==="unknown") continue;
+    if(seen.has(tab.id)) continue; seen.add(tab.id);
     let ok=false;
     try{
       const r=await executeInAiTab(tab.id, detectProviderState, [], "setup-ready-probe").catch(()=>null);
       ok = !!(r && r.provider && r.provider!=="unknown");
     }catch(e){ ok=false; }
-    if(!ok) notReady.push({prov, tabId:tab.id});
+    if(!ok) notReady.push({prov:tab.provider, tabId:tab.id});
   }
   return notReady;
 }
@@ -243,7 +244,7 @@ function _showProviderSetupModal(){
       if(id==='psmOpenTabsBtn'){
         const missing=_missingProviders();
         const openUrl=(typeof PROVIDER_OPEN_URL!=="undefined")?PROVIDER_OPEN_URL:{};
-        if(!missing.length){ setStatus("en"===lang?'No missing tabs':'Không có tab thiếu','running'); return; }
+        if(!missing.length){ setStatus("en"===lang?'No missing tabs — use Reload if a tab shows orange':'Không có tab thiếu — dùng Tải lại nếu tab hiện màu cam','running'); return; }
         let winId=null;
         try{
           const wins=await chrome.windows.getAll({windowTypes:['normal']});

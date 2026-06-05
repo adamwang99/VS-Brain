@@ -498,7 +498,7 @@ select, input, textarea { max-width: 100%; box-sizing: border-box; }
 .hero-logo{width:36px !important;height:36px !important;}
 .hero h1{font-size:15px !important;}
 .start-card{padding:10px !important;gap:5px !important;}
-#extraInstruction{rows:1;min-height:34px;max-height:48px;font-size:12px;}
+#extraInstruction{rows:1;min-height:49px;max-height:70px;font-size:12px;}
 .mode-row{margin:2px 0 !important;}
 .mode-row .mode-hint{display:none !important;}
 .provider-grid{margin:4px 0 !important;padding:6px !important;}
