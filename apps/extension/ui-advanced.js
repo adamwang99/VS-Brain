@@ -126,32 +126,74 @@ function _missingProviders(){
   return missing;
 }
 
+// Tabs that exist for selected providers but whose content script is not ready
+// (tab was opened before the extension was installed/reloaded → no page-helpers injected).
+async function _notReadyTabs(){
+  const sel = getSelectedProviders();
+  const notReady = [];
+  for(const prov of sel){
+    const tab = (aiTabs||[]).find(t=>t.provider===prov);
+    if(!tab) continue;
+    let ok=false;
+    try{
+      const r=await executeInAiTab(tab.id, detectProviderState, [], "setup-ready-probe").catch(()=>null);
+      ok = !!(r && r.provider && r.provider!=="unknown");
+    }catch(e){ ok=false; }
+    if(!ok) notReady.push({prov, tabId:tab.id});
+  }
+  return notReady;
+}
+
+// Try to inject page-helpers.js into a tab without a full reload.
+async function _tryInjectHelpers(tabId){
+  try{
+    await chrome.scripting.executeScript({target:{tabId:Number(tabId)}, files:["page-helpers.js"]});
+    return true;
+  }catch(e){ log(`inject helpers failed tab=${tabId}: ${e.message}`); return false; }
+}
+
 function _renderProviderSetupModal(missing){
   const lang = (typeof getLang==="function"?getLang():"vi");
   const en = (lang==="en");
   const label = p => (typeof providerLabel==="function"?providerLabel(p):p);
   const openUrl = (typeof PROVIDER_OPEN_URL!=="undefined")?PROVIDER_OPEN_URL:{};
   const title = _psmEl('psmTitle'), content = _psmEl('psmContent');
+  const notReady = (Array.isArray(arguments[1])?arguments[1]:[]);
   if(title) title.textContent = en ? 'Set up providers' : 'Chuẩn bị provider';
   // localize buttons so the modal is never mixed-language
-  const ob=_psmEl('psmOpenTabsBtn'), rb=_psmEl('psmRescanBtn'), cb=_psmEl('psmContinueBtn'), xb=_psmEl('psmCloseBtn');
+  const ob=_psmEl('psmOpenTabsBtn'), rlb=_psmEl('psmReloadBtn'), rb=_psmEl('psmRescanBtn'), cb=_psmEl('psmContinueBtn'), xb=_psmEl('psmCloseBtn');
   if(ob) ob.textContent = en ? 'Open missing tabs' : 'Mở tab đang thiếu';
+  if(rlb) rlb.textContent = en ? 'Reload tabs' : 'Tải lại tab';
   if(rb) rb.textContent = en ? 'Rescan' : 'Quét lại';
   if(cb) cb.textContent = en ? 'Continue' : 'Tiếp tục';
   if(xb) xb.textContent = en ? 'Close' : 'Đóng';
+  // show/hide reload button based on whether there are not-ready tabs
+  if(rlb) rlb.style.display = notReady.length ? '' : 'none';
   const items = missing.map(p=>{
     const url = openUrl[p]||'#';
     return `<li><b>${label(p)}</b> — <a href="${url}" target="_blank" rel="noopener">${url}</a></li>`;
   }).join('');
-  const allReady = missing.length===0;
-  const head = allReady
-    ? (en ? `<p style="color:#68d391">✓ All selected providers have a tab. Press Continue.</p>`
-          : `<p style="color:#68d391">✓ Tất cả provider đã có tab. Bấm Tiếp tục.</p>`)
-    : (en ? `<p>These selected providers have no open tab yet:</p><ul>${items}</ul>`
-          : `<p>Các provider bạn chọn chưa có tab đang mở:</p><ul>${items}</ul>`);
+  const nrItems = notReady.map(o=>`<li><b>${label(o.prov)}</b></li>`).join('');
+  const allReady = missing.length===0 && notReady.length===0;
+  let head;
+  if(allReady){
+    head = en ? `<p style="color:#68d391">✓ All selected providers are ready. Press Continue.</p>`
+              : `<p style="color:#68d391">✓ Tất cả provider đã sẵn sàng. Bấm Tiếp tục.</p>`;
+  } else {
+    head = '';
+    if(missing.length){
+      head += en ? `<p>These selected providers have no open tab yet:</p><ul>${items}</ul>`
+                 : `<p>Các provider bạn chọn chưa có tab đang mở:</p><ul>${items}</ul>`;
+    }
+    if(notReady.length){
+      head += en
+        ? `<p style="color:#f6ad55">⚠ These tabs are open but were loaded <b>before</b> VS Brain. They need a reload so VS Brain can read them:</p><ul>${nrItems}</ul>`
+        : `<p style="color:#f6ad55">⚠ Các tab này đã mở nhưng được tải <b>trước khi</b> VS Brain được cài/nạp. Cần tải lại để VS Brain đọc được:</p><ul>${nrItems}</ul>`;
+    }
+  }
   const steps = en
-    ? `<h3>What to do</h3><ol><li>Press <b>Open missing tabs</b> — each provider opens in a new browser tab.</li><li>In each opened tab: <b>log in</b> if needed, then <b>open a chat</b> (start a new conversation).</li><li>Come back here and press <b>Rescan</b>.</li><li>When all providers show a green dot, press <b>Continue</b>.</li></ol><p class="about-owner-mini">VS Brain cannot log in for you. Each AI provider needs your own logged-in session.</p>`
-    : `<h3>Các bước cần làm</h3><ol><li>Bấm <b>Mở tab đang thiếu</b> — mỗi provider sẽ mở trong tab mới của trình duyệt.</li><li>Trong mỗi tab vừa mở: <b>đăng nhập</b> nếu cần, rồi <b>mở ô chat</b> (bắt đầu cuộc trò chuyện mới).</li><li>Quay lại đây và bấm <b>Quét lại</b>.</li><li>Khi tất cả provider hiện chấm xanh, bấm <b>Tiếp tục</b>.</li></ol><p class="about-owner-mini">VS Brain không thể đăng nhập hộ bạn. Mỗi provider AI cần phiên đăng nhập của chính bạn.</p>`;
+    ? `<h3>What to do</h3><ol>${missing.length?'<li>Press <b>Open missing tabs</b> — each provider opens in a new browser tab, then log in + open a chat.</li>':''}${notReady.length?'<li>Press <b>Reload tabs</b> — VS Brain reloads the open tabs so it can read them.</li>':''}<li>Press <b>Rescan</b> to refresh status.</li><li>When all providers show a green dot, press <b>Continue</b>.</li></ol><p class="about-owner-mini">VS Brain cannot log in for you. Each AI provider needs your own logged-in session.</p>`
+    : `<h3>Các bước cần làm</h3><ol>${missing.length?'<li>Bấm <b>Mở tab đang thiếu</b> — mỗi provider mở trong tab mới, rồi đăng nhập + mở ô chat.</li>':''}${notReady.length?'<li>Bấm <b>Tải lại tab</b> — VS Brain tải lại các tab đang mở để đọc được.</li>':''}<li>Bấm <b>Quét lại</b> để cập nhật trạng thái.</li><li>Khi tất cả provider hiện chấm xanh, bấm <b>Tiếp tục</b>.</li></ol><p class="about-owner-mini">VS Brain không thể đăng nhập hộ bạn. Mỗi provider AI cần phiên đăng nhập của chính bạn.</p>`;
   if(content) content.innerHTML = head + steps;
 }
 
@@ -161,14 +203,26 @@ function _showProviderSetupModal(){
     const modal = _psmEl('providerSetupModal');
     if(!modal){ resolve('continue'); return; }
     const lang = (typeof getLang==="function"?getLang():"vi");
-    const openBtn=_psmEl('psmOpenTabsBtn'), rescanBtn=_psmEl('psmRescanBtn'),
+    const openBtn=_psmEl('psmOpenTabsBtn'), reloadBtn=_psmEl('psmReloadBtn'), rescanBtn=_psmEl('psmRescanBtn'),
           contBtn=_psmEl('psmContinueBtn'), closeBtn=_psmEl('psmCloseBtn');
-    _renderProviderSetupModal(_missingProviders());
+
+    // initial render (missing only; not-ready filled in async)
+    _renderProviderSetupModal(_missingProviders(), []);
     modal.classList.remove('hidden');
+    // async fill not-ready
+    _refreshModalState();
+
+    async function _refreshModalState(){
+      const missing=_missingProviders();
+      const notReady=await _notReadyTabs().catch(()=>[]);
+      _renderProviderSetupModal(missing, notReady);
+      return {missing, notReady};
+    }
 
     const cleanup=()=>{
       modal.classList.add('hidden');
       openBtn&&openBtn.replaceWith(openBtn.cloneNode(true));
+      reloadBtn&&reloadBtn.replaceWith(reloadBtn.cloneNode(true));
       rescanBtn&&rescanBtn.replaceWith(rescanBtn.cloneNode(true));
       contBtn&&contBtn.replaceWith(contBtn.cloneNode(true));
       closeBtn&&closeBtn.replaceWith(closeBtn.cloneNode(true));
@@ -178,7 +232,6 @@ function _showProviderSetupModal(){
       const missing=_missingProviders();
       const openUrl=(typeof PROVIDER_OPEN_URL!=="undefined")?PROVIDER_OPEN_URL:{};
       if(!missing.length){ setStatus("en"===lang?'No missing tabs':'Không có tab thiếu','running'); return; }
-      // Resolve a real browser window to host the tabs (side panel has no own window)
       let winId=null;
       try{
         const wins=await chrome.windows.getAll({windowTypes:['normal']});
@@ -203,13 +256,35 @@ function _showProviderSetupModal(){
         : ("en"===lang?'Could not open tabs — open them manually':'Không mở được tab — hãy mở thủ công'),'running');
     });
 
+    _psmEl('psmReloadBtn').addEventListener('click', async ()=>{
+      // First try injecting helpers without a full reload; fall back to chrome.tabs.reload
+      const notReady=await _notReadyTabs().catch(()=>[]);
+      if(!notReady.length){ setStatus("en"===lang?'No tabs need reload':'Không có tab cần tải lại','running'); return; }
+      let fixed=0;
+      for(const o of notReady){
+        const inj=await _tryInjectHelpers(o.tabId);
+        let ok=false;
+        if(inj){
+          const r=await executeInAiTab(o.tabId, detectProviderState, [], "setup-reload-probe").catch(()=>null);
+          ok=!!(r&&r.provider&&r.provider!=="unknown");
+        }
+        if(!ok){
+          try{ await chrome.tabs.reload(Number(o.tabId)); log(`provider-setup: reloaded tab=${o.tabId} (${o.prov})`); }
+          catch(e){ log(`provider-setup: reload failed tab=${o.tabId}: ${e.message}`); }
+        } else { fixed++; log(`provider-setup: injected helpers tab=${o.tabId} (${o.prov}) — no reload needed`); }
+      }
+      setStatus("en"===lang?`Reloading tabs… wait a moment then Rescan`:`Đang tải lại tab… đợi chút rồi Quét lại`,'running');
+      // give reloaded tabs time, then auto-refresh modal
+      setTimeout(async ()=>{ await refreshTabs().catch(()=>{}); await _refreshModalState(); if(typeof createProviderGrid==="function") createProviderGrid(); }, 2500);
+    });
+
     _psmEl('psmRescanBtn').addEventListener('click', async ()=>{
       await refreshTabs().catch(()=>{});
-      _renderProviderSetupModal(_missingProviders());
+      const {missing, notReady}=await _refreshModalState();
       if(typeof createProviderGrid==="function") createProviderGrid();
-      const still=_missingProviders();
-      setStatus(still.length?("en"===lang?`Still missing: ${still.length}`:`Còn thiếu: ${still.length}`)
-                            :("en"===lang?'All tabs ready':'Tất cả tab đã sẵn sàng'),'running');
+      const bad=missing.length+notReady.length;
+      setStatus(bad?("en"===lang?`Not ready: ${bad}`:`Chưa sẵn sàng: ${bad}`)
+                   :("en"===lang?'All providers ready':'Tất cả provider đã sẵn sàng'),'running');
     });
 
     _psmEl('psmContinueBtn').addEventListener('click', ()=>{ cleanup(); resolve('continue'); });
@@ -217,10 +292,12 @@ function _showProviderSetupModal(){
   });
 }
 
-// Returns array of tab ids. If selected providers lack tabs, show the setup modal first.
+// Returns array of tab ids. Shows setup modal if any selected provider lacks a tab
+// OR has a tab whose content script is not ready (opened before extension load).
 async function resolveSelectedProviderTabs(){
-  let missing = _missingProviders();
-  if(missing.length){
+  const missing = _missingProviders();
+  const notReady = await _notReadyTabs().catch(()=>[]);
+  if(missing.length || notReady.length){
     const r = await _showProviderSetupModal();
     if(r===null) return []; // user cancelled
     await refreshTabs().catch(()=>{});

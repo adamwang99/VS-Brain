@@ -12,7 +12,7 @@
       <div class="brand-lockup">
         <img class="brand-logo hero-logo" src="icons/vs-brain-logo.png" alt="VS Brain logo" />
         <div>
-          <h1>VS Brain <span class="version">v0.8.83-modal-i18n-opentab-fix</span></h1>
+          <h1>VS Brain <span class="version">v0.8.84-modal-reload-notready</span></h1>
           <p class="subtitle" data-i18n="subtitle">AI debate relay · archive · checkpoint</p>
         </div>
       </div>
@@ -129,7 +129,7 @@
 
     <div id="helpModal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card glass"><div class="section-head"><h2 data-i18n="helpTitle">Hướng dẫn VS Brain</h2><button id="closeHelpBtn" class="chip" data-i18n="close">Đóng</button></div><div class="modal-banner-wrap"><img class="modal-banner" src="icons/help-banner.jpg" alt="VS Brain — Push every idea to its limit" /></div><div id="helpContent" class="help-content"></div></div></div>
 
-    <div id="providerSetupModal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card glass"><div class="section-head"><h2 id="psmTitle">Chuẩn bị provider</h2><button id="psmCloseBtn" class="chip">Đóng</button></div><div id="psmContent" class="help-content"></div><div class="toolbar" style="margin-top:10px;gap:8px"><button id="psmOpenTabsBtn" class="primary">Mở tab đang thiếu</button><button id="psmRescanBtn" class="chip">Quét lại</button><button id="psmContinueBtn" class="primary">Tiếp tục</button></div></div></div>
+    <div id="providerSetupModal" class="modal hidden" role="dialog" aria-modal="true"><div class="modal-card glass"><div class="section-head"><h2 id="psmTitle">Chuẩn bị provider</h2><button id="psmCloseBtn" class="chip">Đóng</button></div><div id="psmContent" class="help-content"></div><div class="toolbar" style="margin-top:10px;gap:8px;flex-wrap:wrap"><button id="psmOpenTabsBtn" class="primary">Mở tab đang thiếu</button><button id="psmReloadBtn" class="chip">Tải lại tab</button><button id="psmRescanBtn" class="chip">Quét lại</button><button id="psmContinueBtn" class="primary">Tiếp tục</button></div></div></div>
 
     <details class="glass logbox"><summary data-i18n="logDebug">Log / debug</summary><button id="exportLogBtn" class="chip" data-i18n="exportLog">Xuất log</button><pre id="log" aria-label="Nhật ký thao tác"></pre></details>
   </main>
