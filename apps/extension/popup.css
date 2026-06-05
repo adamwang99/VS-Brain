@@ -531,3 +531,6 @@ select, input, textarea { max-width: 100%; box-sizing: border-box; }
   border-color:#63b3ed !important;color:#fff !important;font-weight:700;
   box-shadow:0 0 14px rgba(103,221,255,.55);
 }
+
+/* Needs-user-input banner */
+.need-input-banner{margin:6px 0;padding:8px 10px;border-radius:8px;font-size:12px;line-height:1.45;color:#ffe8c2;background:rgba(246,173,85,.14);border:1px solid rgba(246,173,85,.4);}

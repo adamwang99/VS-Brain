@@ -44,6 +44,28 @@ function _hasEvidence(content){
   return false;
 }
 
+// Detect when a model is asking the USER to supply missing source material
+// (e.g. "please paste Chapter 1", "không có ... trong ngữ cảnh", "yêu cầu người dùng").
+// This is a "consensus-to-request-user-input" signal, distinct from normal critique.
+function _needsUserInput(content){
+  if(!content) return false;
+  const c=String(content);
+  const pats=[
+    /d\u00e1n (tr\u1ef1c ti\u1ebfp|n\u1ed9i dung|b\u1ea3n th\u1ea3o|v\u0103n b\u1ea3n)/i,
+    /vui l\u00f2ng d\u00e1n/i,
+    /y\u00eau c\u1ea7u ng\u01b0\u1eddi d\u00f9ng/i,
+    /(kh\u00f4ng (c\u00f3|t\u00ecm th\u1ea5y)|thi\u1ebfu) [^.\n]{0,40}(trong (ng\u1eef c\u1ea3nh|context|d\u1eef li\u1ec7u|file|tin nh\u1eafn))/i,
+    /(kh\u00f4ng th\u1ec3|ch\u01b0a th\u1ec3) (ki\u1ec3m tra|gi\u00e1m \u0111\u1ecbnh|\u0111\u00e1nh gi\u00e1)[^.\n]{0,60}(kh\u00f4ng c\u00f3|thi\u1ebfu|ch\u01b0a c\u00f3)/i,
+    /\u0110\u00ccNH CH\u1ec8 TO\u00c0N B\u1ed8 V\u00d2NG L\u1eb6P/i,
+    /paste (the|your|chapter|content|text|document)/i,
+    /please (paste|provide|supply|share) (the|your)/i,
+    /(cannot|can'?t|unable to) (check|verify|evaluate|assess)[^.\n]{0,60}(without|no |missing)/i,
+    /not (found|present|available) [^.\n]{0,40}(in (the )?(context|conversation|data|history))/i,
+    /provide (the|your) [^.\n]{0,40}(in the next|so I can)/i
+  ];
+  return pats.some(p=>p.test(c));
+}
+
 function _interventionLevel(silentRounds){
   // 0=no intervention, 1=evidence reminder, 2=summarize+redirect, 3=draft forced
   if(silentRounds>=8) return 3;

@@ -511,3 +511,30 @@ function _compactLangButton(){
   setTimeout(_compactLangButton, 50);
   setTimeout(_compactLangButton, 400);
 })();
+
+// ── Needs-user-input banner: shown when a majority of AIs ask for missing source data ──
+function showNeedUserInputBanner(count, total){
+  const lang = (typeof getLang==="function")?getLang():"vi";
+  const en = (lang==="en");
+  // reuse the evidence payload textarea as the place to paste source material
+  const ev = document.getElementById('evidencePayload');
+  if(ev){ ev.classList.remove('hidden'); ev.focus?.(); }
+  const card = document.querySelector('.start-card');
+  let b = document.getElementById('needInputBanner');
+  if(!b){
+    b = document.createElement('div');
+    b.id = 'needInputBanner';
+    b.className = 'need-input-banner';
+    // insert right above the evidence payload (or at top of start card)
+    if(ev && ev.parentNode){ ev.parentNode.insertBefore(b, ev); }
+    else if(card){ card.insertBefore(b, card.firstChild); }
+  }
+  b.innerHTML = en
+    ? `<b>\u23f8\ufe0f Paused \u2014 the AIs need your source data.</b><br>${count}/${total} models said they cannot proceed without the missing material (e.g. the document/chapter/spec to review). Paste it into the box below, then press <b>Start</b> again.`
+    : `<b>\u23f8\ufe0f \u0110\u00e3 t\u1ea1m d\u1eebng \u2014 c\u00e1c AI c\u1ea7n d\u1eef li\u1ec7u ngu\u1ed3n.</b><br>${count}/${total} model b\u00e1o kh\u00f4ng th\u1ec3 ti\u1ebfp t\u1ee5c v\u00ec thi\u1ebfu n\u1ed9i dung c\u1ea7n gi\u00e1m \u0111\u1ecbnh (v\u00ed d\u1ee5 t\u00e0i li\u1ec7u/ch\u01b0\u01a1ng/spec). H\u00e3y d\u00e1n v\u00e0o \u00f4 b\u00ean d\u01b0\u1edbi, r\u1ed3i b\u1ea5m <b>Start</b> l\u1ea1i.`;
+  b.style.display = '';
+}
+function hideNeedUserInputBanner(){
+  const b = document.getElementById('needInputBanner');
+  if(b) b.style.display = 'none';
+}
