@@ -534,3 +534,15 @@ select, input, textarea { max-width: 100%; box-sizing: border-box; }
 
 /* Needs-user-input banner */
 .need-input-banner{margin:6px 0;padding:8px 10px;border-radius:8px;font-size:12px;line-height:1.45;color:#ffe8c2;background:rgba(246,173,85,.14);border:1px solid rgba(246,173,85,.4);}
+
+/* #2: smaller Start button text */
+#oneClickStartBtn{font-size:13px !important;letter-spacing:.2px;}
+/* #3: tighter dropdown menu (lang + glass selects) */
+.glass-select-menu{padding:4px;font-size:12px;}
+.glass-select-item{padding:6px 10px;font-size:12px;}
+.head-actions .glass-select-wrap .glass-select-btn{padding:0 6px;font-size:15px;}
+.head-actions .glass-select-menu{min-width:130px;}
+/* #4: equalize the two mode-row dropdown widths (Mục đích + Kết quả) */
+.mode-row{display:grid !important;grid-template-columns:1fr;gap:6px;}
+.mode-row .mode-label{width:100%;}
+.mode-row .mode-label select, .mode-row .mode-label .glass-select-wrap{width:100% !important;}

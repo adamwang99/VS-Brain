@@ -499,16 +499,24 @@ function _compactLangButton(){
   const full = (opt && opt.textContent) ? opt.textContent.trim() : '';
   // first token = flag emoji (e.g. "🇺🇸 English" -> "🇺🇸")
   const flag = full.split(/\s+/)[0] || full;
-  sel._glassButton.textContent = flag;
+  if(sel._glassButton.textContent !== flag) sel._glassButton.textContent = flag;
   sel._glassButton.title = full;
 }
-// Keep the compact flag in sync on change + after any relabel.
+// Keep the compact flag in sync — use a MutationObserver because popup.js's
+// syncOneGlassSelect rewrites the button to the full label after we shorten it.
 (function _wireCompactLang(){
   const sel = document.getElementById('langMode');
   if(!sel) return;
   sel.addEventListener('change', ()=> setTimeout(_compactLangButton, 0));
-  // initial + a couple of delayed passes (glass-select builds async)
-  setTimeout(_compactLangButton, 50);
+  function _attachObserver(){
+    if(!sel._glassButton) { setTimeout(_attachObserver, 100); return; }
+    _compactLangButton();
+    try{
+      const obs = new MutationObserver(()=> _compactLangButton());
+      obs.observe(sel._glassButton, {childList:true, characterData:true, subtree:true});
+    }catch(e){}
+  }
+  setTimeout(_attachObserver, 50);
   setTimeout(_compactLangButton, 400);
 })();
 
