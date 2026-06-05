@@ -43,20 +43,18 @@ function createProviderGrid() {
   if (_pgSelectedProviders === null) {
     _pgSelectedProviders = new Set(_pgDefaults());
   }
-  // Keep selection within known providers
+  // Keep selection within known providers (do NOT auto-reset to defaults on under-min;
+  // free toggle is allowed in the grid, Start enforces the minimum of 2).
   _pgSelectedProviders = new Set([..._pgSelectedProviders].filter(p => order.includes(p)));
-  if (_pgSelectedProviders.size < _pgMin()) {
-    _pgSelectedProviders = new Set(_pgDefaults());
-  }
 
   grid.innerHTML = '';
   const sel = _pgSelectedProviders.size;
   const max = _pgMax();
   const hint = document.createElement('div');
-  hint.className = 'pg-hint';
-  hint.textContent = "en"===lang
-    ? `${sel}/${max} selected · min ${_pgMin()}, max ${max} (VS${max})`
-    : `Đã chọn ${sel}/${max} · tối thiểu ${_pgMin()}, tối đa ${max} (VS${max})`;
+  hint.className = 'pg-hint' + (sel < _pgMin() ? ' pg-hint-warn' : '');
+  hint.textContent = sel < _pgMin()
+    ? ("en"===lang ? `Select at least ${_pgMin()} (max ${max})` : `Chọn tối thiểu ${_pgMin()} (tối đa ${max})`)
+    : ("en"===lang ? `${sel}/${max} selected · max ${max} (VS${max})` : `Đã chọn ${sel}/${max} · tối đa ${max} (VS${max})`);
   grid.appendChild(hint);
 
   for (const prov of order) {
@@ -90,10 +88,11 @@ function createProviderGrid() {
 
     chip.addEventListener('click', () => {
       if (_pgSelectedProviders.has(prov)) {
-        if (_pgSelectedProviders.size > _pgMin()) _pgSelectedProviders.delete(prov);
+        // free toggle off (allow going down to 0; Start enforces min 2)
+        _pgSelectedProviders.delete(prov);
       } else {
         if (_pgSelectedProviders.size >= _pgMax()) {
-          // drop oldest selected, then add
+          // at max: drop oldest selected, then add the new one
           const first = [..._pgSelectedProviders][0];
           _pgSelectedProviders.delete(first);
         }
