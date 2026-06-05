@@ -507,3 +507,9 @@ select, input, textarea { max-width: 100%; box-sizing: border-box; }
 .start-actions button{min-height:38px !important;}
 .metrics-grid{margin:2px 0 !important;}
 .mini-meta.compact-meta{font-size:9px !important;opacity:.6;margin:0 !important;}
+
+/* Modal in-place status feedback */
+.psm-status{margin-top:8px;padding:6px 10px;border-radius:8px;font-size:12px;min-height:18px;color:#9fe6ff;background:rgba(103,221,255,.10);border:1px solid rgba(103,221,255,.25);}
+.psm-status:empty{display:none;}
+/* Extra-instruction textarea: expand fully, no inner scrollbar */
+#extraInstruction{rows:2;min-height:64px;max-height:120px;font-size:12px;overflow:hidden;resize:vertical;}
