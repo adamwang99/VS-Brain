@@ -491,3 +491,19 @@ main, .start-card, .glass, section, .mode-row, .provider-grid, .action-panel, .m
 .pg-chip img { max-width: 16px; }
 select, input, textarea { max-width: 100%; box-sizing: border-box; }
 .pg-hint-warn{color:#f6ad55 !important;font-weight:600;}
+
+/* ── First-screen compact mode (fit without scroll) ── */
+.compact-hide{display:none !important;}
+.hero{padding:8px 12px !important;}
+.hero-logo{width:36px !important;height:36px !important;}
+.hero h1{font-size:15px !important;}
+.start-card{padding:10px !important;gap:5px !important;}
+#extraInstruction{rows:1;min-height:34px;max-height:48px;font-size:12px;}
+.mode-row{margin:2px 0 !important;}
+.mode-row .mode-hint{display:none !important;}
+.provider-grid{margin:4px 0 !important;padding:6px !important;}
+.pg-chip{min-height:30px !important;padding:4px 4px !important;font-size:11px !important;}
+.action-panel{padding:5px !important;}
+.start-actions button{min-height:38px !important;}
+.metrics-grid{margin:2px 0 !important;}
+.mini-meta.compact-meta{font-size:9px !important;opacity:.6;margin:0 !important;}

@@ -197,7 +197,8 @@ function _renderProviderSetupModal(missing){
   if(content) content.innerHTML = head + steps;
 }
 
-// Show modal and resolve when the user presses Continue (returns tab ids) or Close (returns null).
+// Show modal and resolve when the user presses Continue (returns) or Close (returns null).
+// Uses ONE delegated click listener on the modal to avoid re-render / reference loss.
 function _showProviderSetupModal(){
   return new Promise((resolve)=>{
     const modal = _psmEl('providerSetupModal');
@@ -211,81 +212,99 @@ function _showProviderSetupModal(){
       return {missing, notReady};
     }
 
-    const done=(val)=>{
+    function _finish(val){
       modal.classList.add('hidden');
-      // detach handlers (onclick assignment is idempotent, but clear to be safe)
-      const ob=_psmEl('psmOpenTabsBtn'), rlb=_psmEl('psmReloadBtn'), rb=_psmEl('psmRescanBtn'), cb=_psmEl('psmContinueBtn'), xb=_psmEl('psmCloseBtn');
-      [ob,rlb,rb,cb,xb].forEach(b=>{ if(b) b.onclick=null; });
+      modal.removeEventListener('click', onClick);
       resolve(val);
-    };
+    }
 
-    // initial render then async fill not-ready
+    async function onClick(e){
+      const btn = e.target && e.target.closest ? e.target.closest('button') : null;
+      if(!btn || !modal.contains(btn)) return;
+      const id = btn.id;
+      log(`provider-setup: click ${id}`);
+      e.preventDefault(); e.stopPropagation();
+
+      if(id==='psmCloseBtn'){ _finish(null); return; }
+
+      if(id==='psmContinueBtn'){
+        // Gate: block continue if any selected provider is still missing/not-ready
+        const missing=_missingProviders();
+        const notReady=await _notReadyTabs().catch(()=>[]);
+        if(missing.length || notReady.length){
+          const n=missing.length+notReady.length;
+          setStatus("en"===lang?`Cannot continue: ${n} provider(s) not ready`:`Chưa thể tiếp tục: còn ${n} provider chưa sẵn sàng`,'blocked');
+          await _refreshModalState();
+          return;
+        }
+        _finish('continue'); return;
+      }
+
+      if(id==='psmOpenTabsBtn'){
+        const missing=_missingProviders();
+        const openUrl=(typeof PROVIDER_OPEN_URL!=="undefined")?PROVIDER_OPEN_URL:{};
+        if(!missing.length){ setStatus("en"===lang?'No missing tabs':'Không có tab thiếu','running'); return; }
+        let winId=null;
+        try{
+          const wins=await chrome.windows.getAll({windowTypes:['normal']});
+          const focused=wins.find(w=>w.focused)||wins[0];
+          if(focused) winId=focused.id;
+        }catch(err){ log(`provider-setup: getAll windows failed: ${err.message}`); }
+        let opened=0;
+        for(const prov of missing){
+          if(!openUrl[prov]) continue;
+          try{
+            const opts={url:openUrl[prov],active:true};
+            if(winId) opts.windowId=winId;
+            const t=await chrome.tabs.create(opts);
+            opened++; log(`provider-setup: opened ${prov} tab=${t.id} win=${winId||'default'}`);
+          }catch(err){
+            log(`provider-setup: tabs.create failed ${prov}: ${err.message}`);
+            try{ window.open(openUrl[prov],'_blank'); opened++; }catch(e2){ log(`window.open failed ${prov}: ${e2.message}`); }
+          }
+        }
+        setStatus(opened>0
+          ? ("en"===lang?`Opened ${opened} tab(s) — log in + open a chat, then Rescan`:`Đã mở ${opened} tab — đăng nhập + mở ô chat, rồi Quét lại`)
+          : ("en"===lang?'Could not open tabs — open them manually':'Không mở được tab — hãy mở thủ công'),'running');
+        setTimeout(async ()=>{ await refreshTabs().catch(()=>{}); await _refreshModalState(); if(typeof createProviderGrid==="function") createProviderGrid(); }, 1500);
+        return;
+      }
+
+      if(id==='psmReloadBtn'){
+        const notReady=await _notReadyTabs().catch(()=>[]);
+        if(!notReady.length){ setStatus("en"===lang?'No tabs need reload':'Không có tab cần tải lại','running'); return; }
+        for(const o of notReady){
+          const inj=await _tryInjectHelpers(o.tabId);
+          let ok=false;
+          if(inj){
+            const r=await executeInAiTab(o.tabId, detectProviderState, [], "setup-reload-probe").catch(()=>null);
+            ok=!!(r&&r.provider&&r.provider!=="unknown");
+          }
+          if(!ok){
+            try{ await chrome.tabs.reload(Number(o.tabId)); log(`provider-setup: reloaded tab=${o.tabId} (${o.prov})`); }
+            catch(err){ log(`provider-setup: reload failed tab=${o.tabId}: ${err.message}`); }
+          } else { log(`provider-setup: injected helpers tab=${o.tabId} (${o.prov})`); }
+        }
+        setStatus("en"===lang?`Reloading tabs… wait then Rescan`:`Đang tải lại tab… đợi chút rồi Quét lại`,'running');
+        setTimeout(async ()=>{ await refreshTabs().catch(()=>{}); await _refreshModalState(); if(typeof createProviderGrid==="function") createProviderGrid(); }, 2500);
+        return;
+      }
+
+      if(id==='psmRescanBtn'){
+        await refreshTabs().catch(()=>{});
+        const {missing, notReady}=await _refreshModalState();
+        if(typeof createProviderGrid==="function") createProviderGrid();
+        const bad=missing.length+notReady.length;
+        setStatus(bad?("en"===lang?`Not ready: ${bad}`:`Chưa sẵn sàng: ${bad}`)
+                     :("en"===lang?'All providers ready':'Tất cả provider đã sẵn sàng'),'running');
+        return;
+      }
+    }
+
     _renderProviderSetupModal(_missingProviders(), []);
     modal.classList.remove('hidden');
+    modal.addEventListener('click', onClick);
     _refreshModalState();
-
-    // ---- Open missing tabs ----
-    _psmEl('psmOpenTabsBtn').onclick = async ()=>{
-      const missing=_missingProviders();
-      const openUrl=(typeof PROVIDER_OPEN_URL!=="undefined")?PROVIDER_OPEN_URL:{};
-      if(!missing.length){ setStatus("en"===lang?'No missing tabs':'Không có tab thiếu','running'); return; }
-      let winId=null;
-      try{
-        const wins=await chrome.windows.getAll({windowTypes:['normal']});
-        const focused=wins.find(w=>w.focused)||wins[0];
-        if(focused) winId=focused.id;
-      }catch(e){ log(`provider-setup: getAll windows failed: ${e.message}`); }
-      let opened=0;
-      for(const prov of missing){
-        if(!openUrl[prov]) continue;
-        try{
-          const opts={url:openUrl[prov],active:true};
-          if(winId) opts.windowId=winId;
-          const t=await chrome.tabs.create(opts);
-          opened++; log(`provider-setup: opened ${prov} tab=${t.id} win=${winId||'default'}`);
-        }catch(e){
-          log(`provider-setup: tabs.create failed ${prov}: ${e.message}; trying window.open`);
-          try{ window.open(openUrl[prov],'_blank'); opened++; }catch(e2){ log(`window.open also failed ${prov}: ${e2.message}`); }
-        }
-      }
-      setStatus(opened>0
-        ? ("en"===lang?`Opened ${opened} tab(s) — log in + open a chat, then Rescan`:`Đã mở ${opened} tab — đăng nhập + mở ô chat, rồi Quét lại`)
-        : ("en"===lang?'Could not open tabs — open them manually':'Không mở được tab — hãy mở thủ công'),'running');
-      setTimeout(async ()=>{ await refreshTabs().catch(()=>{}); await _refreshModalState(); if(typeof createProviderGrid==="function") createProviderGrid(); }, 1500);
-    };
-
-    // ---- Reload not-ready tabs ----
-    _psmEl('psmReloadBtn').onclick = async ()=>{
-      const notReady=await _notReadyTabs().catch(()=>[]);
-      if(!notReady.length){ setStatus("en"===lang?'No tabs need reload':'Không có tab cần tải lại','running'); return; }
-      for(const o of notReady){
-        const inj=await _tryInjectHelpers(o.tabId);
-        let ok=false;
-        if(inj){
-          const r=await executeInAiTab(o.tabId, detectProviderState, [], "setup-reload-probe").catch(()=>null);
-          ok=!!(r&&r.provider&&r.provider!=="unknown");
-        }
-        if(!ok){
-          try{ await chrome.tabs.reload(Number(o.tabId)); log(`provider-setup: reloaded tab=${o.tabId} (${o.prov})`); }
-          catch(e){ log(`provider-setup: reload failed tab=${o.tabId}: ${e.message}`); }
-        } else { log(`provider-setup: injected helpers tab=${o.tabId} (${o.prov}) — no reload needed`); }
-      }
-      setStatus("en"===lang?`Reloading tabs… wait then Rescan`:`Đang tải lại tab… đợi chút rồi Quét lại`,'running');
-      setTimeout(async ()=>{ await refreshTabs().catch(()=>{}); await _refreshModalState(); if(typeof createProviderGrid==="function") createProviderGrid(); }, 2500);
-    };
-
-    // ---- Rescan ----
-    _psmEl('psmRescanBtn').onclick = async ()=>{
-      await refreshTabs().catch(()=>{});
-      const {missing, notReady}=await _refreshModalState();
-      if(typeof createProviderGrid==="function") createProviderGrid();
-      const bad=missing.length+notReady.length;
-      setStatus(bad?("en"===lang?`Not ready: ${bad}`:`Chưa sẵn sàng: ${bad}`)
-                   :("en"===lang?'All providers ready':'Tất cả provider đã sẵn sàng'),'running');
-    };
-
-    _psmEl('psmContinueBtn').onclick = ()=>{ done('continue'); };
-    _psmEl('psmCloseBtn').onclick = ()=>{ done(null); };
   });
 }
 
