@@ -100,6 +100,7 @@ async function runDualConsensus(page) {
     waitForLog(page, 'finalize short-circuit', 60000).then(() => 'recovered_envelope')
   ]);
   await waitForLog(page, 'final blueprint bundle saved', 90000);
+  await sleep(500);
   const afterFinalize = await dumpState(page, 'dual-consensus-after-finalize-saved');
   if (!afterFinalize.log.includes('bundle download started')) throw new Error('missing bundle download log');
   return `dual-consensus/save PASS (${_finalizeOutcome})`;
@@ -128,6 +129,7 @@ async function runSigninFalsePositive(page) {
   // and reach a genuine dual-tab consensus finalize
   await waitForLog(page, 'cả 2 tab đã chốt', 90000);
   await waitForLog(page, 'final blueprint bundle saved', 90000);
+  await sleep(500);
   const state = await dumpState(page, 'signin-false-positive-final');
   if (/SIGNIN_REQUIRED|surface=signin/i.test(state.log)) throw new Error('signin false-positive present in final log');
   return 'signin-false-positive PASS';
@@ -154,6 +156,7 @@ async function runFinalizeDeterministicFallback(page) {
   await waitForLog(page, 'finalize deterministic fallback:', 30000);
   await waitForLog(page, 'finalize fallback chars=', 30000);
   await waitForLog(page, 'final blueprint bundle saved', 60000);
+  await sleep(500);
   const state = await dumpState(page, 'finalize-deterministic-fallback-final');
   if (!/path=fallback_existing_content/.test(state.log)) throw new Error('bundle did not record fallback path');
   return 'finalize-deterministic-fallback PASS';
@@ -225,6 +228,7 @@ async function runDuplicateSourceStall(page) {
   await waitForLog(page, 'auto-loop started');
   await waitForLog(page, 'auto-loop step 2/', 30000);
   await sleep(3000);
+  await sleep(500);
   const state = await dumpState(page, 'duplicate-source-stall-final');
   // Verify: no hard-stop from quality guard while should_continue=true
   if (state.log.includes('quality stop enforced')) throw new Error('quality hard-stop fired when should_continue=true');
@@ -246,6 +250,7 @@ async function runCriticalButProgressing(page) {
   // run through several rounds so criticalCount would have climbed in the old buggy code
   await waitForLog(page, 'auto-loop step 6/', 60000);
   await sleep(2000);
+  await sleep(500);
   const state = await dumpState(page, 'critical-but-progressing-final');
   if (state.log.includes('quality_guard_critical_blocker')) throw new Error('hard-stopped on critical blocker while content kept progressing');
   if (state.log.includes('quality stop enforced')) throw new Error('quality hard-stop fired while debate was progressing');
@@ -268,10 +273,12 @@ async function runNoConvergenceBudget(page) {
   await waitForLog(page, 'auto-loop started');
   // must NOT cut short during warmup (step < 8) and progressing rounds
   await waitForLog(page, 'auto-loop step 6/', 60000);
+  await sleep(300);
   if ((await page.$eval('#log', el => el.textContent || '')).includes('quality_guard_no_convergence'))
     throw new Error('no_convergence fired during warmup (too early)');
   // eventually the convergence budget must force a stop
   await waitForLog(page, 'quality_guard_no_convergence', 90000);
+  await sleep(500);
   const state = await dumpState(page, 'no-convergence-budget-final');
   if (!state.log.includes('quality stop enforced')) throw new Error('budget stop did not enforce hard-stop');
   // NEW CONTRACT (v0.8.66): a forced (non-consensus) stop must NOT auto-download a bundle.
@@ -300,10 +307,12 @@ async function runPoliteNoSignal(page) {
   await waitForLog(page, 'auto-loop started');
   // must NOT cut short during warmup / early progressing rounds
   await waitForLog(page, 'auto-loop step 6/', 60000);
+  await sleep(300);
   if ((await page.$eval('#log', el => el.textContent || '')).includes('quality_guard_round_budget'))
     throw new Error('round_budget fired during warmup (too early)');
   // the round budget must eventually force a stop
   await waitForLog(page, 'quality_guard_round_budget', 120000);
+  await sleep(500);
   const state = await dumpState(page, 'polite-no-signal-final');
   if (state.log.includes('quality_guard_no_convergence')) throw new Error('wrong reason: critical budget fired when critical=0');
   if (!state.log.includes('quality stop enforced')) throw new Error('round budget stop did not enforce hard-stop');
