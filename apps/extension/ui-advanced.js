@@ -448,3 +448,44 @@ async function handleAdaptiveStart(){
   await refreshStartButton();
   return 'ready';
 }
+
+// ── Auto-refresh Start button when tabs change (user reloads/logs in manually) ──
+let _vsStartPollTimer = null;
+function _startReadinessWatch(){
+  // 1) React to Chrome tab updates (reload complete, url change, tab closed)
+  try{
+    if(chrome.tabs?.onUpdated && !chrome.tabs.onUpdated.hasListener(_vsOnTabUpdated)){
+      chrome.tabs.onUpdated.addListener(_vsOnTabUpdated);
+    }
+    if(chrome.tabs?.onRemoved && !chrome.tabs.onRemoved.hasListener(_vsOnTabRemoved)){
+      chrome.tabs.onRemoved.addListener(_vsOnTabRemoved);
+    }
+  }catch(e){}
+  // 2) Lightweight poll ONLY while the button is in a prep state (not running, not ready)
+  if(_vsStartPollTimer) return;
+  _vsStartPollTimer = setInterval(async ()=>{
+    if(typeof loopState!=="undefined" && loopState) return;       // running: skip
+    if(_vsReadyState==='ready') return;                            // already ready: skip
+    await refreshTabs().catch(()=>{});
+    if(typeof createProviderGrid==="function") createProviderGrid();
+    await refreshStartButton();
+  }, 3000);
+}
+function _vsOnTabUpdated(tabId, info){
+  if(info && (info.status==='complete' || info.url)){
+    setTimeout(async ()=>{
+      if(typeof loopState!=="undefined" && loopState) return;
+      await refreshTabs().catch(()=>{});
+      if(typeof createProviderGrid==="function") createProviderGrid();
+      await refreshStartButton();
+    }, 600);
+  }
+}
+function _vsOnTabRemoved(){
+  setTimeout(async ()=>{
+    if(typeof loopState!=="undefined" && loopState) return;
+    await refreshTabs().catch(()=>{});
+    if(typeof createProviderGrid==="function") createProviderGrid();
+    await refreshStartButton();
+  }, 300);
+}
