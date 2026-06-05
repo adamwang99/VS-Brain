@@ -99,6 +99,7 @@ function createProviderGrid() {
         _pgSelectedProviders.add(prov);
       }
       createProviderGrid();
+      if(typeof refreshStartButton==="function") refreshStartButton();
     });
     grid.appendChild(chip);
   }
@@ -340,4 +341,107 @@ async function resolveSelectedProviderTabs(){
 async function getProviderGridParticipants(){
   const ids = await resolveSelectedProviderTabs();
   return ids.length>=_pgMin()?ids:null;
+}
+
+// ── Adaptive Start button: evaluate readiness and morph the Start button ──
+// State machine (no scary modal needed):
+//   need_select   → user picked < 2 providers   → button: "Chọn tối thiểu 2 AI"
+//   need_open     → selected provider has no tab → button: "Mở tab provider thiếu"
+//   need_reload   → tab exists but not ready     → button: "Tải lại tab AI"
+//   ready         → all good                     → button: "Bắt đầu phản biện" (glow)
+let _vsReadyState = 'need_select';
+
+async function evaluateStartReadiness(){
+  const sel = (typeof getSelectedProviders==="function")?getSelectedProviders():[];
+  const min = (typeof _pgMin==="function")?_pgMin():2;
+  if(!_pgSelectedProviders || _pgSelectedProviders.size < min){
+    return {state:'need_select', detail:{need:min}};
+  }
+  // missing tabs?
+  const missing = (typeof _missingProviders==="function")?_missingProviders():[];
+  if(missing.length) return {state:'need_open', detail:{missing}};
+  // not-ready tabs (only among SELECTED providers — keep it simple for the user)?
+  const notReadyAll = (typeof _notReadyTabs==="function")?await _notReadyTabs().catch(()=>[]):[];
+  const selSet = new Set(sel);
+  const notReadySel = notReadyAll.filter(o=>selSet.has(o.prov));
+  if(notReadySel.length) return {state:'need_reload', detail:{notReady:notReadySel}};
+  return {state:'ready', detail:{}};
+}
+
+function _vsStartLabels(state, lang){
+  const en = (lang==="en");
+  switch(state){
+    case 'need_select': return en?'Pick at least 2 AIs':'Chọn tối thiểu 2 AI';
+    case 'need_open':   return en?'Open missing AI tab(s)':'Mở tab AI còn thiếu';
+    case 'need_reload': return en?'Reload AI tab(s)':'Tải lại tab AI';
+    case 'ready':       return en?'Start debate':'Bắt đầu phản biện';
+    default:            return en?'Start':'Bắt đầu';
+  }
+}
+
+// Refresh the Start button label/style based on current readiness.
+async function refreshStartButton(){
+  const btn = document.getElementById('oneClickStartBtn');
+  if(!btn) return _vsReadyState;
+  if(typeof loopState!=="undefined" && loopState) return _vsReadyState; // running: leave as-is
+  const lang = (typeof getLang==="function")?getLang():"vi";
+  const {state} = await evaluateStartReadiness();
+  _vsReadyState = state;
+  btn.textContent = _vsStartLabels(state, lang);
+  btn.dataset.vsState = state;
+  btn.classList.toggle('vs-prep', state!=='ready');
+  btn.classList.toggle('vs-go', state==='ready');
+  return state;
+}
+
+// Perform the action implied by the current Start state. Returns:
+//   'started'  → debate started (caller should NOT continue)
+//   'prep'     → a preparation step ran (caller should NOT start; UI refreshed)
+//   'ready'    → ready to start (caller proceeds to startAutoLoop)
+async function handleAdaptiveStart(){
+  const lang = (typeof getLang==="function")?getLang():"vi";
+  await refreshTabs().catch(()=>{});
+  const {state, detail} = await evaluateStartReadiness();
+  _vsReadyState = state;
+
+  if(state==='need_select'){
+    setStatus("en"===lang?'Pick at least 2 AI providers':'Hãy chọn tối thiểu 2 AI','blocked');
+    await refreshStartButton();
+    return 'prep';
+  }
+
+  if(state==='need_open'){
+    const openUrl=(typeof PROVIDER_OPEN_URL!=="undefined")?PROVIDER_OPEN_URL:{};
+    let winId=null;
+    try{
+      const wins=await chrome.windows.getAll({windowTypes:['normal']});
+      const f=wins.find(w=>w.focused)||wins[0]; if(f) winId=f.id;
+    }catch(e){}
+    let opened=0;
+    for(const prov of detail.missing){
+      if(!openUrl[prov]) continue;
+      try{ const o={url:openUrl[prov],active:true}; if(winId)o.windowId=winId; const t=await chrome.tabs.create(o); opened++; log(`adaptive-start: opened ${prov} tab=${t.id}`); }
+      catch(e){ try{ window.open(openUrl[prov],'_blank'); opened++; }catch(e2){} }
+    }
+    setStatus("en"===lang?`Opened ${opened} tab(s) — log in + open a chat, then press Start again`:`Đã mở ${opened} tab — đăng nhập + mở ô chat, rồi bấm Start lại`,'running');
+    setTimeout(refreshStartButton, 1800);
+    return 'prep';
+  }
+
+  if(state==='need_reload'){
+    for(const o of detail.notReady){
+      const inj=(typeof _tryInjectHelpers==="function")?await _tryInjectHelpers(o.tabId):false;
+      let ok=false;
+      if(inj){ const r=await executeInAiTab(o.tabId, detectProviderState, [], "adaptive-reload-probe").catch(()=>null); ok=!!(r&&r.provider&&r.provider!=="unknown"); }
+      if(!ok){ try{ await chrome.tabs.reload(Number(o.tabId)); log(`adaptive-start: reloaded tab=${o.tabId} (${o.prov})`); }catch(e){} }
+      else log(`adaptive-start: injected helpers tab=${o.tabId} (${o.prov})`);
+    }
+    setStatus("en"===lang?'Reloading AI tab(s)… press Start again in a moment':'Đang tải lại tab AI… đợi chút rồi bấm Start lại','running');
+    setTimeout(refreshStartButton, 2500);
+    return 'prep';
+  }
+
+  // ready
+  await refreshStartButton();
+  return 'ready';
 }

@@ -513,3 +513,14 @@ select, input, textarea { max-width: 100%; box-sizing: border-box; }
 .psm-status:empty{display:none;}
 /* Extra-instruction textarea: expand fully, no inner scrollbar */
 #extraInstruction{rows:2;min-height:64px;max-height:120px;font-size:12px;overflow:hidden;resize:vertical;}
+
+/* Adaptive Start button states */
+#oneClickStartBtn.vs-prep{
+  background:linear-gradient(135deg,rgba(246,173,85,.85),rgba(237,137,54,.78)) !important;
+  border-color:#f6ad55 !important;color:#1a1205 !important;font-weight:700;
+}
+#oneClickStartBtn.vs-go{
+  background:linear-gradient(135deg,rgba(159,140,255,.95),rgba(103,221,255,.85)) !important;
+  border-color:#63b3ed !important;color:#fff !important;font-weight:700;
+  box-shadow:0 0 14px rgba(103,221,255,.55);
+}
