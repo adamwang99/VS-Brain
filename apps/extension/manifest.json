@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VS Brain",
-  "version": "0.8.94",
+  "version": "0.8.95",
   "description": "AI-to-AI critique relay, agreement loop, and final blueprint export.",
   "permissions": [
     "activeTab",
