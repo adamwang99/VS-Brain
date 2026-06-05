@@ -481,3 +481,5 @@ textarea::placeholder { color: rgba(238,242,255,.52); opacity: 1; font-family: R
 .pg-dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-left:5px;vertical-align:middle;}
 .pg-dot-on{background:#68d391;box-shadow:0 0 4px #68d391;}
 .pg-dot-off{background:rgba(255,255,255,0.25);}
+/* Provider grid above action buttons — clear visual separation */
+.provider-grid{margin:10px 0 8px;padding:8px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);}
