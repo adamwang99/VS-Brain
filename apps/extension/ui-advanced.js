@@ -111,32 +111,97 @@ function getSelectedProviders(){
 }
 
 // Resolve selected providers → live tab ids, opening tabs where missing.
-// Returns array of tab ids (>= min). Opens missing provider tabs and waits briefly.
-async function resolveSelectedProviderTabs(){
+// Returns array of tab ids. Shows a setup modal guiding the user to log in + open
+// a chat for any selected provider that has no live tab, opens those tabs, then
+// waits for the user to confirm before continuing.
+function _psmEl(id){ return document.getElementById(id); }
+
+function _missingProviders(){
   const sel = getSelectedProviders();
+  const missing = [];
+  for(const prov of sel){
+    const tab = (aiTabs||[]).find(t=>t.provider===prov);
+    if(!tab) missing.push(prov);
+  }
+  return missing;
+}
+
+function _renderProviderSetupModal(missing){
+  const lang = (typeof getLang==="function"?getLang():"vi");
+  const label = p => (typeof providerLabel==="function"?providerLabel(p):p);
   const openUrl = (typeof PROVIDER_OPEN_URL!=="undefined")?PROVIDER_OPEN_URL:{};
+  const title = _psmEl('psmTitle'), content = _psmEl('psmContent');
+  if(title) title.textContent = "en"===lang ? 'Set up providers' : 'Chuẩn bị provider';
+  const items = missing.map(p=>{
+    const url = openUrl[p]||'#';
+    return `<li><b>${label(p)}</b> — <a href="${url}" target="_blank" rel="noopener">${url}</a></li>`;
+  }).join('');
+  const head = "en"===lang
+    ? `<p>These selected providers have no open tab yet:</p><ul>${items}</ul>`
+    : `<p>Các provider bạn chọn chưa có tab đang mở:</p><ul>${items}</ul>`;
+  const steps = "en"===lang
+    ? `<h3>What to do</h3><ol><li>Press <b>Open missing tabs</b> below — VS Brain opens each provider in a new tab.</li><li>In each opened tab: <b>log in</b> if needed, then <b>open a chat</b> (start a new conversation).</li><li>Come back here and press <b>Rescan</b> to detect the tabs.</li><li>When all show a green dot, press <b>Continue</b> to start the debate.</li></ol><p class="about-owner-mini">Note: VS Brain cannot log in for you. Each AI provider requires your own logged-in session in the browser.</p>`
+    : `<h3>Các bước cần làm</h3><ol><li>Bấm <b>Mở tab đang thiếu</b> bên dưới — VS Brain sẽ mở từng provider trong tab mới.</li><li>Trong mỗi tab vừa mở: <b>đăng nhập</b> nếu cần, rồi <b>mở ô chat</b> (bắt đầu cuộc trò chuyện mới).</li><li>Quay lại đây và bấm <b>Quét lại</b> để nhận diện tab.</li><li>Khi tất cả hiện chấm xanh, bấm <b>Tiếp tục</b> để bắt đầu phản biện.</li></ol><p class="about-owner-mini">Lưu ý: VS Brain không thể đăng nhập hộ bạn. Mỗi provider AI cần phiên đăng nhập của chính bạn trong trình duyệt.</p>`;
+  if(content) content.innerHTML = head + steps;
+}
+
+// Show modal and resolve when the user presses Continue (returns tab ids) or Close (returns null).
+function _showProviderSetupModal(){
+  return new Promise((resolve)=>{
+    const modal = _psmEl('providerSetupModal');
+    if(!modal){ resolve('continue'); return; }
+    const lang = (typeof getLang==="function"?getLang():"vi");
+    const openBtn=_psmEl('psmOpenTabsBtn'), rescanBtn=_psmEl('psmRescanBtn'),
+          contBtn=_psmEl('psmContinueBtn'), closeBtn=_psmEl('psmCloseBtn');
+    _renderProviderSetupModal(_missingProviders());
+    modal.classList.remove('hidden');
+
+    const cleanup=()=>{
+      modal.classList.add('hidden');
+      openBtn&&openBtn.replaceWith(openBtn.cloneNode(true));
+      rescanBtn&&rescanBtn.replaceWith(rescanBtn.cloneNode(true));
+      contBtn&&contBtn.replaceWith(contBtn.cloneNode(true));
+      closeBtn&&closeBtn.replaceWith(closeBtn.cloneNode(true));
+    };
+
+    _psmEl('psmOpenTabsBtn').addEventListener('click', async ()=>{
+      const missing=_missingProviders();
+      const openUrl=(typeof PROVIDER_OPEN_URL!=="undefined")?PROVIDER_OPEN_URL:{};
+      for(const prov of missing){
+        if(!openUrl[prov]) continue;
+        try{ const t=await chrome.tabs.create({url:openUrl[prov],active:true}); log(`provider-setup: opened ${prov} tab=${t.id}`); }
+        catch(e){ log(`provider-setup: failed open ${prov}: ${e.message}`); }
+      }
+      setStatus("en"===lang?'Log in + open a chat, then Rescan':'Đăng nhập + mở ô chat, rồi Quét lại','running');
+    });
+
+    _psmEl('psmRescanBtn').addEventListener('click', async ()=>{
+      await refreshTabs().catch(()=>{});
+      _renderProviderSetupModal(_missingProviders());
+      if(typeof createProviderGrid==="function") createProviderGrid();
+      const still=_missingProviders();
+      setStatus(still.length?("en"===lang?`Still missing: ${still.length}`:`Còn thiếu: ${still.length}`)
+                            :("en"===lang?'All tabs ready':'Tất cả tab đã sẵn sàng'),'running');
+    });
+
+    _psmEl('psmContinueBtn').addEventListener('click', ()=>{ cleanup(); resolve('continue'); });
+    _psmEl('psmCloseBtn').addEventListener('click', ()=>{ cleanup(); resolve(null); });
+  });
+}
+
+// Returns array of tab ids. If selected providers lack tabs, show the setup modal first.
+async function resolveSelectedProviderTabs(){
+  let missing = _missingProviders();
+  if(missing.length){
+    const r = await _showProviderSetupModal();
+    if(r===null) return []; // user cancelled
+    await refreshTabs().catch(()=>{});
+  }
+  const sel = getSelectedProviders();
   const ids = [];
-  const toOpen = [];
   for(const prov of sel){
     const tab = (aiTabs||[]).find(t=>t.provider===prov);
     if(tab) ids.push(tab.id);
-    else if(openUrl[prov]) toOpen.push(prov);
-  }
-  // Open any missing provider tabs
-  for(const prov of toOpen){
-    try{
-      const t = await chrome.tabs.create({url:openUrl[prov],active:false});
-      log(`opened missing provider tab: ${prov} (tabId=${t.id})`);
-    }catch(e){ log(`failed to open ${prov}: ${e.message}`); }
-  }
-  if(toOpen.length){
-    // give tabs time to load, then rescan
-    await new Promise(r=>setTimeout(r,3500));
-    await refreshTabs().catch(()=>{});
-    for(const prov of toOpen){
-      const tab=(aiTabs||[]).find(t=>t.provider===prov);
-      if(tab) ids.push(tab.id);
-    }
   }
   return ids;
 }
