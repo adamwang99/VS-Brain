@@ -12,7 +12,7 @@
       <div class="brand-lockup">
         <img class="brand-logo hero-logo" src="icons/vs-brain-logo.png" alt="VS Brain logo" />
         <div>
-          <h1>VS Brain <span class="version">v0.8.67-judge-advisory-no-faildownload</span></h1>
+          <h1>VS Brain <span class="version">v0.8.73-vs3-no-dup-source</span></h1>
           <p class="subtitle" data-i18n="subtitle">AI debate relay · archive · checkpoint</p>
         </div>
       </div>
@@ -64,6 +64,7 @@
         <div class="loop-counter volume-card"><div class="loop-topline"><span id="loopCounter" title="Double-click để sửa số vòng">0/100</span><span data-i18n="loopCounterLabel">vòng</span><span id="elapsedTimer" class="timer">00:00</span></div><div class="round-stepper simple volume-inline"><input id="stepsSlider" type="range" min="1" max="1000" step="10" value="100" class="slider" /><span id="sliderValue" class="slider-val">100</span></div></div>
       </div>
       <div class="mini-meta compact-meta"><span data-i18n="autoModeNote">Mặc định: Auto ON · Latest · auto-save vào Downloads/vs-brain/<session></span></div>
+      <div id="providerGrid" class="provider-grid" aria-label="Chọn provider tham gia N-way relay"></div>
     </section>
 
     <details class="glass manual-panel">
@@ -135,6 +136,15 @@
   <script src="lease-runtime.js"></script>
   <script src="runtime-recovery.js"></script>
   <script src="judge-gate.js"></script>
-  <script src="popup.js"></script>
+  <script src="core.js"></script>
+  <script src="i18n.js"></script>
+  <script src="storage.js"></script>
+  <script src="providers.js"></script>
+  <script src="tabs.js"></script>
+  <script src="relay.js"></script>
+  <script src="finalize.js"></script>
+  <script src="archive.js"></script>
+  <script src="ui.js"></script>
+  <script src="ui-advanced.js"></script>
 </body>
 </html>

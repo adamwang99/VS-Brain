@@ -463,3 +463,14 @@ textarea::placeholder { color: rgba(238,242,255,.52); opacity: 1; font-family: R
 .mode-hint{font-size:11px;opacity:.7;flex:1 1 100%;line-height:1.4;margin-top:2px}
 #evidencePayload{width:100%;margin:4px 0 2px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px}
 #evidencePayload.hidden{display:none}
+
+/* Provider Grid — N-way selector */
+.provider-grid{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px;}
+.pg-chip{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;
+  border:1.5px solid rgba(255,255,255,0.18);background:rgba(255,255,255,0.06);
+  color:rgba(255,255,255,0.7);font-size:12px;cursor:pointer;transition:all .15s;user-select:none;}
+.pg-chip:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.35);}
+.pg-chip.selected{background:rgba(99,179,237,0.22);border-color:#63b3ed;color:#fff;}
+.pg-chip.certified::after{content:"✓";font-size:10px;color:#68d391;margin-left:2px;}
+.pg-chip img{width:14px;height:14px;object-fit:contain;}
+.pg-hint{font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:4px;}

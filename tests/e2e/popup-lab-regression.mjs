@@ -8,13 +8,16 @@ const labPort = process.env.VSBRAIN_LAB_PORT || '4317';
 const labBase = process.env.VSBRAIN_LAB_BASE || `http://127.0.0.1:${labPort}`;
 function sleep(ms){ return new Promise(r => setTimeout(r, ms)); }
 async function dumpState(page, label) {
-  const state = await page.evaluate(() => ({
-    sourceVal: document.querySelector('#sourceTab')?.value || '',
-    targetVal: document.querySelector('#targetTab')?.value || '',
-    loopCounter: document.querySelector('#loopCounter')?.textContent || '',
-    status: document.querySelector('#status')?.textContent || '',
-    log: document.querySelector('#log')?.textContent || ''
-  }));
+  let state = { sourceVal:'', targetVal:'', loopCounter:'', status:'', log:'' };
+  try {
+    state = await page.evaluate(() => ({
+      sourceVal: document.querySelector('#sourceTab')?.value || '',
+      targetVal: document.querySelector('#targetTab')?.value || '',
+      loopCounter: document.querySelector('#loopCounter')?.textContent || '',
+      status: document.querySelector('#status')?.textContent || '',
+      log: document.querySelector('#log')?.textContent || ''
+    }));
+  } catch(e) { state.log = '(dumpState failed: ' + e.message + ')'; }
   console.log(`\n=== ${label} ===`);
   console.log(JSON.stringify(state, null, 2));
   return state;
@@ -22,8 +25,13 @@ async function dumpState(page, label) {
 async function waitForLog(page, text, timeout = 30000) {
   const start = Date.now();
   while (Date.now() - start < timeout) {
-    const value = await page.$eval('#log', el => el.textContent || '');
-    if (value.includes(text)) return value;
+    try {
+      const value = await page.$eval('#log', el => el.textContent || '');
+      if (value.includes(text)) return value;
+    } catch (e) {
+      if (/detached|destroyed|Target closed/i.test(e.message)) throw e;
+      // transient frame not ready — retry
+    }
     await sleep(400);
   }
   throw new Error(`log timeout: ${text}`);
